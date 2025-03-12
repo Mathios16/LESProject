@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import jakarta.validation.Valid;
+
 import br.com.fatecmogidascruzes.ecommercelivroback.business.customer.Customer;
 import br.com.fatecmogidascruzes.ecommercelivroback.infra.persistence.CustomerRepository;
 
@@ -27,9 +29,9 @@ public class CustomerController {
     private CustomerRepository customerRepository;
 
     @PostMapping
-    public ResponseEntity<Customer> createCustomer(@RequestBody Customer customer) {
-        Customer savedCustomer = customerRepository.save(customer);
-        return ResponseEntity.ok(savedCustomer);
+    public ResponseEntity<?> createCustomer(@Valid @RequestBody Customer customer) {
+        customerRepository.save(customer);
+        return ResponseEntity.ok("Cliente criado com sucesso!");
     }
 
     @GetMapping
@@ -62,13 +64,13 @@ public class CustomerController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Customer> getCustomerById(@PathVariable Long id) {
+    public ResponseEntity<Customer> getCustomerById(@PathVariable int id) {
         Optional<Customer> customer = customerRepository.findById(id);
         return ResponseEntity.of(customer);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Customer> updateCustomer(@PathVariable Long id, @RequestBody Customer customer) {
+    public ResponseEntity<?> updateCustomer(@PathVariable int id,@Valid @RequestBody Customer customer) {
         Optional<Customer> existingCustomer = customerRepository.findById(id);
         if (existingCustomer.isEmpty()) {
             return ResponseEntity.notFound().build();
@@ -79,7 +81,7 @@ public class CustomerController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCustomer(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteCustomer(@PathVariable int id) {
         Optional<Customer> customer = customerRepository.findById(id);
         if (customer.isEmpty()) {
             return ResponseEntity.notFound().build();

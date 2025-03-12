@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 import br.com.fatecmogidascruzes.ecommercelivroback.business.customer.Customer;
 
 @Repository
-public interface CustomerRepository extends JpaRepository<Customer, Long> {
+public interface CustomerRepository extends JpaRepository<Customer, Integer> {
 }

@@ -1,164 +1,107 @@
 package br.com.fatecmogidascruzes.ecommercelivroback.business.customer;
 
 import java.sql.Timestamp;
+import java.util.List;
 
-import br.com.fatecmogidascruzes.ecommercelivroback.business.customer.gender.Gender;
-import br.com.fatecmogidascruzes.ecommercelivroback.business.customer.gender.GenderConverter;
-import br.com.fatecmogidascruzes.ecommercelivroback.business.customer.phoneType.PhoneType;
-import br.com.fatecmogidascruzes.ecommercelivroback.business.customer.phoneType.PhoneTypeConverter;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 
-@Entity(name="Customers")
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import br.com.fatecmogidascruzes.ecommercelivroback.business.address.Address;
+import br.com.fatecmogidascruzes.ecommercelivroback.business.address.addressType.AddressType;
+import br.com.fatecmogidascruzes.ecommercelivroback.business.customer.gender.Gender;
+import br.com.fatecmogidascruzes.ecommercelivroback.business.customer.gender.GenderConverter;
+import br.com.fatecmogidascruzes.ecommercelivroback.business.customer.phoneType.PhoneType;
+import br.com.fatecmogidascruzes.ecommercelivroback.business.customer.phoneType.PhoneTypeConverter;
+
+@Setter
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity(name="customers")
 public class Customer {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "cst_id")
-  private Long id;
+  private int id;
 
-  @NotBlank(message = "Nome não pode ser vazio")
+  @NotBlank(message = "name: Nome não pode ser vazio")
   @Column(name = "cst_name", nullable = false)
   private String name;
 
-  @NotBlank(message = "Sobrenome não pode ser vazio")
+  @NotBlank(message = "lastname: Sobrenome não pode ser vazio")
   @Column(name = "cst_lastname", nullable = false)
   private String lastname;
 
-  @Pattern(regexp = "^\\d{3}\\.\\d{3}\\.\\d{3}\\-\\d{2}$", message = "Documento inválido")
-  @NotBlank(message = "Documento não pode ser vazio")
+  @Pattern(regexp = "^\\d{3}\\.\\d{3}\\.\\d{3}\\-\\d{2}$", message = "document: Documento inválido")
+  @NotBlank(message = "document: Documento não pode ser vazio")
   @Column(name = "cst_document", nullable = false, unique = true)
   private String document;
 
+  @NotBlank(message = "birthdate: Data de nascimento não pode ser vazia")
   @Column(name = "cst_birthdate", nullable = false)
   private Timestamp birthdate;
 
   @Email
-  @NotBlank(message = "Email não pode ser vazio")
+  @NotBlank(message = "email: Email não pode ser vazio")
   @Column(name = "cst_email", nullable = false, unique = true)
   private String email;
 
-  @Pattern(regexp = "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*\\W)[\\w\\W]{8,}$", message = "Senha inválida")
-  @NotBlank(message = "Senha não pode ser vazia")
+  @Pattern(regexp = "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*\\W)[\\w\\W]{8,}$", message = "password: Senha inválida")
+  @NotBlank(message = "password: Senha não pode ser vazia")
   @Column(name = "cst_password", nullable = false)
   private String password;
 
-  @Pattern(regexp = "^\\d{2}$", message = "DDD inválido")
-  @NotBlank(message = "DDD não pode ser vazio")
-  @Column(name = "cst_phone_ddd", nullable = false)
+  @Pattern(regexp = "^\\d{2}$", message = "phone: DDD inválido")
+  @NotBlank(message = "phone: DDD não pode ser vazio")
+  @Column(name = "cst_phoneddd", nullable = false)
   private String phoneddd;
 
-  @Pattern(regexp = "^\\d{8,9}$", message = "Telefone inválido")
-  @NotBlank(message = "Telefone não pode ser vazio")
-  @Column(name = "cst_phone", nullable = false)
+  @Pattern(regexp = "^\\d{8,9}$", message = "phone: Telefone inválido")
+  @NotBlank(message = "phone: Telefone não pode ser vazio")
+  @Column(name = "cst_phonenumber", nullable = false)
   private String phone;
 
+  @NotBlank(message = "gender: Genero não pode ser vazio")
   @Convert(converter = GenderConverter.class)
   @Column(name = "cst_gnd_id", nullable = false)
   private Gender gender;
 
+  @NotBlank(message = "phoneType: Tipo de telefone não pode ser vazio")
   @Convert(converter = PhoneTypeConverter.class)
   @Column(name = "cst_ptyp_id", nullable = false)
   private PhoneType phoneType;
 
-  protected Customer() {
+  @OneToMany(mappedBy = "customer")
+  private List<Address> addresses;
+
+  public String getFullName() {
+    return name + " " + lastname;
   }
 
-  public Customer(String name, String lastname, Timestamp birthdate, String email, String password,
-      String phoneddd, String phone) {
-    setName(name);
-    setLastname(lastname);
-    setBirthdate(birthdate);
-    setEmail(email);
-    setPassword(password);
-    setPhoneddd(phoneddd);
-    setPhone(phone);
-  }
+  public void verifyAddresses() throws MethodArgumentNotValidException {
+    boolean hasDeliveryAddress = addresses != null && addresses.stream()
+        .anyMatch(address -> address.getAddressType() == AddressType.ENTREGA);
+    
+    boolean hasBillingAddress = addresses != null && addresses.stream()
+        .anyMatch(address -> address.getAddressType() == AddressType.COBRANCA);
 
-  public Long getId() {
-    return id;
-  }
-
-  public void setId(Long id) {
-    this.id = id;
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
-  }
-
-  public String getLastname() {
-    return lastname;
-  }
-
-  public void setLastname(String lastname) {
-    this.lastname = lastname;
-  }
-
-  public Timestamp getBirthdate() {
-    return birthdate;
-  }
-
-  public void setBirthdate(Timestamp birthdate) {
-    this.birthdate = birthdate;
-  }
-
-  public String getEmail() {
-    return email;
-  }
-
-  public void setEmail(String email) {
-    this.email = email;
-  }
-
-  public String getPassword() {
-    return password;
-  }
-
-  public void setPassword(String password) {
-    this.password = password;
-  }
-
-  public String getPhoneddd() {
-    return phoneddd;
-  }
-
-  public void setPhoneddd(String phoneddd) {
-    this.phoneddd = phoneddd;
-  }
-
-  public String getPhone() {
-    return phone;
-  }
-
-  public void setPhone(String phone) {
-    this.phone = phone;
-  }
-
-  public Gender getGender() {
-    return gender;
-  }
-
-  public void setGender(Gender gender) {
-    this.gender = gender;
-  }
-
-  public PhoneType getPhoneType() {
-    return phoneType;
-  }
-
-  public void setPhoneType(PhoneType phoneType) {
-    this.phoneType = phoneType;
+    if(!hasDeliveryAddress && !hasBillingAddress) {
+      throw new IllegalArgumentException("addresses: É necessário ter pelo menos um endereço de entrega e de cobrança");
+    }
   }
 }
