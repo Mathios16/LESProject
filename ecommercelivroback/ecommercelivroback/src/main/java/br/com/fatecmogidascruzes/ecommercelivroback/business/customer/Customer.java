@@ -32,6 +32,11 @@ public class Customer {
   @Column(name = "cst_lastname", nullable = false)
   private String lastname;
 
+  @Pattern(regexp = "^\\d{3}\\.\\d{3}\\.\\d{3}\\-\\d{2}$", message = "Documento inválido")
+  @NotBlank(message = "Documento não pode ser vazio")
+  @Column(name = "cst_document", nullable = false, unique = true)
+  private String document;
+
   @Column(name = "cst_birthdate", nullable = false)
   private Timestamp birthdate;
 
