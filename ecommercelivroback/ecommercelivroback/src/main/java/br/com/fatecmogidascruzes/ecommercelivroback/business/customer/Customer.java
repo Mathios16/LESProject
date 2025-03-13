@@ -29,6 +29,7 @@ import br.com.fatecmogidascruzes.ecommercelivroback.business.customer.gender.Gen
 import br.com.fatecmogidascruzes.ecommercelivroback.business.customer.gender.GenderConverter;
 import br.com.fatecmogidascruzes.ecommercelivroback.business.customer.phoneType.PhoneType;
 import br.com.fatecmogidascruzes.ecommercelivroback.business.customer.phoneType.PhoneTypeConverter;
+import br.com.fatecmogidascruzes.ecommercelivroback.business.paymentMethod.PaymentMethod;
 
 @Setter
 @Getter
@@ -93,6 +94,10 @@ public class Customer {
   @OneToMany(mappedBy = "customer")
   private List<Address> addresses;
 
+  @Cascade(CascadeType.REMOVE)
+  @OneToMany(mappedBy = "customer")
+  private List<PaymentMethod> paymentMethods;
+
   public String getFullName() {
     return name + " " + lastname;
   }
@@ -114,6 +119,14 @@ public class Customer {
 
     if(!hasDeliveryAddress || !hasBillingAddress) {
       throw new IllegalArgumentException("addresses: É necessário ter pelo menos um endereço de entrega e de cobrança");
+    }
+  }
+
+  public void verifyPaymentMethods() throws MethodArgumentNotValidException {
+    boolean hasValidPaymentMethod = paymentMethods != null && paymentMethods.stream()
+        .anyMatch(paymentMethod -> paymentMethod.getCardExpiration().after(new Timestamp(System.currentTimeMillis())));
+    if(!hasValidPaymentMethod) {
+      throw new IllegalArgumentException("paymentMethods: É necessário ter pelo menos um método de pagamento válido");
     }
   }
 }

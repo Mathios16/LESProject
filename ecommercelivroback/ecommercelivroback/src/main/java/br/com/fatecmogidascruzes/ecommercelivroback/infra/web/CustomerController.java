@@ -20,11 +20,14 @@ import java.util.stream.Collectors;
 
 import jakarta.validation.Valid;
 import br.com.fatecmogidascruzes.ecommercelivroback.business.address.Address;
-import br.com.fatecmogidascruzes.ecommercelivroback.business.address.addressType.AddressType;
 import br.com.fatecmogidascruzes.ecommercelivroback.business.customer.Customer;
+import br.com.fatecmogidascruzes.ecommercelivroback.business.paymentMethod.PaymentMethod;
 import br.com.fatecmogidascruzes.ecommercelivroback.infra.DTO.dataCustomer;
 import br.com.fatecmogidascruzes.ecommercelivroback.infra.persistence.AddressRepository;
 import br.com.fatecmogidascruzes.ecommercelivroback.infra.persistence.CustomerRepository;
+import br.com.fatecmogidascruzes.ecommercelivroback.infra.persistence.PaymentMethodRepository;
+
+import org.springframework.transaction.annotation.Transactional;
 
 @RestController
 @RequestMapping("/customers")
@@ -36,24 +39,31 @@ public class CustomerController {
     @Autowired
     private AddressRepository addressRepository;
 
+    @Autowired
+    private PaymentMethodRepository paymentMethodRepository;
+
     @PostMapping
-    public ResponseEntity<?> createCustomer(@Valid @RequestBody dataCustomer data) throws MethodArgumentNotValidException {
-        try {
-            Customer customer = data.customer();
-            List<Address> addresses = data.addresses();
+    @Transactional(rollbackFor = Exception.class)
+    public ResponseEntity<?> createCustomer(@Valid @RequestBody dataCustomer data) throws Exception {
+        Customer customer = data.customer();
+        List<Address> addresses = data.addresses();
+        List<PaymentMethod> paymentMethods = data.paymentMethods();
 
-            customer.setAddresses(addresses);
-            customer.verifyAddresses();
+        customer.setAddresses(addresses);
+        customer.setPaymentMethods(paymentMethods);
+        
+        customer.verifyAddresses();
+        customer.verifyPaymentMethods();
 
-            Customer savedCustomer = customerRepository.save(customer);
-                        
-            addresses.forEach(address -> address.setCustomer(savedCustomer.getId()));
-            addressRepository.saveAll(addresses);
+        Customer savedCustomer = customerRepository.save(customer);
+                    
+        addresses.forEach(address -> address.setCustomer(savedCustomer.getId()));
+        addressRepository.saveAll(addresses);
 
-            return ResponseEntity.status(HttpStatus.CREATED).body(savedCustomer);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
+        paymentMethods.forEach(paymentMethod -> paymentMethod.setCustomer(savedCustomer.getId()));
+        paymentMethodRepository.saveAll(paymentMethods);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedCustomer);
     }
 
     @GetMapping
@@ -93,7 +103,8 @@ public class CustomerController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateCustomer(@PathVariable int id,@Valid @RequestBody dataCustomer data) throws MethodArgumentNotValidException {
+    @Transactional(rollbackFor = Exception.class)
+    public ResponseEntity<?> updateCustomer(@PathVariable int id,@Valid @RequestBody dataCustomer data) throws Exception {
         Optional<Customer> existingCustomer = customerRepository.findById(id);
         if (existingCustomer.isEmpty()) {
             return ResponseEntity.notFound().build();

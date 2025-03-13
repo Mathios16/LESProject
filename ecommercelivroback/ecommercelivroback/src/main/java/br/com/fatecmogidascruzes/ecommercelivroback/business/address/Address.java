@@ -7,15 +7,12 @@ import br.com.fatecmogidascruzes.ecommercelivroback.business.address.addressType
 import br.com.fatecmogidascruzes.ecommercelivroback.business.address.addressType.AddressTypeConverter;
 import br.com.fatecmogidascruzes.ecommercelivroback.business.address.streetType.StreetType;
 import br.com.fatecmogidascruzes.ecommercelivroback.business.address.streetType.StreetTypeConverter;
-import br.com.fatecmogidascruzes.ecommercelivroback.business.customer.Customer;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
