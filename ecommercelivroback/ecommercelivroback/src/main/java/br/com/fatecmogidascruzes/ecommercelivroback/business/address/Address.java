@@ -1,5 +1,8 @@
 package br.com.fatecmogidascruzes.ecommercelivroback.business.address;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import br.com.fatecmogidascruzes.ecommercelivroback.business.address.addressType.AddressType;
 import br.com.fatecmogidascruzes.ecommercelivroback.business.address.addressType.AddressTypeConverter;
 import br.com.fatecmogidascruzes.ecommercelivroback.business.address.streetType.StreetType;
@@ -14,6 +17,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 
 import lombok.AllArgsConstructor;
@@ -36,12 +40,12 @@ public class Address {
     @Column(name = "add_title")
     private String title;
 
-    @NotBlank(message = "addressType: Tipo de endereço não pode ser vazio")
+    @NotNull(message = "addressType: Tipo de endereço não pode ser vazio")
     @Convert(converter = AddressTypeConverter.class)
     @Column(name = "add_addresstype", nullable = false)
-    private AddressType addressType;
+    private List<AddressType> addressType;
 
-    @NotBlank(message = "streetType: Tipo de rua não pode ser vazio")
+    @NotNull(message = "streetType: Tipo de rua não pode ser vazio")
     @Convert(converter = StreetTypeConverter.class)
     @Column(name = "add_streettype", nullable = false)
     private StreetType streetType;
@@ -78,11 +82,18 @@ public class Address {
     @Column(name = "add_zip", nullable = false)
     private String zip;
 
-    @ManyToOne
-    @JoinColumn(name = "cst_id")
-    private Customer customer;
+    @Column(name = "add_cst_id")
+    private int customer;
 
     public String getAddress() {
         return streetType + " " + street + ", " + number + ", " + complement + "\n" + zip + " - " + neighborhood + ", " + city + ", " + state + ", " + country;
+    }
+
+    public void setAddressType(List<Integer> addressType) {
+        this.addressType = addressType.stream().map(id -> AddressType.fromId(id)).collect(Collectors.toList());
+    }
+
+    public void setStreetType(int streetType) {
+        this.streetType = StreetType.fromId(streetType);
     }
 }

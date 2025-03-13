@@ -3,6 +3,8 @@ package br.com.fatecmogidascruzes.ecommercelivroback.business.customer;
 import java.sql.Timestamp;
 import java.util.List;
 
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CascadeType;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import jakarta.persistence.Entity;
@@ -14,6 +16,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 
 import lombok.AllArgsConstructor;
@@ -52,7 +55,7 @@ public class Customer {
   @Column(name = "cst_document", nullable = false, unique = true)
   private String document;
 
-  @NotBlank(message = "birthdate: Data de nascimento não pode ser vazia")
+  @NotNull(message = "birthdate: Data de nascimento não pode ser vazia")
   @Column(name = "cst_birthdate", nullable = false)
   private Timestamp birthdate;
 
@@ -76,16 +79,17 @@ public class Customer {
   @Column(name = "cst_phonenumber", nullable = false)
   private String phone;
 
-  @NotBlank(message = "gender: Genero não pode ser vazio")
+  @NotNull(message = "gender: Genero não pode ser vazio")
   @Convert(converter = GenderConverter.class)
   @Column(name = "cst_gnd_id", nullable = false)
   private Gender gender;
 
-  @NotBlank(message = "phoneType: Tipo de telefone não pode ser vazio")
+  @NotNull(message = "phoneType: Tipo de telefone não pode ser vazio")
   @Convert(converter = PhoneTypeConverter.class)
   @Column(name = "cst_ptyp_id", nullable = false)
   private PhoneType phoneType;
 
+  @Cascade(CascadeType.REMOVE)
   @OneToMany(mappedBy = "customer")
   private List<Address> addresses;
 
@@ -93,14 +97,22 @@ public class Customer {
     return name + " " + lastname;
   }
 
+  public void setGender(int gender) {
+    this.gender = Gender.fromId(gender);
+  }
+
+  public void setPhoneType(int phoneType) {
+    this.phoneType = PhoneType.fromId(phoneType);
+  }
+
   public void verifyAddresses() throws MethodArgumentNotValidException {
     boolean hasDeliveryAddress = addresses != null && addresses.stream()
-        .anyMatch(address -> address.getAddressType() == AddressType.ENTREGA);
+        .anyMatch(address -> address.getAddressType().contains(AddressType.ENTREGA));
     
     boolean hasBillingAddress = addresses != null && addresses.stream()
-        .anyMatch(address -> address.getAddressType() == AddressType.COBRANCA);
+        .anyMatch(address -> address.getAddressType().contains(AddressType.COBRANCA));
 
-    if(!hasDeliveryAddress && !hasBillingAddress) {
+    if(!hasDeliveryAddress || !hasBillingAddress) {
       throw new IllegalArgumentException("addresses: É necessário ter pelo menos um endereço de entrega e de cobrança");
     }
   }

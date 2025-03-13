@@ -1,23 +1,32 @@
 package br.com.fatecmogidascruzes.ecommercelivroback.business.address.addressType;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Converter(autoApply = true)
-public class AddressTypeConverter implements AttributeConverter<AddressType, Integer> {
+public class AddressTypeConverter implements AttributeConverter<List<AddressType>, String> {
     
     @Override
-    public Integer convertToDatabaseColumn(AddressType addressType) {
-        if (addressType == null) {
+    public String convertToDatabaseColumn(List<AddressType> addressTypes) {
+        if (addressTypes == null || addressTypes.isEmpty()) {
             return null;
         }
-        return addressType.getId();
+        return addressTypes.stream()
+            .map(addressType -> String.valueOf(addressType.getId()))
+            .collect(Collectors.joining(","));
     }
 
     @Override
-    public AddressType convertToEntityAttribute(Integer id) {
-        if (id == null) {
-            return null;
+    public List<AddressType> convertToEntityAttribute(String ids) {
+        if (ids == null || ids.isEmpty()) {
+            return new ArrayList<>();
         }
-        return AddressType.fromId(id);
+        return Arrays.stream(ids.split(","))
+            .map(Integer::parseInt)
+            .map(AddressType::fromId)
+            .collect(Collectors.toList());
     }
 }

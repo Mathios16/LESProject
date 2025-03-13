@@ -1,7 +1,9 @@
 package br.com.fatecmogidascruzes.ecommercelivroback.infra.web;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,8 +19,11 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import jakarta.validation.Valid;
-
+import br.com.fatecmogidascruzes.ecommercelivroback.business.address.Address;
+import br.com.fatecmogidascruzes.ecommercelivroback.business.address.addressType.AddressType;
 import br.com.fatecmogidascruzes.ecommercelivroback.business.customer.Customer;
+import br.com.fatecmogidascruzes.ecommercelivroback.infra.DTO.dataCustomer;
+import br.com.fatecmogidascruzes.ecommercelivroback.infra.persistence.AddressRepository;
 import br.com.fatecmogidascruzes.ecommercelivroback.infra.persistence.CustomerRepository;
 
 @RestController
@@ -28,10 +33,27 @@ public class CustomerController {
     @Autowired
     private CustomerRepository customerRepository;
 
+    @Autowired
+    private AddressRepository addressRepository;
+
     @PostMapping
-    public ResponseEntity<?> createCustomer(@Valid @RequestBody Customer customer) {
-        customerRepository.save(customer);
-        return ResponseEntity.ok("Cliente criado com sucesso!");
+    public ResponseEntity<?> createCustomer(@Valid @RequestBody dataCustomer data) throws MethodArgumentNotValidException {
+        try {
+            Customer customer = data.customer();
+            List<Address> addresses = data.addresses();
+
+            customer.setAddresses(addresses);
+            customer.verifyAddresses();
+
+            Customer savedCustomer = customerRepository.save(customer);
+                        
+            addresses.forEach(address -> address.setCustomer(savedCustomer.getId()));
+            addressRepository.saveAll(addresses);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedCustomer);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
 
     @GetMapping
@@ -66,17 +88,28 @@ public class CustomerController {
     @GetMapping("/{id}")
     public ResponseEntity<Customer> getCustomerById(@PathVariable int id) {
         Optional<Customer> customer = customerRepository.findById(id);
-        return ResponseEntity.of(customer);
+
+        return ResponseEntity.ok(customer.get());
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateCustomer(@PathVariable int id,@Valid @RequestBody Customer customer) {
+    public ResponseEntity<?> updateCustomer(@PathVariable int id,@Valid @RequestBody dataCustomer data) throws MethodArgumentNotValidException {
         Optional<Customer> existingCustomer = customerRepository.findById(id);
         if (existingCustomer.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
+
+        Customer customer = data.customer();
+        List<Address> addresses = data.addresses();
+        
+        customer.setAddresses(addresses);
+        customer.verifyAddresses();
         customer.setId(id);
         Customer updatedCustomer = customerRepository.save(customer);
+        
+        addresses.forEach(address -> address.setCustomer(updatedCustomer.getId()));
+        addressRepository.saveAll(addresses);
+        
         return ResponseEntity.ok(updatedCustomer);
     }
 
