@@ -1,0 +1,59 @@
+// Cores
+@primary-color: #6C63FF;
+@secondary-color: #2F2E41;
+@background-color: #F5F5F5;
+@text-color: #333333;
+@error-color: #FF6B6B;
+@success-color: #4CAF50;
+@border-color: #E0E0E0;
+
+// Tipografia
+@font-family: 'Inter', sans-serif;
+@font-size-base: 16px;
+@font-size-lg: 18px;
+@font-size-sm: 14px;
+@font-size-xs: 12px;
+
+// Espaçamento
+@spacing-xs: 4px;
+@spacing-sm: 8px;
+@spacing-md: 16px;
+@spacing-lg: 24px;.flex-center() {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between() {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-shadow() {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.transition() {
+  transition: all 0.3s ease;
+}
+
+.button-base() {
+  padding: @spacing-sm @spacing-lg;
+  border-radius: @border-radius-md;
+  font-weight: 500;
+  cursor: pointer;
+  .transition();
+}
+@spacing-xl: 32px;
+
+// Bordas
+@border-radius-sm: 4px;
+@border-radius-md: 8px;
+@border-radius-lg: 12px;
+
+// Breakpoints
+@screen-sm: 576px;
+@screen-md: 768px;
+@screen-lg: 992px;
+@screen-xl: 1200px;

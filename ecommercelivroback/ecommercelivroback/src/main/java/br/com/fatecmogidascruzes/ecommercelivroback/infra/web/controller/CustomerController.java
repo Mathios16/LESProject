@@ -1,9 +1,8 @@
-package br.com.fatecmogidascruzes.ecommercelivroback.infra.web;
+package br.com.fatecmogidascruzes.ecommercelivroback.infra.web.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,6 +12,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.List;
 import java.util.Optional;
@@ -51,12 +52,12 @@ public class CustomerController {
 
         customer.setAddresses(addresses);
         customer.setPaymentMethods(paymentMethods);
-        
+
         customer.verifyAddresses();
         customer.verifyPaymentMethods();
 
         Customer savedCustomer = customerRepository.save(customer);
-                    
+
         addresses.forEach(address -> address.setCustomer(savedCustomer.getId()));
         addressRepository.saveAll(addresses);
 
@@ -71,27 +72,27 @@ public class CustomerController {
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String email,
             @RequestParam(required = false) String document) {
-        
+
         List<Customer> customers = customerRepository.findAll();
-        
+
         if (name != null && !name.isEmpty()) {
             customers = customers.stream()
-                .filter(customer -> customer.getName().toLowerCase().contains(name.toLowerCase()))
-                .collect(Collectors.toList());
-        }
-        
-        if (email != null && !email.isEmpty()) {
-            customers = customers.stream()
-                .filter(customer -> customer.getEmail().toLowerCase().contains(email.toLowerCase()))
-                .collect(Collectors.toList());
+                    .filter(customer -> customer.getName().toLowerCase().contains(name.toLowerCase()))
+                    .collect(Collectors.toList());
         }
 
-        if(document != null && !document.isEmpty()) {
+        if (email != null && !email.isEmpty()) {
             customers = customers.stream()
-                .filter(customer -> customer.getDocument().equals(document))
-                .collect(Collectors.toList());
+                    .filter(customer -> customer.getEmail().toLowerCase().contains(email.toLowerCase()))
+                    .collect(Collectors.toList());
         }
-        
+
+        if (document != null && !document.isEmpty()) {
+            customers = customers.stream()
+                    .filter(customer -> customer.getDocument().equals(document))
+                    .collect(Collectors.toList());
+        }
+
         return ResponseEntity.ok(customers);
     }
 
@@ -104,7 +105,8 @@ public class CustomerController {
 
     @PutMapping("/{id}")
     @Transactional(rollbackFor = Exception.class)
-    public ResponseEntity<?> updateCustomer(@PathVariable int id,@Valid @RequestBody dataCustomer data) throws Exception {
+    public ResponseEntity<?> updateCustomer(@PathVariable int id, @Valid @RequestBody dataCustomer data)
+            throws Exception {
         Optional<Customer> existingCustomer = customerRepository.findById(id);
         if (existingCustomer.isEmpty()) {
             return ResponseEntity.notFound().build();
@@ -112,15 +114,27 @@ public class CustomerController {
 
         Customer customer = data.customer();
         List<Address> addresses = data.addresses();
-        
+        List<PaymentMethod> paymentMethods = data.paymentMethods();
+
         customer.setAddresses(addresses);
+        customer.setPaymentMethods(paymentMethods);
+
+        ObjectMapper mapper = new ObjectMapper();
+        String jsonString = mapper.writeValueAsString(customer);
+        System.out.println(jsonString);
+
         customer.verifyAddresses();
+        customer.verifyPaymentMethods();
+
         customer.setId(id);
         Customer updatedCustomer = customerRepository.save(customer);
-        
+
         addresses.forEach(address -> address.setCustomer(updatedCustomer.getId()));
         addressRepository.saveAll(addresses);
-        
+
+        paymentMethods.forEach(paymentMethod -> paymentMethod.setCustomer(updatedCustomer.getId()));
+        paymentMethodRepository.saveAll(paymentMethods);
+
         return ResponseEntity.ok(updatedCustomer);
     }
 

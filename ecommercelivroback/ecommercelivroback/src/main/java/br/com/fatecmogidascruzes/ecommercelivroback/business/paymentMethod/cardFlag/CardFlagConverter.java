@@ -1,24 +1,22 @@
 package br.com.fatecmogidascruzes.ecommercelivroback.business.paymentMethod.cardFlag;
 
 import jakarta.persistence.AttributeConverter;
-import jakarta.persistence.Converter;
 
-@Converter(autoApply = true)
-public class CardFlagConverter implements AttributeConverter<CardFlag, Integer> {
-    
+public class CardFlagConverter implements AttributeConverter<String, Integer> {
+
     @Override
-    public Integer convertToDatabaseColumn(CardFlag cardFlag) {
+    public Integer convertToDatabaseColumn(String cardFlag) {
         if (cardFlag == null) {
             return null;
         }
-        return cardFlag.getId();
+        return CardFlag.valueOf(cardFlag).getId();
     }
 
     @Override
-    public CardFlag convertToEntityAttribute(Integer id) {
+    public String convertToEntityAttribute(Integer id) {
         if (id == null) {
             return null;
         }
-        return CardFlag.fromId(id);
+        return CardFlag.fromId(id).name();
     }
 }

@@ -2,7 +2,8 @@ package br.com.fatecmogidascruzes.ecommercelivroback.business.address.addressTyp
 
 public enum AddressType {
     ENTREGA(1),
-    COBRANCA(2);
+    COBRANCA(2),
+    RESIDENCIAL(3);
 
     private final int id;
 

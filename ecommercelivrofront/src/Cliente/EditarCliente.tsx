@@ -1,5 +1,5 @@
-import React, { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Plus, X, Trash, Pencil, Eye, EyeSlash } from '@phosphor-icons/react';
 
 interface Address {
@@ -11,13 +11,12 @@ interface Address {
   city: string;
   state: string;
   country: string;
-  zipCode: string;
+  zip: string;
   addressType: string[];
 }
 
 interface PaymentMethod {
   primary: boolean;
-  cardFlag: string;
   cardNumber: string;
   cardName: string;
   cardExpiration: string;
@@ -32,7 +31,7 @@ interface Customer {
   birthdate: string;
   email: string;
   password: string;
-  phoneDdd: string;
+  phoneddd: string;
   phoneType: string;
   phone: string;
   addresses?: Address[];
@@ -41,7 +40,7 @@ interface Customer {
 
 interface ModalProps {
   isOpen: boolean;
-  onClose: () => void;
+  onClose: () => void,
   children: React.ReactNode;
   title: string;
 }
@@ -64,8 +63,12 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children, title }) => {
   );
 };
 
-const CriarCliente: React.FC = () => {
+const EditarCliente: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [error, setError] = useState<string>('');
+  const [success, setSuccess] = useState<string>('');
+
   const [customer, setCustomer] = useState<Customer>({
     name: '',
     lastname: '',
@@ -74,15 +77,14 @@ const CriarCliente: React.FC = () => {
     birthdate: '',
     email: '',
     password: '',
-    phoneDdd: '',
+    phoneddd: '',
     phone: '',
     phoneType: '',
     addresses: [],
     paymentMethods: []
   });
 
-  const [error, setError] = useState<string>('');
-  const [success, setSuccess] = useState<string>('');
+  const previousCustomer = useRef<Customer>(customer);
 
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -90,19 +92,18 @@ const CriarCliente: React.FC = () => {
   const [currentAddress, setCurrentAddress] = useState<Address>({
     streetType: '',
     street: '',
-    number: '', 
+    number: '',
     complement: '',
     neighborhood: '',
     city: '',
     state: '',
     country: '',
-    zipCode: '',
+    zip: '',
     addressType: []
   });
 
   const [currentPaymentMethod, setCurrentPaymentMethod] = useState<PaymentMethod>({
     primary: false,
-    cardFlag: '',
     cardNumber: '',
     cardName: '',
     cardExpiration: '',
@@ -112,6 +113,7 @@ const CriarCliente: React.FC = () => {
   const [editingAddressIndex, setEditingAddressIndex] = useState<number | null>(null);
   const [editingPaymentIndex, setEditingPaymentIndex] = useState<number | null>(null);
 
+  
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordConfirmation, setPasswordConfirmation] = useState('');
@@ -122,6 +124,13 @@ const CriarCliente: React.FC = () => {
 
   const toggleConfirmPasswordVisibility = () => {
     setShowConfirmPassword(!showConfirmPassword);
+  };
+
+  const isPasswordValid = () => {
+    if (customer.password && passwordConfirmation) {
+      return customer.password === passwordConfirmation;
+    }
+    return true;
   };
 
   const fetchAddressByCep = useCallback(async (cep: string) => {
@@ -169,7 +178,7 @@ const CriarCliente: React.FC = () => {
   ) => {
     const value = e.target.value;
     
-    if (field === 'zipCode') {
+    if (field === 'zip') {
       const cleanedCep = value.replace(/\D/g, '');
       
       const formattedCep = cleanedCep.length > 5 
@@ -192,37 +201,14 @@ const CriarCliente: React.FC = () => {
     }
   };
 
-  const handlePaymentInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, 
-    field: keyof PaymentMethod
-  ) => {
-    const value = e.target.value;
-
-    if (field === 'cardExpiration') {
-      const cleanedDate = value.replace(/\D/g, '');
-      const formattedDate = `${cleanedDate.slice(0, 2)}/${cleanedDate.slice(2, 4)}`;
-
-      setCurrentPaymentMethod(prev => ({
-        ...prev,
-        [field]: formattedDate
-      }));
-      return;
-    }
-    setCurrentPaymentMethod(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, 
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
     field: keyof Customer
   ) => {
     const value = e.target.value;
 
-    if (field ===  'document') {
+    if (field === 'document') {
       const cleanedCpf = value.replace(/\D/g, '');
-
       const formattedCpf = `${cleanedCpf.slice(0, 3)}.${cleanedCpf.slice(3, 6)}.${cleanedCpf.slice(6, 9)}-${cleanedCpf.slice(9, 11)}`;
 
       setCustomer(prev => ({
@@ -239,16 +225,16 @@ const CriarCliente: React.FC = () => {
       let phoneDdd = '';
 
       if (cleanedPhone.length === 10) {
-        phoneType = 'FIXO'; 
+        phoneType = 'FIXO';
       } else if (cleanedPhone.length === 11) {
         phoneType = 'CELULAR';
       }
 
-      const formattedPhone = cleanedPhone.length >= 11 
-        ? `${cleanedPhone.slice(2, 7)}-${cleanedPhone.slice(7)}` 
+      const formattedPhone = cleanedPhone.length >= 11
+        ? `${cleanedPhone.slice(2, 7)}-${cleanedPhone.slice(7)}`
         : `${cleanedPhone.slice(2, 6)}-${cleanedPhone.slice(6)}`;
-
-      phoneDdd = cleanedPhone.slice(0, 2);
+        
+      phoneDdd = `(${cleanedPhone.slice(0, 2)})`;
 
       setCustomer(prev => ({
         ...prev,
@@ -275,27 +261,44 @@ const CriarCliente: React.FC = () => {
       return;
     }
 
-    if (field === 'password') {
-      const cleanedPassword = value.replace(/\s/g, '');
-
-      if (!/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*\W)[\w\W]{8,}$/.test(cleanedPassword)) {
-        setError('Senha inválida');
-      } else {
-        setError('');
-      }
-
-      setCustomer(prev => ({
-        ...prev,
-        [field]: cleanedPassword
-      }));
-      return;
-    }
-
     setCustomer(prev => ({
       ...prev,
       [field]: value
     }));
   };
+
+  const formatDateForInput = (dateString: string, dateType: string = '') => {
+    const date = new Date(dateString);
+    
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    
+    return dateType === 'BR' ? `${day}/${month}/${year}` : `${year}-${month}-${day}`;
+  };
+
+  useEffect(() => {
+    const fetchCustomer = async () => {
+      try {
+        const response = await fetch(`http://localhost:8080/customers/${id}`);
+        if (!response.ok) {
+          throw new Error('Cliente não encontrado');
+        }
+        const data = await response.json();
+        
+        setCustomer(data);
+        previousCustomer.current = data;
+        
+      } catch (err) {
+        setError('Erro ao carregar dados do cliente');
+        navigate('/clientes');
+      }
+    };
+
+    if (id) {
+      fetchCustomer();
+    }
+  }, [id, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -344,24 +347,14 @@ const CriarCliente: React.FC = () => {
       return;
     }
 
-    if (customer.password && passwordConfirmation && customer.password !== passwordConfirmation) {
-      setError('As senhas não coincidem');
-      return;
-    }
-
     try {
       let addresses = customer.addresses;
       let paymentMethods = customer.paymentMethods;
       delete customer.addresses;
       delete customer.paymentMethods;
 
-      console.log(JSON.stringify({
-        customer,
-        addresses,
-        paymentMethods
-      }));
-      const response = await fetch('http://localhost:8080/customers', {
-        method: 'POST',
+      const response = await fetch(`http://localhost:8080/customers/${id}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -374,72 +367,28 @@ const CriarCliente: React.FC = () => {
 
       if (!response.ok) {
         const data = await response.json().catch(() => null);
-        throw new Error(data?.message || 'Erro ao criar cliente');
+        throw new Error(data?.message || 'Erro ao atualizar cliente');
       }
 
-      setSuccess('Cliente criado com sucesso!');
+      setSuccess('Cliente atualizado com sucesso!');
       setTimeout(() => navigate('/clientes'), 2000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao criar cliente. Por favor, tente novamente.');
+      setError(err instanceof Error ? err.message : 'Erro ao atualizar cliente. Por favor, tente novamente.');
     }
-  };
-
-  const detectStreetType = (street: string): string => {
-    const streetLower = street.toLowerCase().trim();
-    const streetTypeMappings = [
-      { prefix: 'rua', type: 'RUA' },
-      { prefix: 'avenida', type: 'AVENIDA' },
-      { prefix: 'av.', type: 'AVENIDA' },
-      { prefix: 'condomínio', type: 'CONDOMINIO' },
-      { prefix: 'praça', type: 'PRACA' },
-      { prefix: 'estrada', type: 'ESTRADA' },
-      { prefix: 'rod.', type: 'ESTRADA' },
-      { prefix: 'rodovia', type: 'ESTRADA' }
-    ];
-
-    for (const mapping of streetTypeMappings) {
-      if (streetLower.startsWith(mapping.prefix)) {
-        return mapping.type;
-      }
-    }
-
-    return 'OUTRO';
   };
 
   const handleAddAddress = () => {
-    if (currentAddress.addressType.length === 0) {
-      setError('Selecione pelo menos um tipo de endereço');
-      return;
-    }
-
-    const detectedStreetType = currentAddress.streetType || detectStreetType(currentAddress.street);
-
-    const addressToAdd = {
-      ...currentAddress,
-      streetType: detectedStreetType
-    };
-
     if (!customer.addresses) {
       customer.addresses = [];
     }
-
     if (editingAddressIndex !== null) {
       const newAddresses = [...customer.addresses];
-      newAddresses[editingAddressIndex] = addressToAdd;
+      newAddresses[editingAddressIndex] = currentAddress;
       setCustomer({ ...customer, addresses: newAddresses });
       setEditingAddressIndex(null);
     } else {
-      const hasConflictingTypes = currentAddress.addressType.some(type => 
-        customer.addresses?.some(addr => addr.addressType.includes(type))
-      );
-      
-      if (hasConflictingTypes) {
-        setError('Já existe um endereço com um dos tipos selecionados');
-        return;
-      }
-      setCustomer({ ...customer, addresses: [...customer.addresses, addressToAdd] });
+      setCustomer({ ...customer, addresses: [...customer.addresses, currentAddress] });
     }
-
     setCurrentAddress({
       streetType: '',
       street: '',
@@ -449,54 +398,32 @@ const CriarCliente: React.FC = () => {
       city: '',
       state: '',
       country: '',
-      zipCode: '',
+      zip: '',
       addressType: []
     });
     setIsAddressModalOpen(false);
-    setError('');
   };
 
   const handleAddPaymentMethod = () => {
-    if (!currentPaymentMethod.cardNumber || !currentPaymentMethod.cardName || 
-        !currentPaymentMethod.cardExpiration || !currentPaymentMethod.cvv) {
-      setError('Preencha todos os campos do cartão');
-      return;
-    }
-
     if (!customer.paymentMethods) {
       customer.paymentMethods = [];
     }
-
     if (editingPaymentIndex !== null) {
-      if (currentPaymentMethod.primary && 
-          !customer.paymentMethods[editingPaymentIndex].primary &&
-          customer.paymentMethods.some((p, i) => i !== editingPaymentIndex && p.primary)) {
-        setError('Já existe um cartão principal');
-        return;
-      }
-
       const newPaymentMethods = [...customer.paymentMethods];
       newPaymentMethods[editingPaymentIndex] = currentPaymentMethod;
       setCustomer({ ...customer, paymentMethods: newPaymentMethods });
       setEditingPaymentIndex(null);
     } else {
-      if (currentPaymentMethod.primary && customer.paymentMethods.some(p => p.primary)) {
-        setError('Já existe um cartão principal');
-        return;
-      }
       setCustomer({ ...customer, paymentMethods: [...customer.paymentMethods, currentPaymentMethod] });
     }
-
     setCurrentPaymentMethod({
       primary: false,
-      cardFlag: '',
       cardNumber: '',
       cardName: '',
       cardExpiration: '',
       cvv: ''
     });
     setIsPaymentModalOpen(false);
-    setError('');
   };
 
   const handleEditAddress = (index: number) => {
@@ -518,12 +445,18 @@ const CriarCliente: React.FC = () => {
   };
 
   const handleDeleteAddress = (index: number) => {
-    const newAddresses = customer.addresses?.filter((_, i) => i !== index) || [];
+    if (!customer.addresses) {
+      customer.addresses = [];
+    }
+    const newAddresses = customer.addresses.filter((_, i) => i !== index);
     setCustomer({ ...customer, addresses: newAddresses });
   };
 
   const handleDeletePaymentMethod = (index: number) => {
-    const newPaymentMethods = customer.paymentMethods?.filter((_, i) => i !== index) || [];
+    if (!customer.paymentMethods) {
+      customer.paymentMethods = [];
+    }
+    const newPaymentMethods = customer.paymentMethods.filter((_, i) => i !== index);
     setCustomer({ ...customer, paymentMethods: newPaymentMethods });
   };
 
@@ -538,7 +471,7 @@ const CriarCliente: React.FC = () => {
       city: '',
       state: '',
       country: '',
-      zipCode: '',
+      zip: '',
       addressType: []
     });
     setEditingAddressIndex(null);
@@ -548,7 +481,6 @@ const CriarCliente: React.FC = () => {
     setIsPaymentModalOpen(false);
     setCurrentPaymentMethod({
       primary: false,
-      cardFlag: '',
       cardNumber: '',
       cardName: '',
       cardExpiration: '',
@@ -557,17 +489,11 @@ const CriarCliente: React.FC = () => {
     setEditingPaymentIndex(null);
   };
 
-  const isPasswordValid = () => {
-    if (customer.password && passwordConfirmation) {
-      return customer.password === passwordConfirmation;
-    }
-    return true;
-  };
 
   return (
     <div className="cliente-container">
       <div className="cliente-header">
-        <h1>Cadastro de Cliente</h1>
+        <h1>Editar Cliente</h1>
       </div>
 
       {error && <div className="alert alert-error">{error}</div>}
@@ -578,11 +504,10 @@ const CriarCliente: React.FC = () => {
           <div className="form-group">
             <label className="form-label">Nome</label>
             <input
-              id="name"
               type="text"
               className="form-control"
               value={customer.name}
-              onChange={(e) => setCustomer({ ...customer, name: e.target.value })}
+              onChange={(e) => handleInputChange(e, 'name')}
               required
             />
           </div>
@@ -590,19 +515,33 @@ const CriarCliente: React.FC = () => {
           <div className="form-group">
             <label className="form-label">Sobrenome</label>
             <input
-              id="lastname"
               type="text"
               className="form-control"
               value={customer.lastname}
-              onChange={(e) => setCustomer({ ...customer, lastname: e.target.value })}
+              onChange={(e) => handleInputChange(e, 'lastname')}
               required
             />
           </div>
 
           <div className="form-group">
+            <label className="form-label">Gênero</label>
+            <select
+              className="form-control"
+              value={customer.gender}
+              onChange={(e) => handleInputChange(e, 'gender')}
+              required
+            >
+              <option value="0">Masculino</option>
+              <option value="1">Feminino</option>
+              <option value="2">Outro</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="row-group">
+          <div className="form-group">
             <label className="form-label">CPF</label>
             <input
-              id="document"
               type="text"
               className="form-control"
               value={customer.document}
@@ -610,17 +549,14 @@ const CriarCliente: React.FC = () => {
               required
             />
           </div>
-        </div>
 
-        <div className="row-group">
           <div className="form-group">
             <label className="form-label">Data de Nascimento</label>
             <input
-              id="birthdate"
               type="date"
               className="form-control"
-              value={customer.birthdate}
-              onChange={(e) => setCustomer({ ...customer, birthdate: e.target.value })}
+              value={formatDateForInput(customer.birthdate)}
+              onChange={(e) => handleInputChange(e, 'birthdate')}
               required
             />
           </div>
@@ -628,10 +564,9 @@ const CriarCliente: React.FC = () => {
           <div className="form-group">
             <label className="form-label">Telefone</label>
             <input
-              id="phone"
-              type="text"
+              type="tel"
               className="form-control"
-              value={`(${customer.phoneDdd}) ${customer.phone}`}
+              value={`(${customer.phoneddd}) ${customer.phone}`}
               onChange={(e) => handleInputChange(e, 'phone')}
               required
               maxLength={15}
@@ -639,34 +574,16 @@ const CriarCliente: React.FC = () => {
             {customer.phoneType === 'FIXO' && <small className="form-text text-muted">Telefone Fixo</small>}
             {customer.phoneType === 'CELULAR' && <small className="form-text text-muted">Celular</small>}
           </div>
-
-          <div className="form-group">
-            <label className="form-label">Gênero</label>
-            <select
-              id="gender"
-              className="form-control"
-              value={customer.gender}
-              onChange={(e) => setCustomer({ ...customer, gender: e.target.value })}
-              required
-            >
-              <option value="">Selecione</option>
-              <option value="MASCULINO">Masculino</option>
-              <option value="FEMININO">Feminino</option>
-              <option value="OUTRO">Outro</option>
-            </select>
-          </div>
         </div>
 
         <div className="row-group">
           <div className="form-group">
             <label className="form-label">Email</label>
             <input
-              id="email"
               type="email"
               className="form-control"
               value={customer.email}
-              onChange={(e) => setCustomer({ ...customer, email: e.target.value })}
-              onBlur={(e) => handleInputChange(e, 'email')}
+              onChange={(e) => handleInputChange(e, 'email')}
               required
             />
           </div>
@@ -675,7 +592,6 @@ const CriarCliente: React.FC = () => {
             <label className="form-label">Senha</label>
             <div className="password-input-container" style={{ position: 'relative' }}>
               <input
-                id="password"
                 type={showPassword ? 'text' : 'password'}
                 className="form-control"
                 value={customer.password}
@@ -701,12 +617,11 @@ const CriarCliente: React.FC = () => {
             </div>
           </div>
 
-          {customer.password && (
+          {customer.password && previousCustomer.current.password !== customer.password && (
             <div className="form-group">
               <label className="form-label">Confirmar Senha</label>
               <div className="password-input-container" style={{ position: 'relative' }}>
                 <input
-                  id="confirmPassword"
                   type={showConfirmPassword ? 'text' : 'password'}
                   className={`form-control ${!isPasswordValid() ? 'is-invalid' : ''}`}
                   value={passwordConfirmation}
@@ -739,7 +654,6 @@ const CriarCliente: React.FC = () => {
         <div className="section-header">
           <h4>Endereços</h4>
           <button
-            id="create-address"
             type="button"
             className="add-button"
             onClick={() => {
@@ -752,8 +666,8 @@ const CriarCliente: React.FC = () => {
           </button>
         </div>
 
-        <div className="items-list addresses">
-          {customer.addresses?.map((address, index) => (
+        <div className="items-list">
+          {customer.addresses && customer.addresses.map((address, index) => (
             <div key={index} className="list-item">
               <div className="item-info">
                 <div className="item-type">
@@ -761,15 +675,14 @@ const CriarCliente: React.FC = () => {
                   {address.addressType.includes('ENTREGA') && <span className="type-tag shipping">Entrega</span>}
                   {address.addressType.includes('RESIDENCIAL') && <span className="type-tag residence">Residencial</span>}
                 </div>
-                <p>{address.street}, {address.number}</p>
+                <p>{address.streetType} {address.street}, {address.number}</p>
                 {address.complement && <p>Complemento: {address.complement}</p>}
                 <p>{address.neighborhood}</p>
                 <p>{address.city} - {address.state}</p>
-                <p>CEP: {address.zipCode}</p>
+                <p>CEP: {address.zip}</p>
               </div>
               <div className="item-actions">
                 <button 
-                  id="edit-address"
                   type="button" 
                   className="edit-button"
                   onClick={() => handleEditAddress(index)}
@@ -777,7 +690,6 @@ const CriarCliente: React.FC = () => {
                   <Pencil size={16} />
                 </button>
                 <button 
-                  id="delete-address"
                   type="button" 
                   className="delete-button"
                   onClick={() => handleDeleteAddress(index)}
@@ -792,7 +704,6 @@ const CriarCliente: React.FC = () => {
         <div className="section-header">
           <h4>Métodos de Pagamento</h4>
           <button
-            id="create-payment"
             type="button"
             className="add-button"
             onClick={() => {
@@ -805,8 +716,8 @@ const CriarCliente: React.FC = () => {
           </button>
         </div>
 
-        <div className="items-list paymentMethods">
-          {customer.paymentMethods?.map((payment, index) => (
+        <div className="items-list">
+          {customer.paymentMethods && customer.paymentMethods.map((payment, index) => (
             <div key={index} className="list-item">
               <div className="item-info">
                 <div className="item-type">
@@ -814,11 +725,10 @@ const CriarCliente: React.FC = () => {
                 </div>
                 <strong>{payment.cardName}</strong>
                 <p>**** **** **** {payment.cardNumber?.slice(-4)}</p>
-                <p>Validade: {payment.cardExpiration}</p>
+                <p>Validade: {formatDateForInput(payment.cardExpiration, 'BR')}</p>
               </div>
               <div className="item-actions">
                 <button 
-                  id="edit-payment"
                   type="button" 
                   className="edit-button"
                   onClick={() => handleEditPaymentMethod(index)}
@@ -826,7 +736,6 @@ const CriarCliente: React.FC = () => {
                   <Pencil size={16} />
                 </button>
                 <button 
-                  id="delete-payment"
                   type="button" 
                   className="delete-button"
                   onClick={() => handleDeletePaymentMethod(index)}
@@ -839,16 +748,11 @@ const CriarCliente: React.FC = () => {
         </div>
 
         <div className="cliente-actions">
-          <button
-            id="cancel"
-            type="button" 
-            className="secondary"
-            onClick={() => navigate('/clientes')}
-          >
+          <button type="button" className="secondary" onClick={() => navigate('/clientes')}>
             Cancelar
           </button>
           <button type="submit" className="primary">
-            Cadastrar
+            Salvar Alterações
           </button>
         </div>
       </form>
@@ -858,205 +762,166 @@ const CriarCliente: React.FC = () => {
         onClose={handleCloseAddressModal}
         title={editingAddressIndex !== null ? "Editar Endereço" : "Adicionar Endereço"}
       >
-        <div className="row-group">
-          <div className="form-group">
-            <label className="form-label">CEP</label>
-            <input
-              id="zip"
-              type="text"
-              className="form-control"
-              value={currentAddress.zipCode}
-              onChange={(e) => handleAddressInputChange(e, 'zipCode')}
-              required
-            />
-          </div>
+        <div className="form-group">
+          <label className="form-label">Tipo de Rua</label>
+          <input
+            type="text"
+            className="form-control"
+            value={currentAddress.streetType}
+            onChange={(e) => setCurrentAddress({ ...currentAddress, streetType: e.target.value })}
+            required
+          />
         </div>
 
-        <div className="row-group">
-          <div className="form-group">
-            <label className="form-label">Logradouro</label>
-            <input
-              id="street"
-              type="text"
-              className="form-control"
-              value={currentAddress.street}
-              onChange={(e) => handleAddressInputChange(e, 'street')}
-              required
-            />
-          </div>
+        <div className="form-group">
+          <label className="form-label">Rua</label>
+          <input
+            type="text"
+            className="form-control"
+            value={currentAddress.street}
+            onChange={(e) => setCurrentAddress({ ...currentAddress, street: e.target.value })}
+            required
+          />
         </div>
 
-        <div className="row-group">
-          <div className="form-group">
-            <label className="form-label">Número</label>
-            <input
-              id="number"
-              type="text"
-              className="form-control"
-              value={currentAddress.number}
-              onChange={(e) => handleAddressInputChange(e, 'number')}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Complemento</label>
-            <input
-              id="complement"
-              type="text"
-              className="form-control"
-              value={currentAddress.complement}
-              onChange={(e) => handleAddressInputChange(e, 'complement')}
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Bairro</label>
-            <input
-              id="neighborhood"
-              type="text"
-              className="form-control"
-              value={currentAddress.neighborhood}
-              onChange={(e) => handleAddressInputChange(e, 'neighborhood')}
-              required
-            />
-          </div>
+        <div className="form-group">
+          <label className="form-label">Número</label>
+          <input
+            type="text"
+            className="form-control"
+            value={currentAddress.number}
+            onChange={(e) => setCurrentAddress({ ...currentAddress, number: e.target.value })}
+            required
+          />
         </div>
 
-        <div className="row-group">
-          <div className="form-group">
-            <label className="form-label">Cidade</label>
-            <input
-              id="city"
-              type="text"
-              className="form-control"
-              value={currentAddress.city}
-              onChange={(e) => handleAddressInputChange(e, 'city')}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Estado</label>
-            <input
-              id="state"
-              type="text"
-              className="form-control"
-              value={currentAddress.state}
-              onChange={(e) => handleAddressInputChange(e, 'state')}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">País</label>
-            <input
-              id="country"
-              type="text"
-              className="form-control"
-              value={currentAddress.country}
-              onChange={(e) => handleAddressInputChange(e, 'country')}
-              required
-            />
-          </div>
+        <div className="form-group">
+          <label className="form-label">Complemento</label>
+          <input
+            type="text"
+            className="form-control"
+            value={currentAddress.complement}
+            onChange={(e) => setCurrentAddress({ ...currentAddress, complement: e.target.value })}
+          />
         </div>
 
-        <div className="row-group">
-          <div className="form-group">
-            <label className="form-label">Tipo do Endereço</label>
-            <div className="type-group">
-              <div className="type-option">
-                <label className="switch">
-                  <input
-                    type="checkbox"
-                    checked={currentAddress.addressType.includes('COBRANCA')}
-                    onChange={(e) => {
-                      const newTypes = e.target.checked 
-                        ? [...currentAddress.addressType, 'COBRANCA']
-                        : currentAddress.addressType.filter(t => t !== 'COBRANCA');
-                      setCurrentAddress({ ...currentAddress, addressType: newTypes });
-                      setError('');
-                    }}
-                  />
-                  <span id="billing" className="slider"></span>
-                </label>
-                <span>Cobrança</span>
-              </div>
-              <div className="type-option">
-                <label className="switch">
-                  <input 
-                    type="checkbox"
-                    checked={currentAddress.addressType.includes('ENTREGA')}
-                    onChange={(e) => {
-                      const newTypes = e.target.checked 
-                        ? [...currentAddress.addressType, 'ENTREGA']
-                        : currentAddress.addressType.filter(t => t !== 'ENTREGA');
-                      setCurrentAddress({ ...currentAddress, addressType: newTypes });
-                      setError('');
-                    }}
-                  />
-                  <span id="delivery" className="slider"></span>
-                </label>
-                <span>Entrega</span>
-              </div>
-              <div className="type-option">
-                <label className="switch">
-                  <input 
-                    type="checkbox"
-                    checked={currentAddress.addressType.includes('RESIDENCIAL')}
-                    onChange={(e) => {
-                      const newTypes = e.target.checked 
-                        ? [...currentAddress.addressType, 'RESIDENCIAL']
-                        : currentAddress.addressType.filter(t => t !== 'RESIDENCIAL');
-                      setCurrentAddress({ ...currentAddress, addressType: newTypes });
-                      setError('');
-                    }}
-                  />
-                  <span id="residence" className="slider"></span>
-                </label>
-                <span>Residencial</span>
-              </div>
+        <div className="form-group">
+          <label className="form-label">Bairro</label>
+          <input
+            type="text"
+            className="form-control"
+            value={currentAddress.neighborhood}
+            onChange={(e) => setCurrentAddress({ ...currentAddress, neighborhood: e.target.value })}
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">Cidade</label>
+          <input
+            type="text"
+            className="form-control"
+            value={currentAddress.city}
+            onChange={(e) => setCurrentAddress({ ...currentAddress, city: e.target.value })}
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">Estado</label>
+          <input
+            type="text"
+            className="form-control"
+            value={currentAddress.state}
+            onChange={(e) => setCurrentAddress({ ...currentAddress, state: e.target.value })}
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">País</label>
+          <input
+            type="text"
+            className="form-control"
+            value={currentAddress.country}
+            onChange={(e) => setCurrentAddress({ ...currentAddress, country: e.target.value })}
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">CEP</label>
+          <input
+            type="text"
+            className="form-control"
+            value={currentAddress.zip}
+            onChange={(e) => handleAddressInputChange(e, 'zip')}
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">Tipo de Endereço</label>
+          <div className="type-group">
+            <div className="type-option">
+              <label className="switch">
+                <input 
+                  type="checkbox"
+                  checked={currentAddress.addressType.includes('COBRANCA')}
+                  onChange={(e) => {
+                    const newTypes = e.target.checked 
+                      ? [...currentAddress.addressType, 'COBRANCA']
+                      : currentAddress.addressType.filter(t => t !== 'COBRANCA');
+                    setCurrentAddress({ ...currentAddress, addressType: newTypes });
+                    setError('');
+                  }}
+                />
+                <span className="slider"></span>
+              </label>
+              <span>Cobrança</span>
+            </div>
+            <div className="type-option">
+              <label className="switch">
+                <input 
+                  type="checkbox"
+                  checked={currentAddress.addressType.includes('ENTREGA')}
+                  onChange={(e) => {
+                    const newTypes = e.target.checked 
+                      ? [...currentAddress.addressType, 'ENTREGA']
+                      : currentAddress.addressType.filter(t => t !== 'ENTREGA');
+                    setCurrentAddress({ ...currentAddress, addressType: newTypes });
+                    setError('');
+                  }}
+                />
+                <span className="slider"></span>
+              </label>
+              <span>Entrega</span>
+            </div>
+            <div className="type-option">
+              <label className="switch">
+                <input 
+                  type="checkbox"
+                  checked={currentAddress.addressType.includes('RESIDENCIAL')}
+                  onChange={(e) => {
+                    const newTypes = e.target.checked 
+                      ? [...currentAddress.addressType, 'RESIDENCIAL']
+                      : currentAddress.addressType.filter(t => t !== 'RESIDENCIAL');
+                    setCurrentAddress({ ...currentAddress, addressType: newTypes });
+                    setError('');
+                  }}
+                />
+                <span className="slider"></span>
+              </label>
+              <span>Residencial</span>
             </div>
           </div>
         </div>
 
-        {currentAddress.addressType.length === 0 && (
-          <div className="alert alert-error">
-            Selecione pelo menos um tipo de endereço
-          </div>
-        )}
-
         <div className="modal-actions">
-          <button 
-            id="cancel-address"
-            type="button" 
-            className="secondary" 
-            onClick={() => {
-              setIsAddressModalOpen(false);
-              setError('');
-              setCurrentAddress({
-                streetType: '',
-                street: '',
-                number: '',
-                complement: '',
-                neighborhood: '',
-                city: '',
-                state: '',
-                country: '',
-                zipCode: '',
-                addressType: []
-              });
-            }}
-          >
+          <button type="button" className="secondary" onClick={() => setIsAddressModalOpen(false)}>
             Cancelar
           </button>
-          <button 
-            id="add-address"
-            type="button" 
-            className="primary" 
-            onClick={handleAddAddress}
-            disabled={currentAddress.addressType.length === 0}
-          >
+          <button type="button" className="primary" onClick={handleAddAddress}>
             {editingAddressIndex !== null ? "Salvar" : "Adicionar"}
           </button>
         </div>
@@ -1067,129 +932,86 @@ const CriarCliente: React.FC = () => {
         onClose={handleClosePaymentModal}
         title={editingPaymentIndex !== null ? "Editar Método de Pagamento" : "Adicionar Método de Pagamento"}
       >
-        <div className="row-group">
-          <div className="form-group">
-            <label className="form-label">Número do Cartão</label>
-            <input
-              id="cardNumber"
-              type="text"
-              className="form-control"
-              value={currentPaymentMethod.cardNumber}
-              onChange={(e) => setCurrentPaymentMethod({ ...currentPaymentMethod, cardNumber: e.target.value })}
-              required
-            />
-          </div>
+        <div className="form-group">
+          <label className="form-label">Número do Cartão</label>
+          <input
+            type="text"
+            className="form-control"
+            value={currentPaymentMethod.cardNumber}
+            onChange={(e) => setCurrentPaymentMethod({ ...currentPaymentMethod, cardNumber: e.target.value })}
+            required
+          />
+        </div>
 
-          <div className="form-group">
-            <label className="form-label">Bandeira do Cartão</label>
-            <select
-              id="cardFlag"
-              className="form-control"
-              value={currentPaymentMethod.cardFlag}
-              onChange={(e) => setCurrentPaymentMethod({ ...currentPaymentMethod, cardFlag: e.target.value })}
-              required
-            >
-              <option value="">Selecione</option>
-              <option value="VISA">VISA</option>
-              <option value="MASTERCARD">MASTERCARD</option>
-              <option value="AMERICANEXPRESS">AMERICANEXPRESS</option>
-            </select>
+        <div className="form-group">
+          <label className="form-label">Nome no Cartão</label>
+          <input
+            type="text"
+            className="form-control"
+            value={currentPaymentMethod.cardName}
+            onChange={(e) => setCurrentPaymentMethod({ ...currentPaymentMethod, cardName: e.target.value })}
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">Data de Expiração</label>
+          <input
+            type="date"
+            className="form-control"
+            value={formatDateForInput(currentPaymentMethod.cardExpiration)}
+            onChange={(e) => setCurrentPaymentMethod({ ...currentPaymentMethod, cardExpiration: e.target.value })}
+            placeholder="MM/AA"
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">CVV</label>
+          <input
+            type="text"
+            className="form-control"
+            value={currentPaymentMethod.cvv}
+            onChange={(e) => setCurrentPaymentMethod({ ...currentPaymentMethod, cvv: e.target.value })}
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">Cartão Principal</label>
+          <div className="type-group">
+            <div className="type-option">
+              <label className="switch">
+                <input 
+                  type="checkbox"
+                  checked={currentPaymentMethod.primary}
+                  onChange={(e) => {
+                    if (e.target.checked && customer.paymentMethods && customer.paymentMethods.some(p => p.primary)) {
+                      setError('Já existe um cartão principal');
+                      return;
+                    }
+                    setCurrentPaymentMethod({ ...currentPaymentMethod, primary: e.target.checked });
+                    setError('');
+                  }}
+                />
+                <span className="slider"></span>
+              </label>
+              <span>Definir como Principal</span>
+            </div>
           </div>
         </div>
 
-        <div className="row-group">
-          <div className="form-group">
-            <label className="form-label">Nome no Cartão</label>
-            <input
-              id="cardName"
-              type="text"
-              className="form-control"
-              value={currentPaymentMethod.cardName}
-              onChange={(e) => setCurrentPaymentMethod({ ...currentPaymentMethod, cardName: e.target.value })}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Data de Expiração</label>
-            <input
-              id="cardExpiration"
-              type="text"
-              className="form-control"
-              value={currentPaymentMethod.cardExpiration}
-              onChange={(e) => handlePaymentInputChange(e, 'cardExpiration')}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">CVV</label>
-            <input
-              id="cvv"
-              type="text"
-              className="form-control"
-              value={currentPaymentMethod.cvv}
-              onChange={(e) => setCurrentPaymentMethod({ ...currentPaymentMethod, cvv: e.target.value })}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Cartão Principal</label>
-            <div className="type-group">
-              <div className="type-option">
-                <label className="switch">
-                  <input 
-                    type="checkbox"
-                    checked={currentPaymentMethod.primary}
-                    onChange={(e) => {
-                      if (e.target.checked && customer.paymentMethods?.some(p => p.primary)) {
-                        setError('Já existe um cartão principal');
-                        return;
-                      }
-                      setCurrentPaymentMethod({ ...currentPaymentMethod, primary: e.target.checked });
-                      setError('');
-                    }}
-                  />
-                  <span id="primary" className="slider"></span>
-                </label>
-                <span>Definir como Principal</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="modal-actions">
-            <button 
-              id="cancel-payment"
-              type="button" 
-              className="secondary" 
-              onClick={() => {
-                setIsPaymentModalOpen(false);
-                setError('');
-                setCurrentPaymentMethod({
-                  primary: false,
-                  cardFlag: '',
-                  cardNumber: '',
-                  cardName: '',
-                  cardExpiration: '',
-                  cvv: ''
-                });
-              }}
-            >
-              Cancelar
-            </button>
-            <button 
-              id="add-payment"
-              type="button" 
-              className="primary" 
-              onClick={handleAddPaymentMethod}
-            >
-              {editingPaymentIndex !== null ? "Salvar" : "Adicionar"}
-            </button>
-          </div>
+        <div className="modal-actions">
+          <button type="button" className="secondary" onClick={() => setIsPaymentModalOpen(false)}>
+            Cancelar
+          </button>
+          <button type="button" className="primary" onClick={handleAddPaymentMethod}>
+            {editingPaymentIndex !== null ? "Salvar" : "Adicionar"}
+          </button>
         </div>
       </Modal>
     </div>
   );
 };
 
-export default CriarCliente;
+export default EditarCliente;

@@ -1,0 +1,65 @@
+@import '../variables.less';
+@import '../mixins.less';
+
+.table-container {
+  background-color: white;
+  border-radius: @border-radius-lg;
+  .card-shadow();
+  overflow: hidden;
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th, td {
+      padding: @spacing-md;
+      text-align: left;
+      border-bottom: 1px solid @border-color;
+    }
+
+    th {
+      background-color: fade(@primary-color, 5%);
+      color: @secondary-color;
+      font-weight: 500;
+    }
+
+    tr {
+      &:hover {
+        background-color: fade(@primary-color, 2%);
+      }
+
+      td {
+        color: @text-color;
+
+        .actions {
+          .flex-center();
+          gap: @spacing-sm;
+
+          button {
+            .button-base();
+            padding: @spacing-xs @spacing-sm;
+            font-size: @font-size-sm;
+
+            &.edit {
+              background-color: fade(@primary-color, 10%);
+              color: @primary-color;
+
+              &:hover {
+                background-color: fade(@primary-color, 20%);
+              }
+            }
+
+            &.delete {
+              background-color: fade(@error-color, 10%);
+              color: @error-color;
+
+              &:hover {
+                background-color: fade(@error-color, 20%);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

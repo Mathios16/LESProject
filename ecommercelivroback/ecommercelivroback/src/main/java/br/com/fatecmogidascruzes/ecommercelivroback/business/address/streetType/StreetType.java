@@ -5,7 +5,8 @@ public enum StreetType {
     AVENIDA(2),
     CONDOMINIO(3),
     PRACA(4),
-    ESTRADA(5);
+    ESTRADA(5),
+    OUTRO(6);
 
     private final int id;
 

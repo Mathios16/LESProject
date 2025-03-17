@@ -1,30 +1,5 @@
 import { User } from "@phosphor-icons/react";
 import { Link, useMatch, useResolvedPath } from "react-router-dom";
-
-function NavBar() {
-    return (
-        <>
-        <nav>
-            <div className="logo">
-                <h1>Logo</h1>
-            </div>
-            <div className="header-menu">
-                <ul>
-                    <CustomLink to="/" className="click-header-menu">Home</CustomLink>
-                    <CustomLink to="/cliente/criar" className="click-header-menu">Criar Cliente</CustomLink>
-                    <CustomLink to="/cliente/listar" className="click-header-menu">Listar Cliente</CustomLink>
-                </ul>
-            </div>  
-            <div className="user-infos">
-                <div className="avatar">
-                    <User size={32} />
-                </div>
-            </div> 
-        </nav>
-        </>
-      );
-}
-
 import { ReactNode } from 'react';
 
 function CustomLink({to, children, className}: {to: string, children: ReactNode, className?: string}) {
@@ -32,9 +7,35 @@ function CustomLink({to, children, className}: {to: string, children: ReactNode,
     const isActive = useMatch({ path: resolvedPath.pathname, end: true });
 
     return (
-        <li className={isActive ? 'active' : ''}>
-            <Link to={to} className={className}>{children}</Link>
-        </li>
+        <Link 
+            to={to} 
+            className={`${className || ''} ${isActive ? 'active' : ''}`}
+        >
+            {children}
+        </Link>
     )
 }
+
+function NavBar() {
+    return (
+        <nav className="navbar">
+            <div className="navbar-container">
+                <Link to="/" className="navbar-brand">
+                    Livraria Online
+                </Link>
+                
+                <div className="navbar-nav">
+                    <CustomLink to="/">Home</CustomLink>
+                    <CustomLink to="/clientes/criar">Criar Cliente</CustomLink>
+                    <CustomLink to="/clientes">Listar Clientes</CustomLink>
+                </div>
+
+                <div className="navbar-user">
+                    <User size={32} weight="light" />
+                </div>
+            </div>
+        </nav>
+    );
+}
+
 export default NavBar;

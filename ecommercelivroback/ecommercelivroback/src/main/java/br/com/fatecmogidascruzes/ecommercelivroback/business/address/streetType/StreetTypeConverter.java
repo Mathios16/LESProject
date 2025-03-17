@@ -1,24 +1,23 @@
 package br.com.fatecmogidascruzes.ecommercelivroback.business.address.streetType;
-import jakarta.persistence.AttributeConverter;
-import jakarta.persistence.Converter;
 
-@Converter(autoApply = true)
-public class StreetTypeConverter implements AttributeConverter<StreetType, Integer> {
-    
+import jakarta.persistence.AttributeConverter;
+
+public class StreetTypeConverter implements AttributeConverter<String, Integer> {
+
     @Override
-    public Integer convertToDatabaseColumn(StreetType streetType) {
+    public Integer convertToDatabaseColumn(String streetType) {
         if (streetType == null) {
             return null;
         }
-        return streetType.getId();
+        return StreetType.valueOf(streetType).getId();
     }
 
     @Override
-    public StreetType convertToEntityAttribute(Integer id) {
+    public String convertToEntityAttribute(Integer id) {
         if (id == null) {
             return null;
         }
-        return StreetType.fromId(id);
+        return StreetType.fromId(id).name();
     }
 
 }

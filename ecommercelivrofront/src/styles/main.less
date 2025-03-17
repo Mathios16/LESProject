@@ -1,0 +1,43 @@
+@import 'variables.less';
+@import 'mixins.less';
+@import 'components/cliente.less';
+@import 'components/table.less';
+@import 'components/navbar.less';
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: @font-family;
+  font-size: @font-size-base;
+  line-height: 1.5;
+  color: @text-color;
+  background-color: @background-color;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 @spacing-lg;
+}
+
+.alert {
+  padding: @spacing-md;
+  border-radius: @border-radius-md;
+  margin-bottom: @spacing-lg;
+
+  &-success {
+    background-color: fade(@success-color, 10%);
+    color: @success-color;
+    border: 1px solid fade(@success-color, 20%);
+  }
+
+  &-error {
+    background-color: fade(@error-color, 10%);
+    color: @error-color;
+    border: 1px solid fade(@error-color, 20%);
+  }
+}

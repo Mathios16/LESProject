@@ -1,24 +1,22 @@
 package br.com.fatecmogidascruzes.ecommercelivroback.business.customer.gender;
 
 import jakarta.persistence.AttributeConverter;
-import jakarta.persistence.Converter;
 
-@Converter(autoApply = true)
-public class GenderConverter implements AttributeConverter<Gender, Integer> {
+public class GenderConverter implements AttributeConverter<String, Integer> {
 
     @Override
-    public Integer convertToDatabaseColumn(Gender gender) {
+    public Integer convertToDatabaseColumn(String gender) {
         if (gender == null) {
             return null;
         }
-        return gender.getId();
+        return Gender.valueOf(gender).getId();
     }
 
     @Override
-    public Gender convertToEntityAttribute(Integer id) {
+    public String convertToEntityAttribute(Integer id) {
         if (id == null) {
             return null;
         }
-        return Gender.fromId(id);
+        return Gender.fromId(id).name();
     }
 }

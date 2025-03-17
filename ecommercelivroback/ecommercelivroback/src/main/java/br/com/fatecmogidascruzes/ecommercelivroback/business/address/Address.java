@@ -1,11 +1,7 @@
 package br.com.fatecmogidascruzes.ecommercelivroback.business.address;
 
 import java.util.List;
-import java.util.stream.Collectors;
-
-import br.com.fatecmogidascruzes.ecommercelivroback.business.address.addressType.AddressType;
 import br.com.fatecmogidascruzes.ecommercelivroback.business.address.addressType.AddressTypeConverter;
-import br.com.fatecmogidascruzes.ecommercelivroback.business.address.streetType.StreetType;
 import br.com.fatecmogidascruzes.ecommercelivroback.business.address.streetType.StreetTypeConverter;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -28,7 +24,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Entity(name = "addresses")
 public class Address {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "add_id")
@@ -40,12 +36,12 @@ public class Address {
     @NotNull(message = "addressType: Tipo de endereço não pode ser vazio")
     @Convert(converter = AddressTypeConverter.class)
     @Column(name = "add_addresstype", nullable = false)
-    private List<AddressType> addressType;
+    private List<String> addressType;
 
     @NotNull(message = "streetType: Tipo de rua não pode ser vazio")
     @Convert(converter = StreetTypeConverter.class)
     @Column(name = "add_streettype", nullable = false)
-    private StreetType streetType;
+    private String streetType;
 
     @NotBlank(message = "street: Rua não pode ser vazia")
     @Column(name = "add_street", nullable = false)
@@ -74,23 +70,17 @@ public class Address {
     @Column(name = "add_country", nullable = false)
     private String country;
 
-    @Pattern(regexp = "^\\d{5}-\\d{3}$", message = "zip: CEP inválido")
-    @NotBlank(message = "zip: CEP não pode ser vazio")
-    @Column(name = "add_zip", nullable = false)
-    private String zip;
+    @Pattern(regexp = "^\\d{5}-\\d{3}$", message = "zipCode: CEP inválido")
+    @NotBlank(message = "zipCode: CEP não pode ser vazio")
+    @Column(name = "add_zipcode", nullable = false)
+    private String zipCode;
 
     @Column(name = "add_cst_id")
     private int customer;
 
     public String getAddress() {
-        return streetType + " " + street + ", " + number + ", " + complement + "\n" + zip + " - " + neighborhood + ", " + city + ", " + state + ", " + country;
-    }
-
-    public void setAddressType(List<Integer> addressType) {
-        this.addressType = addressType.stream().map(id -> AddressType.fromId(id)).collect(Collectors.toList());
-    }
-
-    public void setStreetType(int streetType) {
-        this.streetType = StreetType.fromId(streetType);
+        return streetType + " " + street + ", " + number + ", " + complement + "\n" + zipCode + " - " + neighborhood
+                + ", "
+                + city + ", " + state + ", " + country;
     }
 }
