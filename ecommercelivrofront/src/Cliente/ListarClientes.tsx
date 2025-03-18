@@ -25,7 +25,7 @@ interface Customer {
   lastname: string;
   email: string;
   document: string;
-  phoneddd: string;
+  phoneDdd: string;
   phone: string;
   phoneType: string;
   addresses: Address[];
@@ -37,7 +37,9 @@ const ListarClientes: React.FC = () => {
   const [searchName, setSearchName] = useState('');
   const [searchEmail, setSearchEmail] = useState('');
   const [searchDocument, setSearchDocument] = useState('');
+  const [searchPhone, setSearchPhone] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string>('');
   const navigate = useNavigate();
 
   const fetchCustomers = async () => {
@@ -46,6 +48,7 @@ const ListarClientes: React.FC = () => {
       if (searchName) queryParams.append('name', searchName);
       if (searchEmail) queryParams.append('email', searchEmail);
       if (searchDocument) queryParams.append('document', searchDocument);
+      if (searchPhone) queryParams.append('phone', searchPhone);
 
       const response = await fetch(`http://localhost:8080/customers${queryParams.toString() ? `?${queryParams.toString()}` : ''}`, {
         method: 'GET',
@@ -63,14 +66,13 @@ const ListarClientes: React.FC = () => {
       const data = await response.json();
       setCustomers(data);
     } catch (error) {
-      console.error('Erro na busca de clientes:', error);
       setError(error instanceof Error ? error.message : 'Erro desconhecido');
     }
   };
 
   useEffect(() => {
     fetchCustomers();
-  }, [searchName, searchEmail, searchDocument]);
+  }, [searchName, searchEmail, searchDocument, searchPhone]);
 
   const handleDelete = async (id: number) => {
     if (window.confirm('Tem certeza que deseja excluir este cliente?')) {
@@ -88,9 +90,9 @@ const ListarClientes: React.FC = () => {
           throw new Error('Erro ao excluir cliente');
         }
 
+        setSuccess('Cliente excluído com sucesso!');
         fetchCustomers();
       } catch (error) {
-        console.error('Erro na exclusão de cliente:', error);
         setError(error instanceof Error ? error.message : 'Erro desconhecido');
       }
     }
@@ -107,11 +109,15 @@ const ListarClientes: React.FC = () => {
         </div>
       </div>
       
+      {error && <div className="alert alert-error">{error}</div>}
+      {success && <div className="alert alert-success">{success}</div>}
+
       <div className="cliente-form">
         <div className="row-group">
           <div className="form-group">
             <label className="form-label">Nome</label>
             <input
+              id="searchName"
               type="text"
               className="form-control"
               value={searchName}
@@ -123,6 +129,7 @@ const ListarClientes: React.FC = () => {
           <div className="form-group">
             <label className="form-label">Email</label>
             <input
+              id="searchEmail"
               type="text"
               className="form-control"
               value={searchEmail}
@@ -130,15 +137,29 @@ const ListarClientes: React.FC = () => {
               placeholder="Buscar por email"
             />
           </div>
-
+        </div>
+        <div className="row-group">
           <div className="form-group">
-            <label className="form-label">CPF/CNPJ</label>
+            <label className="form-label">CPF</label>
             <input
+              id="searchDocument"
               type="text"
               className="form-control"
               value={searchDocument}
               onChange={(e) => setSearchDocument(e.target.value)}
               placeholder="Buscar por documento"
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Telefone</label>
+            <input
+              id="searchPhone"
+              type="text"
+              className="form-control"
+              value={searchPhone}
+              onChange={(e) => setSearchPhone(e.target.value)}
+              placeholder="Buscar por telefone"
             />
           </div>
         </div>
@@ -162,7 +183,7 @@ const ListarClientes: React.FC = () => {
                 <td>{customer.email}</td>
                 <td>{customer.document}</td>
                 <td>
-                  {customer.phoneddd} {customer.phone}
+                  {`(${customer.phoneDdd}) ${customer.phone}`}
                 </td>
                 <td>
                   <div className="actions">
@@ -185,7 +206,6 @@ const ListarClientes: React.FC = () => {
           </tbody>
         </table>
       </div>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
     </div>
   );
 };

@@ -11,12 +11,13 @@ interface Address {
   city: string;
   state: string;
   country: string;
-  zip: string;
+  zipCode: string;
   addressType: string[];
 }
 
 interface PaymentMethod {
   primary: boolean;
+  cardFlag: string;
   cardNumber: string;
   cardName: string;
   cardExpiration: string;
@@ -31,7 +32,7 @@ interface Customer {
   birthdate: string;
   email: string;
   password: string;
-  phoneddd: string;
+  phoneDdd: string;
   phoneType: string;
   phone: string;
   addresses?: Address[];
@@ -77,7 +78,7 @@ const EditarCliente: React.FC = () => {
     birthdate: '',
     email: '',
     password: '',
-    phoneddd: '',
+    phoneDdd: '',
     phone: '',
     phoneType: '',
     addresses: [],
@@ -98,12 +99,13 @@ const EditarCliente: React.FC = () => {
     city: '',
     state: '',
     country: '',
-    zip: '',
+    zipCode: '',
     addressType: []
   });
 
   const [currentPaymentMethod, setCurrentPaymentMethod] = useState<PaymentMethod>({
     primary: false,
+    cardFlag: '',
     cardNumber: '',
     cardName: '',
     cardExpiration: '',
@@ -178,7 +180,7 @@ const EditarCliente: React.FC = () => {
   ) => {
     const value = e.target.value;
     
-    if (field === 'zip') {
+    if (field === 'zipCode') {
       const cleanedCep = value.replace(/\D/g, '');
       
       const formattedCep = cleanedCep.length > 5 
@@ -366,6 +368,8 @@ const EditarCliente: React.FC = () => {
       });
 
       if (!response.ok) {
+        customer.addresses = addresses;
+        customer.paymentMethods = paymentMethods;
         const data = await response.json().catch(() => null);
         throw new Error(data?.message || 'Erro ao atualizar cliente');
       }
@@ -398,7 +402,7 @@ const EditarCliente: React.FC = () => {
       city: '',
       state: '',
       country: '',
-      zip: '',
+      zipCode: '',
       addressType: []
     });
     setIsAddressModalOpen(false);
@@ -418,6 +422,7 @@ const EditarCliente: React.FC = () => {
     }
     setCurrentPaymentMethod({
       primary: false,
+      cardFlag: '',
       cardNumber: '',
       cardName: '',
       cardExpiration: '',
@@ -471,7 +476,7 @@ const EditarCliente: React.FC = () => {
       city: '',
       state: '',
       country: '',
-      zip: '',
+      zipCode: '',
       addressType: []
     });
     setEditingAddressIndex(null);
@@ -481,6 +486,7 @@ const EditarCliente: React.FC = () => {
     setIsPaymentModalOpen(false);
     setCurrentPaymentMethod({
       primary: false,
+      cardFlag: '',
       cardNumber: '',
       cardName: '',
       cardExpiration: '',
@@ -504,6 +510,7 @@ const EditarCliente: React.FC = () => {
           <div className="form-group">
             <label className="form-label">Nome</label>
             <input
+              id="name"
               type="text"
               className="form-control"
               value={customer.name}
@@ -515,6 +522,7 @@ const EditarCliente: React.FC = () => {
           <div className="form-group">
             <label className="form-label">Sobrenome</label>
             <input
+              id="lastname"
               type="text"
               className="form-control"
               value={customer.lastname}
@@ -526,6 +534,7 @@ const EditarCliente: React.FC = () => {
           <div className="form-group">
             <label className="form-label">Gênero</label>
             <select
+              id="gender"
               className="form-control"
               value={customer.gender}
               onChange={(e) => handleInputChange(e, 'gender')}
@@ -542,6 +551,7 @@ const EditarCliente: React.FC = () => {
           <div className="form-group">
             <label className="form-label">CPF</label>
             <input
+              id="document"
               type="text"
               className="form-control"
               value={customer.document}
@@ -553,6 +563,7 @@ const EditarCliente: React.FC = () => {
           <div className="form-group">
             <label className="form-label">Data de Nascimento</label>
             <input
+              id="birthdate"
               type="date"
               className="form-control"
               value={formatDateForInput(customer.birthdate)}
@@ -564,9 +575,10 @@ const EditarCliente: React.FC = () => {
           <div className="form-group">
             <label className="form-label">Telefone</label>
             <input
+              id="phone"
               type="tel"
               className="form-control"
-              value={`(${customer.phoneddd}) ${customer.phone}`}
+              value={`(${customer.phoneDdd}) ${customer.phone}`}
               onChange={(e) => handleInputChange(e, 'phone')}
               required
               maxLength={15}
@@ -580,6 +592,7 @@ const EditarCliente: React.FC = () => {
           <div className="form-group">
             <label className="form-label">Email</label>
             <input
+              id="email"
               type="email"
               className="form-control"
               value={customer.email}
@@ -592,6 +605,7 @@ const EditarCliente: React.FC = () => {
             <label className="form-label">Senha</label>
             <div className="password-input-container" style={{ position: 'relative' }}>
               <input
+                id="password"
                 type={showPassword ? 'text' : 'password'}
                 className="form-control"
                 value={customer.password}
@@ -622,6 +636,7 @@ const EditarCliente: React.FC = () => {
               <label className="form-label">Confirmar Senha</label>
               <div className="password-input-container" style={{ position: 'relative' }}>
                 <input
+                  id="passwordConfirmation"
                   type={showConfirmPassword ? 'text' : 'password'}
                   className={`form-control ${!isPasswordValid() ? 'is-invalid' : ''}`}
                   value={passwordConfirmation}
@@ -654,6 +669,7 @@ const EditarCliente: React.FC = () => {
         <div className="section-header">
           <h4>Endereços</h4>
           <button
+            id="create-address"
             type="button"
             className="add-button"
             onClick={() => {
@@ -679,7 +695,7 @@ const EditarCliente: React.FC = () => {
                 {address.complement && <p>Complemento: {address.complement}</p>}
                 <p>{address.neighborhood}</p>
                 <p>{address.city} - {address.state}</p>
-                <p>CEP: {address.zip}</p>
+                <p>CEP: {address.zipCode}</p>
               </div>
               <div className="item-actions">
                 <button 
@@ -704,6 +720,7 @@ const EditarCliente: React.FC = () => {
         <div className="section-header">
           <h4>Métodos de Pagamento</h4>
           <button
+            id="create-payment"
             type="button"
             className="add-button"
             onClick={() => {
@@ -765,6 +782,7 @@ const EditarCliente: React.FC = () => {
         <div className="form-group">
           <label className="form-label">Tipo de Rua</label>
           <input
+            id="streetType"
             type="text"
             className="form-control"
             value={currentAddress.streetType}
@@ -776,6 +794,7 @@ const EditarCliente: React.FC = () => {
         <div className="form-group">
           <label className="form-label">Rua</label>
           <input
+            id="street"
             type="text"
             className="form-control"
             value={currentAddress.street}
@@ -787,6 +806,7 @@ const EditarCliente: React.FC = () => {
         <div className="form-group">
           <label className="form-label">Número</label>
           <input
+            id="number"
             type="text"
             className="form-control"
             value={currentAddress.number}
@@ -798,6 +818,7 @@ const EditarCliente: React.FC = () => {
         <div className="form-group">
           <label className="form-label">Complemento</label>
           <input
+            id="complement"
             type="text"
             className="form-control"
             value={currentAddress.complement}
@@ -808,6 +829,7 @@ const EditarCliente: React.FC = () => {
         <div className="form-group">
           <label className="form-label">Bairro</label>
           <input
+            id="neighborhood"
             type="text"
             className="form-control"
             value={currentAddress.neighborhood}
@@ -819,6 +841,7 @@ const EditarCliente: React.FC = () => {
         <div className="form-group">
           <label className="form-label">Cidade</label>
           <input
+            id="city"
             type="text"
             className="form-control"
             value={currentAddress.city}
@@ -830,6 +853,7 @@ const EditarCliente: React.FC = () => {
         <div className="form-group">
           <label className="form-label">Estado</label>
           <input
+            id="state"
             type="text"
             className="form-control"
             value={currentAddress.state}
@@ -841,6 +865,7 @@ const EditarCliente: React.FC = () => {
         <div className="form-group">
           <label className="form-label">País</label>
           <input
+            id="country"
             type="text"
             className="form-control"
             value={currentAddress.country}
@@ -852,10 +877,11 @@ const EditarCliente: React.FC = () => {
         <div className="form-group">
           <label className="form-label">CEP</label>
           <input
+            id="zipCode"
             type="text"
             className="form-control"
-            value={currentAddress.zip}
-            onChange={(e) => handleAddressInputChange(e, 'zip')}
+            value={currentAddress.zipCode}
+            onChange={(e) => handleAddressInputChange(e, 'zipCode')}
             required
           />
         </div>
@@ -866,6 +892,7 @@ const EditarCliente: React.FC = () => {
             <div className="type-option">
               <label className="switch">
                 <input 
+                  id="billing"
                   type="checkbox"
                   checked={currentAddress.addressType.includes('COBRANCA')}
                   onChange={(e) => {
@@ -883,6 +910,7 @@ const EditarCliente: React.FC = () => {
             <div className="type-option">
               <label className="switch">
                 <input 
+                  id="delivery"
                   type="checkbox"
                   checked={currentAddress.addressType.includes('ENTREGA')}
                   onChange={(e) => {
@@ -900,6 +928,7 @@ const EditarCliente: React.FC = () => {
             <div className="type-option">
               <label className="switch">
                 <input 
+                  id="residential"
                   type="checkbox"
                   checked={currentAddress.addressType.includes('RESIDENCIAL')}
                   onChange={(e) => {
@@ -918,10 +947,35 @@ const EditarCliente: React.FC = () => {
         </div>
 
         <div className="modal-actions">
-          <button type="button" className="secondary" onClick={() => setIsAddressModalOpen(false)}>
+          <button 
+            id="cancel-address"
+            type="button" 
+            className="secondary" 
+            onClick={() => {
+              setIsAddressModalOpen(false);
+              setError('');
+              setCurrentAddress({
+                streetType: '',
+                street: '',
+                number: '',
+                complement: '',
+                neighborhood: '',
+                city: '',
+                state: '',
+                country: '',
+                zipCode: '',
+                addressType: []
+              });
+            }}
+          >
             Cancelar
           </button>
-          <button type="button" className="primary" onClick={handleAddAddress}>
+          <button 
+            id="add-address"
+            type="button" 
+            className="primary" 
+            onClick={handleAddAddress}
+          >
             {editingAddressIndex !== null ? "Salvar" : "Adicionar"}
           </button>
         </div>
@@ -932,71 +986,94 @@ const EditarCliente: React.FC = () => {
         onClose={handleClosePaymentModal}
         title={editingPaymentIndex !== null ? "Editar Método de Pagamento" : "Adicionar Método de Pagamento"}
       >
-        <div className="form-group">
-          <label className="form-label">Número do Cartão</label>
-          <input
-            type="text"
-            className="form-control"
-            value={currentPaymentMethod.cardNumber}
-            onChange={(e) => setCurrentPaymentMethod({ ...currentPaymentMethod, cardNumber: e.target.value })}
-            required
-          />
+        <div className="row-group">
+          <div className="form-group">
+            <label className="form-label">Número do Cartão</label>
+            <input
+              type="text"
+              className="form-control"
+              value={currentPaymentMethod.cardNumber}
+              onChange={(e) => setCurrentPaymentMethod({ ...currentPaymentMethod, cardNumber: e.target.value })}
+              required
+            />
+          </div>
+          <div className="form-group">
+              <label className="form-label">Bandeira do Cartão</label>
+              <select
+                id="cardFlag"
+                className="form-control"
+                value={currentPaymentMethod.cardFlag}
+                onChange={(e) => setCurrentPaymentMethod({ ...currentPaymentMethod, cardFlag: e.target.value })}
+                required
+              >
+              <option value="">Selecione</option>
+              <option value="VISA">VISA</option>
+              <option value="MASTERCARD">MASTERCARD</option>
+              <option value="AMERICANEXPRESS">AMERICANEXPRESS</option>
+            </select>
+          </div>
         </div>
 
-        <div className="form-group">
-          <label className="form-label">Nome no Cartão</label>
-          <input
-            type="text"
-            className="form-control"
-            value={currentPaymentMethod.cardName}
-            onChange={(e) => setCurrentPaymentMethod({ ...currentPaymentMethod, cardName: e.target.value })}
-            required
-          />
-        </div>
+        <div className="row-group">
+          <div className="form-group">
+            <label className="form-label">Nome no Cartão</label>
+            <input
+              id="cardName"
+              type="text"
+              className="form-control"
+              value={currentPaymentMethod.cardName}
+              onChange={(e) => setCurrentPaymentMethod({ ...currentPaymentMethod, cardName: e.target.value })}
+              required
+            />
+          </div>
 
-        <div className="form-group">
-          <label className="form-label">Data de Expiração</label>
-          <input
-            type="date"
-            className="form-control"
-            value={formatDateForInput(currentPaymentMethod.cardExpiration)}
-            onChange={(e) => setCurrentPaymentMethod({ ...currentPaymentMethod, cardExpiration: e.target.value })}
-            placeholder="MM/AA"
-            required
-          />
-        </div>
+          <div className="form-group">
+            <label className="form-label">Data de Expiração</label>
+            <input
+              id="cardExpiration"
+              type="date"
+              className="form-control"
+              value={formatDateForInput(currentPaymentMethod.cardExpiration)}
+              onChange={(e) => setCurrentPaymentMethod({ ...currentPaymentMethod, cardExpiration: e.target.value })}
+              placeholder="MM/AA"
+              required
+            />
+          </div>
 
-        <div className="form-group">
-          <label className="form-label">CVV</label>
-          <input
-            type="text"
-            className="form-control"
-            value={currentPaymentMethod.cvv}
-            onChange={(e) => setCurrentPaymentMethod({ ...currentPaymentMethod, cvv: e.target.value })}
-            required
-          />
-        </div>
+          <div className="form-group">
+            <label className="form-label">CVV</label>
+            <input
+              id="cvv"
+              type="text"
+              className="form-control"
+              value={currentPaymentMethod.cvv}
+              onChange={(e) => setCurrentPaymentMethod({ ...currentPaymentMethod, cvv: e.target.value })}
+              required
+            />
+          </div>
 
-        <div className="form-group">
-          <label className="form-label">Cartão Principal</label>
-          <div className="type-group">
-            <div className="type-option">
-              <label className="switch">
-                <input 
-                  type="checkbox"
-                  checked={currentPaymentMethod.primary}
-                  onChange={(e) => {
-                    if (e.target.checked && customer.paymentMethods && customer.paymentMethods.some(p => p.primary)) {
-                      setError('Já existe um cartão principal');
-                      return;
-                    }
-                    setCurrentPaymentMethod({ ...currentPaymentMethod, primary: e.target.checked });
-                    setError('');
-                  }}
-                />
-                <span className="slider"></span>
-              </label>
-              <span>Definir como Principal</span>
+          <div className="form-group">
+            <label className="form-label">Cartão Principal</label>
+            <div className="type-group">
+              <div className="type-option">
+                <label className="switch">
+                  <input
+                    id="primary"
+                    type="checkbox"
+                    checked={currentPaymentMethod.primary}
+                    onChange={(e) => {
+                      if (e.target.checked && customer.paymentMethods && customer.paymentMethods.some(p => p.primary)) {
+                        setError('Já existe um cartão principal');
+                        return;
+                      }
+                      setCurrentPaymentMethod({ ...currentPaymentMethod, primary: e.target.checked });
+                      setError('');
+                    }}
+                  />
+                  <span className="slider"></span>
+                </label>
+                <span>Definir como Principal</span>
+              </div>
             </div>
           </div>
         </div>

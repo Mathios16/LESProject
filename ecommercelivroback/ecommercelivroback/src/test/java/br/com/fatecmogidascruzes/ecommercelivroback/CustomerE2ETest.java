@@ -4,10 +4,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
-import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
+import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -18,7 +19,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.logging.Logger;
+import java.util.concurrent.CountDownLatch;
+import org.openqa.selenium.JavascriptExecutor;
 
 @SpringBootTest
 @TestPropertySource(properties = {
@@ -27,13 +31,23 @@ import java.util.logging.Logger;
         "spring.datasource.password=root",
         "spring.jpa.hibernate.ddl-auto=create-drop"
 })
-@TestMethodOrder(OrderAnnotation.class)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class CustomerE2ETest {
     private WebDriver driver;
     private WebDriverWait wait;
     private final String BASE_URL = "http://localhost:5173";
     private final String TEST_CPF = "123.456.789-00";
+    private final String TEST_CPF_EDIT = "987.654.321-01";
     private static final Logger logger = Logger.getLogger(CustomerE2ETest.class.getName());
+
+    // Static latches to ensure sequential test execution
+    private static final CountDownLatch[] latches = new CountDownLatch[4];
+
+    static {
+        for (int i = 0; i < latches.length; i++) {
+            latches[i] = new CountDownLatch(1);
+        }
+    }
 
     @BeforeEach
     void setUp() {
@@ -101,114 +115,118 @@ class CustomerE2ETest {
 
         // Verificar mensagem de sucesso
         WebElement successMessage = wait
-                .until(ExpectedConditions.presenceOfElementLocated(By.className("success-message")));
-        assertTrue(successMessage.getText().contains("Cliente cadastrado com sucesso"));
+                .until(ExpectedConditions.presenceOfElementLocated(By.className("alert-success")));
+        assertTrue(successMessage.getText().contains("Cliente criado com sucesso!"));
 
-        // Verificar redirecionamento para a lista de clientes
-        wait.until(ExpectedConditions.urlToBe(BASE_URL + "/clientes"));
-
-        // Verificar se o cliente aparece na lista
-        WebElement searchInput = wait.until(ExpectedConditions.presenceOfElementLocated(By.id("search-input")));
-        searchInput.sendKeys(TEST_CPF);
-
-        WebElement customersTable = wait
-                .until(ExpectedConditions.presenceOfElementLocated(By.className("customers-table")));
-        String tableText = customersTable.getText();
-        assertTrue(tableText.contains("João"));
-        assertTrue(tableText.contains("Silva"));
-        assertTrue(tableText.contains(TEST_CPF));
-        assertTrue(tableText.contains("joao.silva@test.com"));
+        // Signal that this test is complete
+        // latches[0].countDown();
     }
 
-    // @Test
-    // @Order(2)
-    // void shouldListAndFilterCustomers() {
-    // driver.get(BASE_URL + "/clientes");
+    @Test
+    @Order(2)
+    void shouldListAndFilterCustomers() throws InterruptedException {
+        // Wait for previous test to complete
+        // assertTrue(latches[0].await(30, TimeUnit.SECONDS), "Previous test did not
+        // complete");
 
-    // // Esperar carregamento da lista
-    // wait.until(ExpectedConditions.presenceOfElementLocated(By.className("customers-table")));
+        driver.get(BASE_URL + "/clientes");
 
-    // // Verificar se o cliente criado está na lista
-    // WebElement searchInput = driver.findElement(By.id("search-input"));
-    // searchInput.sendKeys(TEST_CPF);
+        // Esperar carregamento da lista
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.className("table-container")));
 
-    // // Verificar resultados filtrados
-    // List<WebElement> customerRows =
-    // driver.findElements(By.cssSelector(".customers-table tr"));
-    // assertTrue(customerRows.size() > 0);
-    // assertTrue(customerRows.get(1).getText().contains("João Silva"));
-    // }
+        // Verificar se o cliente criado está na lista
+        fillInputById("searchDocument", TEST_CPF);
 
-    // @Test
-    // @Order(3)
-    // void shouldEditCustomer() {
-    // driver.get(BASE_URL + "/clientes");
+        // Verificar resultados filtrados
+        WebElement customerRows = wait
+                .until(ExpectedConditions.presenceOfElementLocated(By.className("table-container")));
+        assertTrue(customerRows.getText().contains("João Silva"));
+        assertTrue(customerRows.getText().contains("(11) 98765-4321"));
+        assertTrue(customerRows.getText().contains(TEST_CPF));
+        assertTrue(customerRows.getText().contains("joao.silva@test.com"));
 
-    // // Buscar cliente para editar
-    // WebElement searchInput = driver.findElement(By.id("search-input"));
-    // searchInput.sendKeys(TEST_CPF);
+        // Signal that this test is complete
+        // latches[1].countDown();
+    }
 
-    // // Clicar no botão de editar
-    // clickButtonByClass("edit-button");
+    @Test
+    @Order(3)
+    void shouldEditCustomer() throws InterruptedException {
+        // Wait for previous test to complete
+        // assertTrue(latches[1].await(30, TimeUnit.SECONDS), "Previous test did not
+        // complete");
 
-    // // Atualizar nome
-    // WebElement nameInput =
-    // wait.until(ExpectedConditions.presenceOfElementLocated(By.id("name")));
-    // nameInput.clear();
-    // nameInput.sendKeys("João Editado");
+        driver.get(BASE_URL + "/clientes");
 
-    // // Submeter edição
-    // clickButtonById("submit");
+        // Buscar cliente para editar
+        fillInputById("searchDocument", TEST_CPF);
 
-    // // Verificar mensagem de sucesso
-    // WebElement successMessage = wait
-    // .until(ExpectedConditions.presenceOfElementLocated(By.className("success-message")));
-    // assertTrue(successMessage.getText().contains("Cliente atualizado com
-    // sucesso"));
+        // Clicar no botão de editar
+        clickButtonByClass("edit");
 
-    // // Verificar se a alteração foi aplicada na listagem
-    // driver.get(BASE_URL + "/clientes");
-    // searchInput =
-    // wait.until(ExpectedConditions.presenceOfElementLocated(By.id("search-input")));
-    // searchInput.sendKeys(TEST_CPF);
+        // Atualizar nome
+        fillInputById("name", "João Editado");
 
-    // List<WebElement> customerRows =
-    // driver.findElements(By.cssSelector(".customers-table tr"));
-    // assertTrue(customerRows.get(1).getText().contains("João Editado"));
-    // }
+        // Atualizar documento
+        fillInputById("document", TEST_CPF_EDIT);
 
-    // @Test
-    // @Order(4)
-    // void shouldDeleteCustomer() {
-    // driver.get(BASE_URL + "/clientes");
+        // Submeter edição
+        WebElement submitButton = wait
+                .until(ExpectedConditions.elementToBeClickable(By.cssSelector("button[type='submit']")));
+        submitButton.click();
 
-    // // Buscar cliente para deletar
-    // WebElement searchInput = driver.findElement(By.id("search-input"));
-    // searchInput.sendKeys(TEST_CPF);
+        // Verificar mensagem de sucesso
+        WebElement successMessage = wait
+                .until(ExpectedConditions.presenceOfElementLocated(By.className("alert-success")));
+        assertTrue(successMessage.getText().contains("Cliente atualizado com sucesso!"));
 
-    // // Clicar no botão de deletar
-    // clickButtonByClass("delete-button");
+        // Verificar se a alteração foi aplicada na listagem
+        driver.get(BASE_URL + "/clientes");
+        fillInputById("searchDocument", TEST_CPF_EDIT);
 
-    // // Confirmar exclusão
-    // WebElement confirmButton =
-    // wait.until(ExpectedConditions.presenceOfElementLocated(By.id("confirm-delete")));
-    // confirmButton.click();
+        WebElement customerRows = wait
+                .until(ExpectedConditions.presenceOfElementLocated(By.className("table-container")));
+        assertTrue(customerRows.getText().contains("João Editado"));
+        assertTrue(customerRows.getText().contains("(11) 98765-4321"));
+        assertTrue(customerRows.getText().contains(TEST_CPF_EDIT));
+        assertTrue(customerRows.getText().contains("joao.silva@test.com"));
 
-    // // Verificar mensagem de sucesso
-    // WebElement successMessage = wait
-    // .until(ExpectedConditions.presenceOfElementLocated(By.className("success-message")));
-    // assertTrue(successMessage.getText().contains("Cliente removido com
-    // sucesso"));
+        // Signal that this test is complete
+        // latches[2].countDown();
+    }
 
-    // // Verificar se o cliente foi removido
-    // searchInput =
-    // wait.until(ExpectedConditions.presenceOfElementLocated(By.id("search-input")));
-    // searchInput.sendKeys(TEST_CPF);
+    @Test
+    @Order(4)
+    void shouldDeleteCustomer() {
+        // Setup to always confirm dialogs
+        ((JavascriptExecutor) driver).executeScript(
+                "window.confirm = function() { return true; };");
 
-    // List<WebElement> customerRows =
-    // driver.findElements(By.cssSelector(".customers-table tr"));
-    // assertEquals(1, customerRows.size()); // Apenas o header da tabela
-    // }
+        driver.get(BASE_URL + "/clientes");
+
+        // Search for customer to delete
+        WebElement searchInput = wait.until(
+                ExpectedConditions.presenceOfElementLocated(By.id("searchDocument")));
+        searchInput.sendKeys(TEST_CPF_EDIT);
+
+        // Wait for table results
+        WebElement tableContainer = wait.until(
+                ExpectedConditions.presenceOfElementLocated(By.cssSelector(".table-container")));
+
+        // Find and click delete button
+        WebElement deleteButton = wait.until(
+                ExpectedConditions.elementToBeClickable(
+                        tableContainer.findElements(By.cssSelector("button[class*='delete']")).get(0)));
+        deleteButton.click();
+
+        Alert alert = wait.until(ExpectedConditions.alertIsPresent());
+        alert.accept();
+
+        // Verify success message
+        WebElement successMessage = wait.until(
+                ExpectedConditions.presenceOfElementLocated(By.className("alert-success")));
+        assertTrue(successMessage.getText().contains("Cliente excluído com sucesso!"));
+    }
 
     private void fillInputById(String id, String value) {
         try {
@@ -320,8 +338,8 @@ class CustomerE2ETest {
 
     @AfterEach
     void tearDown() {
-        // if (driver != null) {
-        // driver.quit();
-        // }
+        if (driver != null) {
+            driver.quit();
+        }
     }
 }

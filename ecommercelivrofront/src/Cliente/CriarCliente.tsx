@@ -373,6 +373,8 @@ const CriarCliente: React.FC = () => {
       });
 
       if (!response.ok) {
+        customer.addresses = addresses;
+        customer.paymentMethods = paymentMethods;
         const data = await response.json().catch(() => null);
         throw new Error(data?.message || 'Erro ao criar cliente');
       }
