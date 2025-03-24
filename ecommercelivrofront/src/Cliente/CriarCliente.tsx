@@ -90,7 +90,7 @@ const CriarCliente: React.FC = () => {
   const [currentAddress, setCurrentAddress] = useState<Address>({
     streetType: '',
     street: '',
-    number: '', 
+    number: '',
     complement: '',
     neighborhood: '',
     city: '',
@@ -134,7 +134,7 @@ const CriarCliente: React.FC = () => {
 
     try {
       const response = await fetch(`https://viacep.com.br/ws/${cleanedCep}/json/`);
-      
+
       if (!response.ok) {
         throw new Error('Erro ao buscar endereço');
       }
@@ -148,13 +148,13 @@ const CriarCliente: React.FC = () => {
 
       setCurrentAddress(prevAddress => ({
         ...prevAddress,
-        streetType: '', 
+        streetType: '',
         street: data.logradouro,
         neighborhood: data.bairro,
         city: data.localidade,
         state: data.uf,
-        country: 'Brasil', 
-        zipCode: cleanedCep
+        country: 'Brasil',
+        zipCode: `${cleanedCep.slice(0, 5)}-${cleanedCep.slice(5, 8)}`
       }));
 
       setError('');
@@ -164,16 +164,16 @@ const CriarCliente: React.FC = () => {
   }, []);
 
   const handleAddressInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, 
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
     field: keyof Address
   ) => {
     const value = e.target.value;
-    
+
     if (field === 'zipCode') {
       const cleanedCep = value.replace(/\D/g, '');
-      
-      const formattedCep = cleanedCep.length > 5 
-        ? `${cleanedCep.slice(0, 5)}-${cleanedCep.slice(5, 8)}` 
+
+      const formattedCep = cleanedCep.length > 5
+        ? `${cleanedCep.slice(0, 5)}-${cleanedCep.slice(5, 8)}`
         : cleanedCep;
 
       setCurrentAddress(prev => ({
@@ -193,7 +193,7 @@ const CriarCliente: React.FC = () => {
   };
 
   const handlePaymentInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, 
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
     field: keyof PaymentMethod
   ) => {
     const value = e.target.value;
@@ -215,12 +215,12 @@ const CriarCliente: React.FC = () => {
   };
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, 
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
     field: keyof Customer
   ) => {
     const value = e.target.value;
 
-    if (field ===  'document') {
+    if (field === 'document') {
       const cleanedCpf = value.replace(/\D/g, '');
 
       const formattedCpf = `${cleanedCpf.slice(0, 3)}.${cleanedCpf.slice(3, 6)}.${cleanedCpf.slice(6, 9)}-${cleanedCpf.slice(9, 11)}`;
@@ -239,13 +239,13 @@ const CriarCliente: React.FC = () => {
       let phoneDdd = '';
 
       if (cleanedPhone.length === 10) {
-        phoneType = 'FIXO'; 
+        phoneType = 'FIXO';
       } else if (cleanedPhone.length === 11) {
         phoneType = 'CELULAR';
       }
 
-      const formattedPhone = cleanedPhone.length >= 11 
-        ? `${cleanedPhone.slice(2, 7)}-${cleanedPhone.slice(7)}` 
+      const formattedPhone = cleanedPhone.length >= 11
+        ? `${cleanedPhone.slice(2, 7)}-${cleanedPhone.slice(7)}`
         : `${cleanedPhone.slice(2, 6)}-${cleanedPhone.slice(6)}`;
 
       phoneDdd = cleanedPhone.slice(0, 2);
@@ -431,10 +431,10 @@ const CriarCliente: React.FC = () => {
       setCustomer({ ...customer, addresses: newAddresses });
       setEditingAddressIndex(null);
     } else {
-      const hasConflictingTypes = currentAddress.addressType.some(type => 
+      const hasConflictingTypes = currentAddress.addressType.some(type =>
         customer.addresses?.some(addr => addr.addressType.includes(type))
       );
-      
+
       if (hasConflictingTypes) {
         setError('Já existe um endereço com um dos tipos selecionados');
         return;
@@ -459,8 +459,8 @@ const CriarCliente: React.FC = () => {
   };
 
   const handleAddPaymentMethod = () => {
-    if (!currentPaymentMethod.cardNumber || !currentPaymentMethod.cardName || 
-        !currentPaymentMethod.cardExpiration || !currentPaymentMethod.cvv) {
+    if (!currentPaymentMethod.cardNumber || !currentPaymentMethod.cardName ||
+      !currentPaymentMethod.cardExpiration || !currentPaymentMethod.cvv) {
       setError('Preencha todos os campos do cartão');
       return;
     }
@@ -470,9 +470,9 @@ const CriarCliente: React.FC = () => {
     }
 
     if (editingPaymentIndex !== null) {
-      if (currentPaymentMethod.primary && 
-          !customer.paymentMethods[editingPaymentIndex].primary &&
-          customer.paymentMethods.some((p, i) => i !== editingPaymentIndex && p.primary)) {
+      if (currentPaymentMethod.primary &&
+        !customer.paymentMethods[editingPaymentIndex].primary &&
+        customer.paymentMethods.some((p, i) => i !== editingPaymentIndex && p.primary)) {
         setError('Já existe um cartão principal');
         return;
       }
@@ -684,7 +684,7 @@ const CriarCliente: React.FC = () => {
                 onChange={(e) => setCustomer({ ...customer, password: e.target.value })}
                 onBlur={(e) => handleInputChange(e, 'password')}
                 required
-                style={{ 
+                style={{
                   paddingRight: '40px'
                 }}
               />
@@ -714,7 +714,7 @@ const CriarCliente: React.FC = () => {
                   value={passwordConfirmation}
                   onChange={(e) => setPasswordConfirmation(e.target.value)}
                   required
-                  style={{ 
+                  style={{
                     paddingRight: '40px'
                   }}
                 />
@@ -731,9 +731,9 @@ const CriarCliente: React.FC = () => {
                   )}
                 </button>
               </div>
-                {!isPasswordValid() && (
-                  <small className="form-text text-muted">As senhas não coincidem</small>
-                )}
+              {!isPasswordValid() && (
+                <small className="form-text text-muted">As senhas não coincidem</small>
+              )}
             </div>
           )}
         </div>
@@ -770,17 +770,17 @@ const CriarCliente: React.FC = () => {
                 <p>CEP: {address.zipCode}</p>
               </div>
               <div className="item-actions">
-                <button 
+                <button
                   id="edit-address"
-                  type="button" 
+                  type="button"
                   className="edit-button"
                   onClick={() => handleEditAddress(index)}
                 >
                   <Pencil size={16} />
                 </button>
-                <button 
+                <button
                   id="delete-address"
-                  type="button" 
+                  type="button"
                   className="delete-button"
                   onClick={() => handleDeleteAddress(index)}
                 >
@@ -819,17 +819,17 @@ const CriarCliente: React.FC = () => {
                 <p>Validade: {payment.cardExpiration}</p>
               </div>
               <div className="item-actions">
-                <button 
+                <button
                   id="edit-payment"
-                  type="button" 
+                  type="button"
                   className="edit-button"
                   onClick={() => handleEditPaymentMethod(index)}
                 >
                   <Pencil size={16} />
                 </button>
-                <button 
+                <button
                   id="delete-payment"
-                  type="button" 
+                  type="button"
                   className="delete-button"
                   onClick={() => handleDeletePaymentMethod(index)}
                 >
@@ -843,7 +843,7 @@ const CriarCliente: React.FC = () => {
         <div className="cliente-actions">
           <button
             id="cancel"
-            type="button" 
+            type="button"
             className="secondary"
             onClick={() => navigate('/clientes')}
           >
@@ -973,7 +973,7 @@ const CriarCliente: React.FC = () => {
                     type="checkbox"
                     checked={currentAddress.addressType.includes('COBRANCA')}
                     onChange={(e) => {
-                      const newTypes = e.target.checked 
+                      const newTypes = e.target.checked
                         ? [...currentAddress.addressType, 'COBRANCA']
                         : currentAddress.addressType.filter(t => t !== 'COBRANCA');
                       setCurrentAddress({ ...currentAddress, addressType: newTypes });
@@ -986,11 +986,11 @@ const CriarCliente: React.FC = () => {
               </div>
               <div className="type-option">
                 <label className="switch">
-                  <input 
+                  <input
                     type="checkbox"
                     checked={currentAddress.addressType.includes('ENTREGA')}
                     onChange={(e) => {
-                      const newTypes = e.target.checked 
+                      const newTypes = e.target.checked
                         ? [...currentAddress.addressType, 'ENTREGA']
                         : currentAddress.addressType.filter(t => t !== 'ENTREGA');
                       setCurrentAddress({ ...currentAddress, addressType: newTypes });
@@ -1003,11 +1003,11 @@ const CriarCliente: React.FC = () => {
               </div>
               <div className="type-option">
                 <label className="switch">
-                  <input 
+                  <input
                     type="checkbox"
                     checked={currentAddress.addressType.includes('RESIDENCIAL')}
                     onChange={(e) => {
-                      const newTypes = e.target.checked 
+                      const newTypes = e.target.checked
                         ? [...currentAddress.addressType, 'RESIDENCIAL']
                         : currentAddress.addressType.filter(t => t !== 'RESIDENCIAL');
                       setCurrentAddress({ ...currentAddress, addressType: newTypes });
@@ -1029,10 +1029,10 @@ const CriarCliente: React.FC = () => {
         )}
 
         <div className="modal-actions">
-          <button 
+          <button
             id="cancel-address"
-            type="button" 
-            className="secondary" 
+            type="button"
+            className="secondary"
             onClick={() => {
               setIsAddressModalOpen(false);
               setError('');
@@ -1052,10 +1052,10 @@ const CriarCliente: React.FC = () => {
           >
             Cancelar
           </button>
-          <button 
+          <button
             id="add-address"
-            type="button" 
-            className="primary" 
+            type="button"
+            className="primary"
             onClick={handleAddAddress}
             disabled={currentAddress.addressType.length === 0}
           >
@@ -1140,7 +1140,7 @@ const CriarCliente: React.FC = () => {
             <div className="type-group">
               <div className="type-option">
                 <label className="switch">
-                  <input 
+                  <input
                     type="checkbox"
                     checked={currentPaymentMethod.primary}
                     onChange={(e) => {
@@ -1160,10 +1160,10 @@ const CriarCliente: React.FC = () => {
           </div>
 
           <div className="modal-actions">
-            <button 
+            <button
               id="cancel-payment"
-              type="button" 
-              className="secondary" 
+              type="button"
+              className="secondary"
               onClick={() => {
                 setIsPaymentModalOpen(false);
                 setError('');
@@ -1179,10 +1179,10 @@ const CriarCliente: React.FC = () => {
             >
               Cancelar
             </button>
-            <button 
+            <button
               id="add-payment"
-              type="button" 
-              className="primary" 
+              type="button"
+              className="primary"
               onClick={handleAddPaymentMethod}
             >
               {editingPaymentIndex !== null ? "Salvar" : "Adicionar"}

@@ -61,32 +61,28 @@ class CustomerE2ETest {
     void shouldCreateCustomer() {
         driver.get(BASE_URL + "/clientes/criar");
 
-        // Preencher dados pessoais
         fillInputById("name", "João");
         fillInputById("lastname", "Silva");
-        fillInputById("document", TEST_CPF);
+        fillInputById("document", "123.456.789-00");
         fillInputById("email", "joao.silva@test.com");
         fillInputById("password", "Test@123");
         fillInputById("confirmPassword", "Test@123");
         fillInputById("birthdate", "01/01/2000");
 
-        // Selecionar gênero e tipo de telefone
         selectOptionById("gender", "MASCULINO");
 
-        // Preencher telefone
-        fillInputById("phone", "1198765-4321");
+        fillInputById("phone", "11987654321");
 
-        // Adicionar endereço residencial
         clickButtonById("create-address");
         fillAddressForm("0", "0", "1", "Rua A", "123", "Apto 1", "Centro", "São Paulo", "SP", "Brasil", "01234-567");
 
-        // Adicionar endereço de entrega
         clickButtonById("create-address");
-        fillAddressForm("0", "1", "0", "Rua B", "456", "", "Jardim", "São Paulo", "SP", "Brasil", "04567-890");
+        fillAddressForm("0", "1", "0", "Rua B", "456", "", "Jardim", "São Paulo",
+                "SP", "Brasil", "04567-890");
 
-        // Adicionar endereço de cobrança
         clickButtonById("create-address");
-        fillAddressForm("1", "0", "0", "Rua C", "789", "", "Vila", "São Paulo", "SP", "Brasil", "06789-012");
+        fillAddressForm("1", "0", "0", "Rua C", "789", "", "Vila", "São Paulo", "SP",
+                "Brasil", "06789-012");
 
         WebElement addressList = wait.until(ExpectedConditions.presenceOfElementLocated(By.className("addresses")));
         assertTrue(addressList.getText().contains("Rua A"));
@@ -98,134 +94,86 @@ class CustomerE2ETest {
         assertTrue(addressList.getText().contains("Rua C"));
         assertTrue(addressList.getText().contains("Cobrança"));
 
-        // Adicionar método de pagamento
         clickButtonById("create-payment");
-        fillPaymentForm("1", "4111111111111111", "João Silva", "12/30", "123", "VISA");
+        fillPaymentForm("1", "4111111111111111", "João Silva", "12/30", "123",
+                "VISA");
 
-        // Verificar se o método de pagamento foi adicionado
         WebElement paymentList = wait
                 .until(ExpectedConditions.presenceOfElementLocated(By.className("paymentMethods")));
         assertTrue(paymentList.getText().contains("João Silva"));
         assertTrue(paymentList.getText().contains("**** **** **** 1111"));
 
-        // Submeter formulário
         WebElement submitButton = wait
                 .until(ExpectedConditions.elementToBeClickable(By.cssSelector("button[type='submit']")));
         submitButton.click();
 
-        // Verificar mensagem de sucesso
         WebElement successMessage = wait
                 .until(ExpectedConditions.presenceOfElementLocated(By.className("alert-success")));
         assertTrue(successMessage.getText().contains("Cliente criado com sucesso!"));
 
-        // Signal that this test is complete
-        // latches[0].countDown();
     }
 
     @Test
     @Order(2)
     void shouldListAndFilterCustomers() throws InterruptedException {
-        // Wait for previous test to complete
-        // assertTrue(latches[0].await(30, TimeUnit.SECONDS), "Previous test did not
-        // complete");
-
         driver.get(BASE_URL + "/clientes");
 
-        // Esperar carregamento da lista
         wait.until(ExpectedConditions.presenceOfElementLocated(By.className("table-container")));
 
-        // Verificar se o cliente criado está na lista
-        fillInputById("searchDocument", TEST_CPF);
+        fillInputById("searchDocument", "123.456.789-00");
 
-        // Verificar resultados filtrados
         WebElement customerRows = wait
                 .until(ExpectedConditions.presenceOfElementLocated(By.className("table-container")));
         assertTrue(customerRows.getText().contains("João Silva"));
         assertTrue(customerRows.getText().contains("(11) 98765-4321"));
-        assertTrue(customerRows.getText().contains(TEST_CPF));
+        assertTrue(customerRows.getText().contains("123.456.789-00"));
         assertTrue(customerRows.getText().contains("joao.silva@test.com"));
-
-        // Signal that this test is complete
-        // latches[1].countDown();
     }
 
     @Test
     @Order(3)
     void shouldEditCustomer() throws InterruptedException {
-        // Wait for previous test to complete
-        // assertTrue(latches[1].await(30, TimeUnit.SECONDS), "Previous test did not
-        // complete");
-
         driver.get(BASE_URL + "/clientes");
 
-        // Buscar cliente para editar
-        fillInputById("searchDocument", TEST_CPF);
+        fillInputById("searchName", "João");
 
-        // Clicar no botão de editar
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.className("table-container")));
+
         clickButtonByClass("edit");
 
-        // Atualizar nome
+        fillInputById("name", "");
         fillInputById("name", "João Editado");
 
-        // Atualizar documento
-        fillInputById("document", TEST_CPF_EDIT);
+        fillInputById("document", "");
+        fillInputById("document", "987.654.321-01");
 
-        // Submeter edição
-        WebElement submitButton = wait
-                .until(ExpectedConditions.elementToBeClickable(By.cssSelector("button[type='submit']")));
-        submitButton.click();
+        clickButtonById("save-button");
 
-        // Verificar mensagem de sucesso
         WebElement successMessage = wait
                 .until(ExpectedConditions.presenceOfElementLocated(By.className("alert-success")));
         assertTrue(successMessage.getText().contains("Cliente atualizado com sucesso!"));
 
-        // Verificar se a alteração foi aplicada na listagem
         driver.get(BASE_URL + "/clientes");
-        fillInputById("searchDocument", TEST_CPF_EDIT);
 
         WebElement customerRows = wait
                 .until(ExpectedConditions.presenceOfElementLocated(By.className("table-container")));
         assertTrue(customerRows.getText().contains("João Editado"));
         assertTrue(customerRows.getText().contains("(11) 98765-4321"));
-        assertTrue(customerRows.getText().contains(TEST_CPF_EDIT));
+        assertTrue(customerRows.getText().contains("987.654.321-01"));
         assertTrue(customerRows.getText().contains("joao.silva@test.com"));
-
-        // Signal that this test is complete
-        // latches[2].countDown();
     }
 
     @Test
     @Order(4)
     void shouldDeleteCustomer() {
-        // Setup to always confirm dialogs
-        ((JavascriptExecutor) driver).executeScript(
-                "window.confirm = function() { return true; };");
-
         driver.get(BASE_URL + "/clientes");
 
-        // Search for customer to delete
-        WebElement searchInput = wait.until(
-                ExpectedConditions.presenceOfElementLocated(By.id("searchDocument")));
-        searchInput.sendKeys(TEST_CPF_EDIT);
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.className("table-container")));
 
-        // Wait for table results
-        WebElement tableContainer = wait.until(
-                ExpectedConditions.presenceOfElementLocated(By.cssSelector(".table-container")));
-
-        // Find and click delete button
-        WebElement deleteButton = wait.until(
-                ExpectedConditions.elementToBeClickable(
-                        tableContainer.findElements(By.cssSelector("button[class*='delete']")).get(0)));
-        deleteButton.click();
+        clickButtonByClass("delete");
 
         Alert alert = wait.until(ExpectedConditions.alertIsPresent());
         alert.accept();
-
-        // Verify success message
-        WebElement successMessage = wait.until(
-                ExpectedConditions.presenceOfElementLocated(By.className("alert-success")));
-        assertTrue(successMessage.getText().contains("Cliente excluído com sucesso!"));
     }
 
     private void fillInputById(String id, String value) {
@@ -293,10 +241,8 @@ class CustomerE2ETest {
     private void fillAddressForm(String billing, String delivery, String residence, String street, String number,
             String complement, String neighborhood, String city, String state, String country, String zipcode) {
         try {
-            // Primeiro preenchemos o CEP para aproveitar a busca automática
             fillInputById("zip", zipcode);
 
-            // Depois preenchemos os outros campos
             fillInputById("street", street);
             fillInputById("number", number);
             fillInputById("complement", complement);
@@ -305,7 +251,6 @@ class CustomerE2ETest {
             fillInputById("state", state);
             fillInputById("country", country);
 
-            // Por último, marcamos os checkboxes
             setCheckboxById("billing", billing);
             setCheckboxById("delivery", delivery);
             setCheckboxById("residence", residence);

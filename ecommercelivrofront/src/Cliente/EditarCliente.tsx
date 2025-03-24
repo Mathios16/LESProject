@@ -115,7 +115,7 @@ const EditarCliente: React.FC = () => {
   const [editingAddressIndex, setEditingAddressIndex] = useState<number | null>(null);
   const [editingPaymentIndex, setEditingPaymentIndex] = useState<number | null>(null);
 
-  
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordConfirmation, setPasswordConfirmation] = useState('');
@@ -145,7 +145,7 @@ const EditarCliente: React.FC = () => {
 
     try {
       const response = await fetch(`https://viacep.com.br/ws/${cleanedCep}/json/`);
-      
+
       if (!response.ok) {
         throw new Error('Erro ao buscar endereço');
       }
@@ -159,13 +159,13 @@ const EditarCliente: React.FC = () => {
 
       setCurrentAddress(prevAddress => ({
         ...prevAddress,
-        streetType: '', 
+        streetType: '',
         street: data.logradouro,
         neighborhood: data.bairro,
         city: data.localidade,
         state: data.uf,
-        country: 'Brasil', 
-        zipCode: cleanedCep
+        country: 'Brasil',
+        zipCode: `${cleanedCep.slice(0, 5)}-${cleanedCep.slice(5, 8)}`
       }));
 
       setError('');
@@ -175,16 +175,16 @@ const EditarCliente: React.FC = () => {
   }, []);
 
   const handleAddressInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, 
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
     field: keyof Address
   ) => {
     const value = e.target.value;
-    
+
     if (field === 'zipCode') {
       const cleanedCep = value.replace(/\D/g, '');
-      
-      const formattedCep = cleanedCep.length > 5 
-        ? `${cleanedCep.slice(0, 5)}-${cleanedCep.slice(5, 8)}` 
+
+      const formattedCep = cleanedCep.length > 5
+        ? `${cleanedCep.slice(0, 5)}-${cleanedCep.slice(5, 8)}`
         : cleanedCep;
 
       setCurrentAddress(prev => ({
@@ -235,7 +235,7 @@ const EditarCliente: React.FC = () => {
       const formattedPhone = cleanedPhone.length >= 11
         ? `${cleanedPhone.slice(2, 7)}-${cleanedPhone.slice(7)}`
         : `${cleanedPhone.slice(2, 6)}-${cleanedPhone.slice(6)}`;
-        
+
       phoneDdd = `(${cleanedPhone.slice(0, 2)})`;
 
       setCustomer(prev => ({
@@ -271,11 +271,11 @@ const EditarCliente: React.FC = () => {
 
   const formatDateForInput = (dateString: string, dateType: string = '') => {
     const date = new Date(dateString);
-    
+
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
-    
+
     return dateType === 'BR' ? `${day}/${month}/${year}` : `${year}-${month}-${day}`;
   };
 
@@ -287,10 +287,10 @@ const EditarCliente: React.FC = () => {
           throw new Error('Cliente não encontrado');
         }
         const data = await response.json();
-        
+
         setCustomer(data);
         previousCustomer.current = data;
-        
+
       } catch (err) {
         setError('Erro ao carregar dados do cliente');
         navigate('/clientes');
@@ -612,7 +612,7 @@ const EditarCliente: React.FC = () => {
                 onChange={(e) => setCustomer({ ...customer, password: e.target.value })}
                 onBlur={(e) => handleInputChange(e, 'password')}
                 required
-                style={{ 
+                style={{
                   paddingRight: '40px'
                 }}
               />
@@ -642,7 +642,7 @@ const EditarCliente: React.FC = () => {
                   value={passwordConfirmation}
                   onChange={(e) => setPasswordConfirmation(e.target.value)}
                   required
-                  style={{ 
+                  style={{
                     paddingRight: '40px'
                   }}
                 />
@@ -659,9 +659,9 @@ const EditarCliente: React.FC = () => {
                   )}
                 </button>
               </div>
-                {!isPasswordValid() && (
-                  <small className="form-text text-muted">As senhas não coincidem</small>
-                )}
+              {!isPasswordValid() && (
+                <small className="form-text text-muted">As senhas não coincidem</small>
+              )}
             </div>
           )}
         </div>
@@ -698,15 +698,15 @@ const EditarCliente: React.FC = () => {
                 <p>CEP: {address.zipCode}</p>
               </div>
               <div className="item-actions">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="edit-button"
                   onClick={() => handleEditAddress(index)}
                 >
                   <Pencil size={16} />
                 </button>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="delete-button"
                   onClick={() => handleDeleteAddress(index)}
                 >
@@ -745,15 +745,15 @@ const EditarCliente: React.FC = () => {
                 <p>Validade: {formatDateForInput(payment.cardExpiration, 'BR')}</p>
               </div>
               <div className="item-actions">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="edit-button"
                   onClick={() => handleEditPaymentMethod(index)}
                 >
                   <Pencil size={16} />
                 </button>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="delete-button"
                   onClick={() => handleDeletePaymentMethod(index)}
                 >
@@ -768,7 +768,7 @@ const EditarCliente: React.FC = () => {
           <button type="button" className="secondary" onClick={() => navigate('/clientes')}>
             Cancelar
           </button>
-          <button type="submit" className="primary">
+          <button id="save-button" type="submit" className="primary">
             Salvar Alterações
           </button>
         </div>
@@ -891,12 +891,12 @@ const EditarCliente: React.FC = () => {
           <div className="type-group">
             <div className="type-option">
               <label className="switch">
-                <input 
+                <input
                   id="billing"
                   type="checkbox"
                   checked={currentAddress.addressType.includes('COBRANCA')}
                   onChange={(e) => {
-                    const newTypes = e.target.checked 
+                    const newTypes = e.target.checked
                       ? [...currentAddress.addressType, 'COBRANCA']
                       : currentAddress.addressType.filter(t => t !== 'COBRANCA');
                     setCurrentAddress({ ...currentAddress, addressType: newTypes });
@@ -909,12 +909,12 @@ const EditarCliente: React.FC = () => {
             </div>
             <div className="type-option">
               <label className="switch">
-                <input 
+                <input
                   id="delivery"
                   type="checkbox"
                   checked={currentAddress.addressType.includes('ENTREGA')}
                   onChange={(e) => {
-                    const newTypes = e.target.checked 
+                    const newTypes = e.target.checked
                       ? [...currentAddress.addressType, 'ENTREGA']
                       : currentAddress.addressType.filter(t => t !== 'ENTREGA');
                     setCurrentAddress({ ...currentAddress, addressType: newTypes });
@@ -927,12 +927,12 @@ const EditarCliente: React.FC = () => {
             </div>
             <div className="type-option">
               <label className="switch">
-                <input 
+                <input
                   id="residential"
                   type="checkbox"
                   checked={currentAddress.addressType.includes('RESIDENCIAL')}
                   onChange={(e) => {
-                    const newTypes = e.target.checked 
+                    const newTypes = e.target.checked
                       ? [...currentAddress.addressType, 'RESIDENCIAL']
                       : currentAddress.addressType.filter(t => t !== 'RESIDENCIAL');
                     setCurrentAddress({ ...currentAddress, addressType: newTypes });
@@ -947,10 +947,10 @@ const EditarCliente: React.FC = () => {
         </div>
 
         <div className="modal-actions">
-          <button 
+          <button
             id="cancel-address"
-            type="button" 
-            className="secondary" 
+            type="button"
+            className="secondary"
             onClick={() => {
               setIsAddressModalOpen(false);
               setError('');
@@ -970,10 +970,10 @@ const EditarCliente: React.FC = () => {
           >
             Cancelar
           </button>
-          <button 
+          <button
             id="add-address"
-            type="button" 
-            className="primary" 
+            type="button"
+            className="primary"
             onClick={handleAddAddress}
           >
             {editingAddressIndex !== null ? "Salvar" : "Adicionar"}
@@ -998,14 +998,14 @@ const EditarCliente: React.FC = () => {
             />
           </div>
           <div className="form-group">
-              <label className="form-label">Bandeira do Cartão</label>
-              <select
-                id="cardFlag"
-                className="form-control"
-                value={currentPaymentMethod.cardFlag}
-                onChange={(e) => setCurrentPaymentMethod({ ...currentPaymentMethod, cardFlag: e.target.value })}
-                required
-              >
+            <label className="form-label">Bandeira do Cartão</label>
+            <select
+              id="cardFlag"
+              className="form-control"
+              value={currentPaymentMethod.cardFlag}
+              onChange={(e) => setCurrentPaymentMethod({ ...currentPaymentMethod, cardFlag: e.target.value })}
+              required
+            >
               <option value="">Selecione</option>
               <option value="VISA">VISA</option>
               <option value="MASTERCARD">MASTERCARD</option>
