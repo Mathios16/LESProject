@@ -1,0 +1,118 @@
+@import (reference) '../../styles/variables.less';
+
+.home-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+  
+  > h1 {
+    text-align: center;
+    color: @primary-color;
+    margin-bottom: 2rem;
+    font-size: 2.5rem;
+    border-bottom: 3px solid @primary-color;
+    padding-bottom: 1rem;
+  }
+}
+
+.category-section {
+  margin-bottom: 3rem;
+  
+  .category-title {
+    color: @secondary-color;
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid @primary-color;
+  }
+  
+  .items-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
+  }
+  
+  .item-card {
+    background-color: @border-color;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    
+    &:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .item-image {
+      height: 350px;
+      overflow: hidden;
+      
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+      }
+    }
+    
+    .item-details {
+      padding: 1rem;
+      background-color: @background-color;
+      
+      h3 {
+        font-size: 1.2rem;
+        color: @primary-color;
+        margin-bottom: 0.5rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      
+      .item-price {
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: @secondary-color;
+      }
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .home-container {
+    padding: 1rem;
+    
+    > h1 {
+      font-size: 2rem;
+    }
+  }
+  
+  .category-section {
+    .category-title {
+      font-size: 1.5rem;
+    }
+    
+    .items-grid {
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 1rem;
+    }
+    
+    .item-card {
+      .item-image {
+        height: 250px;
+      }
+      
+      .item-details {
+        h3 {
+          font-size: 1rem;
+        }
+        
+        .item-price {
+          font-size: 0.9rem;
+        }
+      }
+    }
+  }
+}

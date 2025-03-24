@@ -498,14 +498,14 @@ const EditarCliente: React.FC = () => {
 
   return (
     <div className="cliente-container">
-      <div className="cliente-header">
+      <div className="header">
         <h1>Editar Cliente</h1>
       </div>
 
       {error && <div className="alert alert-error">{error}</div>}
       {success && <div className="alert alert-success">{success}</div>}
 
-      <form className="cliente-form" onSubmit={handleSubmit}>
+      <form className="form" onSubmit={handleSubmit}>
         <div className="row-group">
           <div className="form-group">
             <label className="form-label">Nome</label>
@@ -764,7 +764,7 @@ const EditarCliente: React.FC = () => {
           ))}
         </div>
 
-        <div className="cliente-actions">
+        <div className="actions">
           <button type="button" className="secondary" onClick={() => navigate('/clientes')}>
             Cancelar
           </button>
