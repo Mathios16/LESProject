@@ -100,9 +100,9 @@ const ListarClientes: React.FC = () => {
 
   return (
     <div className="cliente-container">
-      <div className="cliente-header">
+      <div className="header">
         <h1>Lista de Clientes</h1>
-        <div className="cliente-actions">
+        <div className="actions">
           <button className="primary" onClick={() => navigate('/cliente/criar')}>
             Novo Cliente
           </button>
@@ -112,7 +112,7 @@ const ListarClientes: React.FC = () => {
       {error && <div className="alert alert-error">{error}</div>}
       {success && <div className="alert alert-success">{success}</div>}
 
-      <div className="cliente-form">
+      <div className="form">
         <div className="row-group">
           <div className="form-group">
             <label className="form-label">Nome</label>

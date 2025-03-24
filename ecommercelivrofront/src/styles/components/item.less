@@ -1,13 +1,18 @@
 @import '../variables.less';
 @import '../mixins.less';
 
+.inicial,
+.devolucao,
+.compra,
+.estoque,
+.item,
 .cliente {
   &-container {
     padding: 20px;
     max-width: 1200px;
     margin: 0 auto;
 
-    .cliente-header {
+    .header {
       margin-bottom: 30px;
       h1 {
         font-size: 24px;
@@ -15,7 +20,7 @@
       }
     }
 
-    .cliente-form {
+    .form {
       background: #fff;
       padding: 30px;
       border-radius: 8px;
@@ -149,18 +154,25 @@
     }
 
     .list-item {
-      background: #fff;
-      border: 1px solid #e1e1e1;
-      border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 16px;
       display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      transition: box-shadow 0.2s;
+      flex-wrap: wrap;
+      gap: 8px;
 
-      &:hover {
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      .selected-category {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+
+        .remove-category {
+          background: none;
+          border: none;
+          color: #dc3545;
+          font-size: 18px;
+          cursor: pointer;
+          padding: 0;
+          line-height: 1;
+        }
       }
 
       .item-info {
@@ -180,24 +192,39 @@
             font-weight: 500;
             height: 24px;
 
-            &.billing {
+            &.blue {
               background-color: #e3f2fd;
               color: #1976d2;
             }
 
-            &.shipping {
+            &.green {
               background-color: #e8f5e9;
               color: #2e7d32;
             }
 
-            &.residence {
+            &.red {
               background-color: #fde3f3e1;
               color: #d21985dc;
             }
 
-            &.primary {
+            &.yellow {
               background-color: #fff3e0;
               color: #e65100;
+            }
+
+            &.purple {
+              background-color: #efe3fde1;
+              color: #5119d2dc;
+            }
+
+            &.grey {
+              background-color: #b7e1ff;
+              color: #414141ce;
+            }
+
+            &.black {
+              background-color: #cee8fa;
+              color: #000000ce;
             }
           }
         }
@@ -267,7 +294,35 @@
       }
     }
 
-    .cliente-actions {
+    .category-search {
+      position: relative;
+      margin-bottom: 16px;
+
+      .category-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #ddd;
+        border-top: none;
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 10;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+
+        .category-option {
+          padding: 8px 12px;
+          cursor: pointer;
+          
+          &:hover {
+            background-color: #f0f0f0;
+          }
+        }
+      }
+    }
+
+    .actions {
       display: flex;
       justify-content: flex-end;
       gap: 16px;

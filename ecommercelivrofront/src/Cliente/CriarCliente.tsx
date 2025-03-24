@@ -568,14 +568,14 @@ const CriarCliente: React.FC = () => {
 
   return (
     <div className="cliente-container">
-      <div className="cliente-header">
+      <div className="header">
         <h1>Cadastro de Cliente</h1>
       </div>
 
       {error && <div className="alert alert-error">{error}</div>}
       {success && <div className="alert alert-success">{success}</div>}
 
-      <form className="cliente-form" onSubmit={handleSubmit}>
+      <form className="form" onSubmit={handleSubmit}>
         <div className="row-group">
           <div className="form-group">
             <label className="form-label">Nome</label>
@@ -759,9 +759,9 @@ const CriarCliente: React.FC = () => {
             <div key={index} className="list-item">
               <div className="item-info">
                 <div className="item-type">
-                  {address.addressType.includes('COBRANCA') && <span className="type-tag billing">Cobrança</span>}
-                  {address.addressType.includes('ENTREGA') && <span className="type-tag shipping">Entrega</span>}
-                  {address.addressType.includes('RESIDENCIAL') && <span className="type-tag residence">Residencial</span>}
+                  {address.addressType.includes('COBRANCA') && <span className="type-tag green">Cobrança</span>}
+                  {address.addressType.includes('ENTREGA') && <span className="type-tag red">Entrega</span>}
+                  {address.addressType.includes('RESIDENCIAL') && <span className="type-tag blue">Residencial</span>}
                 </div>
                 <p>{address.street}, {address.number}</p>
                 {address.complement && <p>Complemento: {address.complement}</p>}
@@ -812,7 +812,7 @@ const CriarCliente: React.FC = () => {
             <div key={index} className="list-item">
               <div className="item-info">
                 <div className="item-type">
-                  {payment.primary && <span className="type-tag primary">Cartão Principal</span>}
+                  {payment.primary && <span className="type-tag yellow">Cartão Principal</span>}
                 </div>
                 <strong>{payment.cardName}</strong>
                 <p>**** **** **** {payment.cardNumber?.slice(-4)}</p>
@@ -840,7 +840,7 @@ const CriarCliente: React.FC = () => {
           ))}
         </div>
 
-        <div className="cliente-actions">
+        <div className="actions">
           <button
             id="cancel"
             type="button"

@@ -2,7 +2,7 @@ import { User } from "@phosphor-icons/react";
 import { Link, useMatch, useResolvedPath } from "react-router-dom";
 import { ReactNode } from 'react';
 
-function CustomLink({to, children, className}: {to: string, children: ReactNode, className?: string}) {
+const CustomLink: React.FC<{to: string, children: ReactNode, className?: string}> = ({to, children, className}) => {
     const resolvedPath = useResolvedPath(to);
     const isActive = useMatch({ path: resolvedPath.pathname, end: true });
 
@@ -16,7 +16,7 @@ function CustomLink({to, children, className}: {to: string, children: ReactNode,
     )
 }
 
-function NavBar() {
+const NavBar: React.FC<{userType: string, userId?: number}> = ({userType, userId}) => {
     return (
         <nav className="navbar">
             <div className="navbar-container">
@@ -25,13 +25,24 @@ function NavBar() {
                 </Link>
                 
                 <div className="navbar-nav">
-                    <CustomLink to="/">Home</CustomLink>
-                    <CustomLink to="/clientes/criar">Criar Cliente</CustomLink>
-                    <CustomLink to="/clientes">Listar Clientes</CustomLink>
+                    {userType === 'admin' && (
+                        <>
+                            <CustomLink to="/clientes/criar">Criar Cliente</CustomLink>
+                            <CustomLink to="/clientes">Listar Clientes</CustomLink>
+                            <CustomLink to="/itens/criar">Criar Item</CustomLink>
+                            <CustomLink to="/itens">Listar Itens</CustomLink>
+                        </>
+                    )}
+                    {userType === 'user' && (
+                        <>
+                            <CustomLink to="/">Home</CustomLink>
+                            <CustomLink to="/carrinho">Carrinho</CustomLink>
+                        </>
+                    )}
                 </div>
 
                 <div className="navbar-user">
-                    <User size={32} weight="light" />
+                    {userType === 'user' && <CustomLink to={ userId ? `/clientes/editar/${userId}` : '/clientes/criar'}><User size={32} weight="light" /></CustomLink>}
                 </div>
             </div>
         </nav>
