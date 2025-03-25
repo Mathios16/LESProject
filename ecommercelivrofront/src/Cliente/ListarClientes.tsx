@@ -1,6 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PencilSimple, Trash } from '@phosphor-icons/react';
+import {
+  Container,
+  Typography,
+  TextField,
+  Button,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  IconButton,
+  Grid,
+  Box,
+  Snackbar,
+  Alert
+} from '@mui/material';
 
 interface Address {
   street: string;
@@ -50,12 +68,12 @@ const ListarClientes: React.FC = () => {
       if (searchDocument) queryParams.append('document', searchDocument);
       if (searchPhone) queryParams.append('phone', searchPhone);
 
-      const response = await fetch(`http://localhost:8080/customers${queryParams.toString() ? `?${queryParams.toString()}` : ''}`, {
+      const response = await fetch(`http://172.17.0.2:8080/customers${queryParams.toString() ? `?${queryParams.toString()}` : ''}`, {
         method: 'GET',
-        credentials: 'include', 
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*' 
+          'Access-Control-Allow-Origin': '*'
         }
       });
 
@@ -77,12 +95,12 @@ const ListarClientes: React.FC = () => {
   const handleDelete = async (id: number) => {
     if (window.confirm('Tem certeza que deseja excluir este cliente?')) {
       try {
-        const response = await fetch(`http://localhost:8080/customers/${id}`, {
+        const response = await fetch(`http://172.17.0.2:8080/customers/${id}`, {
           method: 'DELETE',
-          credentials: 'include', 
+          credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*' 
+            'Access-Control-Allow-Origin': '*'
           }
         });
 
@@ -99,114 +117,118 @@ const ListarClientes: React.FC = () => {
   };
 
   return (
-    <div className="cliente-container">
-      <div className="header">
-        <h1>Lista de Clientes</h1>
-        <div className="actions">
-          <button className="primary" onClick={() => navigate('/cliente/criar')}>
+    <Container maxWidth="lg">
+      <Box py={4}>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
+          <Typography variant="h4">
+            Lista de Clientes
+          </Typography>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => navigate('/clientes/criar')}
+          >
             Novo Cliente
-          </button>
-        </div>
-      </div>
-      
-      {error && <div className="alert alert-error">{error}</div>}
-      {success && <div className="alert alert-success">{success}</div>}
+          </Button>
+        </Box>
 
-      <div className="form">
-        <div className="row-group">
-          <div className="form-group">
-            <label className="form-label">Nome</label>
-            <input
-              id="searchName"
-              type="text"
-              className="form-control"
-              value={searchName}
-              onChange={(e) => setSearchName(e.target.value)}
-              placeholder="Buscar por nome"
-            />
-          </div>
+        <Paper elevation={3}>
+          <Box p={3}>
+            <Grid container spacing={2} mb={3}>
+              <Grid item xs={12} sm={6} md={3}>
+                <TextField
+                  fullWidth
+                  label="Nome"
+                  value={searchName}
+                  onChange={(e) => setSearchName(e.target.value)}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <TextField
+                  fullWidth
+                  label="Email"
+                  value={searchEmail}
+                  onChange={(e) => setSearchEmail(e.target.value)}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <TextField
+                  fullWidth
+                  label="CPF"
+                  value={searchDocument}
+                  onChange={(e) => setSearchDocument(e.target.value)}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <TextField
+                  fullWidth
+                  label="Telefone"
+                  value={searchPhone}
+                  onChange={(e) => setSearchPhone(e.target.value)}
+                />
+              </Grid>
+            </Grid>
 
-          <div className="form-group">
-            <label className="form-label">Email</label>
-            <input
-              id="searchEmail"
-              type="text"
-              className="form-control"
-              value={searchEmail}
-              onChange={(e) => setSearchEmail(e.target.value)}
-              placeholder="Buscar por email"
-            />
-          </div>
-        </div>
-        <div className="row-group">
-          <div className="form-group">
-            <label className="form-label">CPF</label>
-            <input
-              id="searchDocument"
-              type="text"
-              className="form-control"
-              value={searchDocument}
-              onChange={(e) => setSearchDocument(e.target.value)}
-              placeholder="Buscar por documento"
-            />
-          </div>
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Nome</TableCell>
+                    <TableCell>Email</TableCell>
+                    <TableCell>CPF</TableCell>
+                    <TableCell>Telefone</TableCell>
+                    <TableCell align="right">Ações</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {customers.map((customer) => (
+                    <TableRow key={customer.id}>
+                      <TableCell>{customer.name} {customer.lastname}</TableCell>
+                      <TableCell>{customer.email}</TableCell>
+                      <TableCell>{customer.document}</TableCell>
+                      <TableCell>({customer.phoneDdd}) {customer.phone}</TableCell>
+                      <TableCell align="right">
+                        <IconButton
+                          color="primary"
+                          onClick={() => navigate(`/clientes/editar/${customer.id}`)}
+                        >
+                          <PencilSimple />
+                        </IconButton>
+                        <IconButton
+                          color="error"
+                          onClick={() => handleDelete(customer.id)}
+                        >
+                          <Trash />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Box>
+        </Paper>
+      </Box>
 
-          <div className="form-group">
-            <label className="form-label">Telefone</label>
-            <input
-              id="searchPhone"
-              type="text"
-              className="form-control"
-              value={searchPhone}
-              onChange={(e) => setSearchPhone(e.target.value)}
-              placeholder="Buscar por telefone"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Nome</th>
-              <th>Email</th>
-              <th>CPF</th>
-              <th>Telefone</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {customers.map((customer) => (
-              <tr key={customer.id}>
-                <td>{customer.name} {customer.lastname}</td>
-                <td>{customer.email}</td>
-                <td>{customer.document}</td>
-                <td>
-                  {`(${customer.phoneDdd}) ${customer.phone}`}
-                </td>
-                <td>
-                  <div className="actions">
-                    <button
-                      className="edit"
-                      onClick={() => navigate(`/cliente/editar/${customer.id}`)}
-                    >
-                      <PencilSimple size={20} />
-                    </button>
-                    <button
-                      className="delete"
-                      onClick={() => handleDelete(customer.id)}
-                    >
-                      <Trash size={20} />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+      <Snackbar
+        open={!!error || !!success}
+        autoHideDuration={6000}
+        onClose={() => {
+          setError(null);
+          setSuccess('');
+        }}
+      >
+        <Alert
+          severity={error ? "error" : "success"}
+          onClose={() => {
+            setError(null);
+            setSuccess('');
+          }}
+        >
+          {error || success}
+        </Alert>
+      </Snackbar>
+    </Container>
   );
 };
 

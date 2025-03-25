@@ -1,6 +1,33 @@
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, X, Trash, Pencil, Eye, EyeSlash } from '@phosphor-icons/react';
+import {
+  Container,
+  Typography,
+  TextField,
+  Button,
+  Checkbox,
+  Grid,
+  Paper,
+  Box,
+  FormControl,
+  FormControlLabel,
+  InputLabel,
+  Select,
+  MenuItem,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Snackbar,
+  Alert,
+  FormGroup,
+  FormLabel,
+  Chip
+} from '@mui/material';
+
+import { SelectChangeEvent } from '@mui/material/Select';
 
 interface Address {
   streetType: string;
@@ -40,32 +67,36 @@ interface Customer {
 }
 
 interface ModalProps {
-  isOpen: boolean;
+  open: boolean;
   onClose: () => void;
-  children: React.ReactNode;
   title: string;
+  children: React.ReactNode;
 }
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children, title }) => {
-  if (!isOpen) return null;
-
+const Modal: React.FC<ModalProps> = ({ open, onClose, title, children }) => {
   return (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <div className="modal-header">
-          <h3>{title}</h3>
-          <button className="close-button" onClick={onClose}>
-            <X size={24} />
-          </button>
-        </div>
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+      <DialogTitle>
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+          {title}
+          <IconButton onClick={onClose} size="small">
+            <X />
+          </IconButton>
+        </Box>
+      </DialogTitle>
+      <DialogContent>
         {children}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
 const CriarCliente: React.FC = () => {
   const navigate = useNavigate();
+  const [error, setError] = useState<string>('');
+  const [success, setSuccess] = useState<string>('');
+  const [showPassword, setShowPassword] = useState(false);
+
   const [customer, setCustomer] = useState<Customer>({
     name: '',
     lastname: '',
@@ -80,49 +111,6 @@ const CriarCliente: React.FC = () => {
     addresses: [],
     paymentMethods: []
   });
-
-  const [error, setError] = useState<string>('');
-  const [success, setSuccess] = useState<string>('');
-
-  const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-
-  const [currentAddress, setCurrentAddress] = useState<Address>({
-    streetType: '',
-    street: '',
-    number: '', 
-    complement: '',
-    neighborhood: '',
-    city: '',
-    state: '',
-    country: '',
-    zipCode: '',
-    addressType: []
-  });
-
-  const [currentPaymentMethod, setCurrentPaymentMethod] = useState<PaymentMethod>({
-    primary: false,
-    cardFlag: '',
-    cardNumber: '',
-    cardName: '',
-    cardExpiration: '',
-    cvv: ''
-  });
-
-  const [editingAddressIndex, setEditingAddressIndex] = useState<number | null>(null);
-  const [editingPaymentIndex, setEditingPaymentIndex] = useState<number | null>(null);
-
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [passwordConfirmation, setPasswordConfirmation] = useState('');
-
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
-
-  const toggleConfirmPasswordVisibility = () => {
-    setShowConfirmPassword(!showConfirmPassword);
-  };
 
   const fetchAddressByCep = useCallback(async (cep: string) => {
     const cleanedCep = cep.replace(/\D/g, '');
@@ -163,1034 +151,600 @@ const CriarCliente: React.FC = () => {
     }
   }, []);
 
-  const handleAddressInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, 
-    field: keyof Address
-  ) => {
-    const value = e.target.value;
-    
-    if (field === 'zipCode') {
-      const cleanedCep = value.replace(/\D/g, '');
-      
-      const formattedCep = cleanedCep.length > 5 
-        ? `${cleanedCep.slice(0, 5)}-${cleanedCep.slice(5, 8)}` 
-        : cleanedCep;
+  const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [currentAddress, setCurrentAddress] = useState<Address>({
+    streetType: '',
+    street: '',
+    number: '',
+    complement: '',
+    neighborhood: '',
+    city: '',
+    state: '',
+    country: '',
+    zipCode: '',
+    addressType: []
+  });
 
-      setCurrentAddress(prev => ({
-        ...prev,
-        [field]: formattedCep
-      }));
+  const [currentPayment, setCurrentPayment] = useState<PaymentMethod>({
+    primary: false,
+    cardFlag: '',
+    cardNumber: '',
+    cardName: '',
+    cardExpiration: '',
+    cvv: ''
+  });
 
-      if (cleanedCep.length === 8) {
-        fetchAddressByCep(cleanedCep);
-      }
-    } else {
-      setCurrentAddress(prev => ({
-        ...prev,
-        [field]: value
-      }));
-    }
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setCustomer(prev => ({ ...prev, [name]: value }));
   };
 
-  const handlePaymentInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, 
-    field: keyof PaymentMethod
-  ) => {
+  const handleSelectChangeCustomer = (e: SelectChangeEvent<string>) => {
+    const name = e.target.name as keyof Customer;
     const value = e.target.value;
-
-    if (field === 'cardExpiration') {
-      const cleanedDate = value.replace(/\D/g, '');
-      const formattedDate = `${cleanedDate.slice(0, 2)}/${cleanedDate.slice(2, 4)}`;
-
-      setCurrentPaymentMethod(prev => ({
-        ...prev,
-        [field]: formattedDate
-      }));
-      return;
-    }
-    setCurrentPaymentMethod(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setCustomer(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, 
-    field: keyof Customer
-  ) => {
+  const handleSelectChangePayment = (e: SelectChangeEvent<string>) => {
+    const name = e.target.name as keyof PaymentMethod;
     const value = e.target.value;
+    setCurrentPayment(prev => ({ ...prev, [name]: value }));
+  };
 
-    if (field ===  'document') {
-      const cleanedCpf = value.replace(/\D/g, '');
+  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setCurrentAddress(prev => ({ ...prev, [name]: value }));
+  };
 
-      const formattedCpf = `${cleanedCpf.slice(0, 3)}.${cleanedCpf.slice(3, 6)}.${cleanedCpf.slice(6, 9)}-${cleanedCpf.slice(9, 11)}`;
-
-      setCustomer(prev => ({
-        ...prev,
-        [field]: formattedCpf
-      }));
-      return;
-    }
-
-    if (field === 'phone') {
-      const cleanedPhone = value.replace(/\D/g, '');
-
-      let phoneType = '';
-      let phoneDdd = '';
-
-      if (cleanedPhone.length === 10) {
-        phoneType = 'FIXO'; 
-      } else if (cleanedPhone.length === 11) {
-        phoneType = 'CELULAR';
-      }
-
-      const formattedPhone = cleanedPhone.length >= 11 
-        ? `${cleanedPhone.slice(2, 7)}-${cleanedPhone.slice(7)}` 
-        : `${cleanedPhone.slice(2, 6)}-${cleanedPhone.slice(6)}`;
-
-      phoneDdd = cleanedPhone.slice(0, 2);
-
-      setCustomer(prev => ({
-        ...prev,
-        phoneType,
-        phoneDdd,
-        [field]: formattedPhone
-      }));
-      return;
-    }
-
-    if (field === 'email') {
-      const cleanedEmail = value.replace(/\s/g, '');
-
-      if (!/^[^\s]+@[^\s]+\.[^\s]+$/.test(cleanedEmail)) {
-        setError('Email inválido');
-      } else {
-        setError('');
-      }
-
-      setCustomer(prev => ({
-        ...prev,
-        [field]: cleanedEmail
-      }));
-      return;
-    }
-
-    if (field === 'password') {
-      const cleanedPassword = value.replace(/\s/g, '');
-
-      if (!/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*\W)[\w\W]{8,}$/.test(cleanedPassword)) {
-        setError('Senha inválida');
-      } else {
-        setError('');
-      }
-
-      setCustomer(prev => ({
-        ...prev,
-        [field]: cleanedPassword
-      }));
-      return;
-    }
-
-    setCustomer(prev => ({
-      ...prev,
-      [field]: value
-    }));
+  const handlePaymentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setCurrentPayment(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-
-    if (!customer.addresses) {
-      customer.addresses = [];
-    }
-
-    if (!customer.paymentMethods) {
-      customer.paymentMethods = [];
-    }
-
-    if (customer.addresses.length === 0) {
-      setError('Adicione pelo menos um endereço');
-      return;
-    }
-
-    const hasBillingAddress = customer.addresses.some(addr => addr.addressType.includes('COBRANCA'));
-    const hasShippingAddress = customer.addresses.some(addr => addr.addressType.includes('ENTREGA'));
-    const hasResidenceAddress = customer.addresses.some(addr => addr.addressType.includes('RESIDENCIAL'));
-
-    if (!hasBillingAddress) {
-      setError('Adicione pelo menos um endereço de cobrança');
-      return;
-    }
-
-    if (!hasShippingAddress) {
-      setError('Adicione pelo menos um endereço de entrega');
-      return;
-    }
-
-    if (!hasResidenceAddress) {
-      setError('Adicione pelo menos um endereço residencial');
-      return;
-    }
-
-    if (customer.paymentMethods.length === 0) {
-      setError('Adicione pelo menos um método de pagamento');
-      return;
-    }
-
-    const hasPrimaryCard = customer.paymentMethods.some(payment => payment.primary);
-    if (!hasPrimaryCard) {
-      setError('Defina um cartão como principal');
-      return;
-    }
-
-    if (customer.password && passwordConfirmation && customer.password !== passwordConfirmation) {
-      setError('As senhas não coincidem');
-      return;
-    }
-
     try {
-      let addresses = customer.addresses;
-      let paymentMethods = customer.paymentMethods;
-      delete customer.addresses;
-      delete customer.paymentMethods;
-
-      console.log(JSON.stringify({
-        customer,
-        addresses,
-        paymentMethods
-      }));
       const response = await fetch('http://localhost:8080/customers', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          customer,
-          addresses,
-          paymentMethods
-        }),
+        body: JSON.stringify(customer)
       });
 
       if (!response.ok) {
-        customer.addresses = addresses;
-        customer.paymentMethods = paymentMethods;
-        const data = await response.json().catch(() => null);
-        throw new Error(data?.message || 'Erro ao criar cliente');
+        throw new Error('Erro ao criar cliente');
       }
 
       setSuccess('Cliente criado com sucesso!');
-      setTimeout(() => navigate('/clientes'), 2000);
+      navigate('/clientes');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao criar cliente. Por favor, tente novamente.');
+      setError(err instanceof Error ? err.message : 'Erro desconhecido');
     }
   };
 
-  const detectStreetType = (street: string): string => {
-    const streetLower = street.toLowerCase().trim();
-    const streetTypeMappings = [
-      { prefix: 'rua', type: 'RUA' },
-      { prefix: 'avenida', type: 'AVENIDA' },
-      { prefix: 'av.', type: 'AVENIDA' },
-      { prefix: 'condomínio', type: 'CONDOMINIO' },
-      { prefix: 'praça', type: 'PRACA' },
-      { prefix: 'estrada', type: 'ESTRADA' },
-      { prefix: 'rod.', type: 'ESTRADA' },
-      { prefix: 'rodovia', type: 'ESTRADA' }
-    ];
-
-    for (const mapping of streetTypeMappings) {
-      if (streetLower.startsWith(mapping.prefix)) {
-        return mapping.type;
-      }
+  const getStatusColor = (status: Address['addressType'][number]) => {
+    switch (status) {
+      case 'billing': return 'warning';
+      case 'shipping': return 'primary';
+      case 'residential': return 'success';
+      case 'primary': return 'error';
     }
-
-    return 'OUTRO';
-  };
-
-  const handleAddAddress = () => {
-    if (currentAddress.addressType.length === 0) {
-      setError('Selecione pelo menos um tipo de endereço');
-      return;
-    }
-
-    const detectedStreetType = currentAddress.streetType || detectStreetType(currentAddress.street);
-
-    const addressToAdd = {
-      ...currentAddress,
-      streetType: detectedStreetType
-    };
-
-    if (!customer.addresses) {
-      customer.addresses = [];
-    }
-
-    if (editingAddressIndex !== null) {
-      const newAddresses = [...customer.addresses];
-      newAddresses[editingAddressIndex] = addressToAdd;
-      setCustomer({ ...customer, addresses: newAddresses });
-      setEditingAddressIndex(null);
-    } else {
-      const hasConflictingTypes = currentAddress.addressType.some(type => 
-        customer.addresses?.some(addr => addr.addressType.includes(type))
-      );
-      
-      if (hasConflictingTypes) {
-        setError('Já existe um endereço com um dos tipos selecionados');
-        return;
-      }
-      setCustomer({ ...customer, addresses: [...customer.addresses, addressToAdd] });
-    }
-
-    setCurrentAddress({
-      streetType: '',
-      street: '',
-      number: '',
-      complement: '',
-      neighborhood: '',
-      city: '',
-      state: '',
-      country: '',
-      zipCode: '',
-      addressType: []
-    });
-    setIsAddressModalOpen(false);
-    setError('');
-  };
-
-  const handleAddPaymentMethod = () => {
-    if (!currentPaymentMethod.cardNumber || !currentPaymentMethod.cardName || 
-        !currentPaymentMethod.cardExpiration || !currentPaymentMethod.cvv) {
-      setError('Preencha todos os campos do cartão');
-      return;
-    }
-
-    if (!customer.paymentMethods) {
-      customer.paymentMethods = [];
-    }
-
-    if (editingPaymentIndex !== null) {
-      if (currentPaymentMethod.primary && 
-          !customer.paymentMethods[editingPaymentIndex].primary &&
-          customer.paymentMethods.some((p, i) => i !== editingPaymentIndex && p.primary)) {
-        setError('Já existe um cartão principal');
-        return;
-      }
-
-      const newPaymentMethods = [...customer.paymentMethods];
-      newPaymentMethods[editingPaymentIndex] = currentPaymentMethod;
-      setCustomer({ ...customer, paymentMethods: newPaymentMethods });
-      setEditingPaymentIndex(null);
-    } else {
-      if (currentPaymentMethod.primary && customer.paymentMethods.some(p => p.primary)) {
-        setError('Já existe um cartão principal');
-        return;
-      }
-      setCustomer({ ...customer, paymentMethods: [...customer.paymentMethods, currentPaymentMethod] });
-    }
-
-    setCurrentPaymentMethod({
-      primary: false,
-      cardFlag: '',
-      cardNumber: '',
-      cardName: '',
-      cardExpiration: '',
-      cvv: ''
-    });
-    setIsPaymentModalOpen(false);
-    setError('');
-  };
-
-  const handleEditAddress = (index: number) => {
-    if (!customer.addresses) {
-      customer.addresses = [];
-    }
-    setCurrentAddress(customer.addresses[index]);
-    setEditingAddressIndex(index);
-    setIsAddressModalOpen(true);
-  };
-
-  const handleEditPaymentMethod = (index: number) => {
-    if (!customer.paymentMethods) {
-      customer.paymentMethods = [];
-    }
-    setCurrentPaymentMethod(customer.paymentMethods[index]);
-    setEditingPaymentIndex(index);
-    setIsPaymentModalOpen(true);
-  };
-
-  const handleDeleteAddress = (index: number) => {
-    const newAddresses = customer.addresses?.filter((_, i) => i !== index) || [];
-    setCustomer({ ...customer, addresses: newAddresses });
-  };
-
-  const handleDeletePaymentMethod = (index: number) => {
-    const newPaymentMethods = customer.paymentMethods?.filter((_, i) => i !== index) || [];
-    setCustomer({ ...customer, paymentMethods: newPaymentMethods });
-  };
-
-  const handleCloseAddressModal = () => {
-    setIsAddressModalOpen(false);
-    setCurrentAddress({
-      streetType: '',
-      street: '',
-      number: '',
-      complement: '',
-      neighborhood: '',
-      city: '',
-      state: '',
-      country: '',
-      zipCode: '',
-      addressType: []
-    });
-    setEditingAddressIndex(null);
-  };
-
-  const handleClosePaymentModal = () => {
-    setIsPaymentModalOpen(false);
-    setCurrentPaymentMethod({
-      primary: false,
-      cardFlag: '',
-      cardNumber: '',
-      cardName: '',
-      cardExpiration: '',
-      cvv: ''
-    });
-    setEditingPaymentIndex(null);
-  };
-
-  const isPasswordValid = () => {
-    if (customer.password && passwordConfirmation) {
-      return customer.password === passwordConfirmation;
-    }
-    return true;
   };
 
   return (
-    <div className="cliente-container">
-      <div className="header">
-        <h1>Cadastro de Cliente</h1>
-      </div>
+    <Container maxWidth="lg">
+      <Box py={4}>
+        <Typography variant="h4" gutterBottom>
+          Criar Novo Cliente
+        </Typography>
 
-      {error && <div className="alert alert-error">{error}</div>}
-      {success && <div className="alert alert-success">{success}</div>}
+        <Paper elevation={3}>
+          <Box p={3}>
+            <form onSubmit={handleSubmit}>
+              <Grid container spacing={3}>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Nome"
+                    name="name"
+                    value={customer.name}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Sobrenome"
+                    name="lastname"
+                    value={customer.lastname}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </Grid>
 
-      <form className="form" onSubmit={handleSubmit}>
-        <div className="row-group">
-          <div className="form-group">
-            <label className="form-label">Nome</label>
-            <input
-              id="name"
-              type="text"
-              className="form-control"
-              value={customer.name}
-              onChange={(e) => setCustomer({ ...customer, name: e.target.value })}
-              required
-            />
-          </div>
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth>
+                    <InputLabel>Gênero</InputLabel>
+                    <Select
+                      name="gender"
+                      value={customer.gender}
+                      onChange={handleSelectChangeCustomer}
+                      required
+                    >
+                      <MenuItem value="M">Masculino</MenuItem>
+                      <MenuItem value="F">Feminino</MenuItem>
+                      <MenuItem value="O">Outro</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
 
-          <div className="form-group">
-            <label className="form-label">Sobrenome</label>
-            <input
-              id="lastname"
-              type="text"
-              className="form-control"
-              value={customer.lastname}
-              onChange={(e) => setCustomer({ ...customer, lastname: e.target.value })}
-              required
-            />
-          </div>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="CPF"
+                    name="document"
+                    value={customer.document}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </Grid>
 
-          <div className="form-group">
-            <label className="form-label">CPF</label>
-            <input
-              id="document"
-              type="text"
-              className="form-control"
-              value={customer.document}
-              onChange={(e) => handleInputChange(e, 'document')}
-              required
-            />
-          </div>
-        </div>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    type="date"
+                    label="Data de Nascimento"
+                    name="birthdate"
+                    value={customer.birthdate}
+                    onChange={handleInputChange}
+                    InputLabelProps={{ shrink: true }}
+                    required
+                  />
+                </Grid>
 
-        <div className="row-group">
-          <div className="form-group">
-            <label className="form-label">Data de Nascimento</label>
-            <input
-              id="birthdate"
-              type="date"
-              className="form-control"
-              value={customer.birthdate}
-              onChange={(e) => setCustomer({ ...customer, birthdate: e.target.value })}
-              required
-            />
-          </div>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    type="email"
+                    label="Email"
+                    name="email"
+                    value={customer.email}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </Grid>
 
-          <div className="form-group">
-            <label className="form-label">Telefone</label>
-            <input
-              id="phone"
-              type="text"
-              className="form-control"
-              value={`(${customer.phoneDdd}) ${customer.phone}`}
-              onChange={(e) => handleInputChange(e, 'phone')}
-              required
-              maxLength={15}
-            />
-            {customer.phoneType === 'FIXO' && <small className="form-text text-muted">Telefone Fixo</small>}
-            {customer.phoneType === 'CELULAR' && <small className="form-text text-muted">Celular</small>}
-          </div>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    type={showPassword ? "text" : "password"}
+                    label="Senha"
+                    name="password"
+                    value={customer.password}
+                    onChange={handleInputChange}
+                    required
+                    InputProps={{
+                      endAdornment: (
+                        <IconButton
+                          onClick={() => setShowPassword(!showPassword)}
+                          edge="end"
+                        >
+                          {showPassword ? <EyeSlash /> : <Eye />}
+                        </IconButton>
+                      ),
+                    }}
+                  />
+                </Grid>
 
-          <div className="form-group">
-            <label className="form-label">Gênero</label>
-            <select
-              id="gender"
-              className="form-control"
-              value={customer.gender}
-              onChange={(e) => setCustomer({ ...customer, gender: e.target.value })}
-              required
-            >
-              <option value="">Selecione</option>
-              <option value="MASCULINO">Masculino</option>
-              <option value="FEMININO">Feminino</option>
-              <option value="OUTRO">Outro</option>
-            </select>
-          </div>
-        </div>
+                <Grid item xs={12} sm={6}>
+                  <Box display="flex" gap={2}>
+                    <TextField
+                      label="DDD"
+                      name="phoneDdd"
+                      value={customer.phoneDdd}
+                      onChange={handleInputChange}
+                      required
+                      style={{ width: '80px' }}
+                    />
+                    <TextField
+                      fullWidth
+                      label="Telefone"
+                      name="phone"
+                      value={customer.phone}
+                      onChange={handleInputChange}
+                      required
+                    />
+                    <FormControl style={{ minWidth: '120px' }}>
+                      <InputLabel>Tipo</InputLabel>
+                      <Select
+                        name="phoneType"
+                        value={customer.phoneType}
+                        onChange={handleSelectChangeCustomer}
+                        required
+                      >
+                        <MenuItem value="MOBILE">Celular</MenuItem>
+                        <MenuItem value="HOME">Residencial</MenuItem>
+                        <MenuItem value="WORK">Trabalho</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Box>
+                </Grid>
 
-        <div className="row-group">
-          <div className="form-group">
-            <label className="form-label">Email</label>
-            <input
-              id="email"
-              type="email"
-              className="form-control"
-              value={customer.email}
-              onChange={(e) => setCustomer({ ...customer, email: e.target.value })}
-              onBlur={(e) => handleInputChange(e, 'email')}
-              required
-            />
-          </div>
+                <Grid item xs={12}>
+                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                    <Typography variant="h6">Endereços</Typography>
+                    <Button
+                      variant="contained"
+                      startIcon={<Plus />}
+                      onClick={() => setIsAddressModalOpen(true)}
+                    >
+                      Adicionar Endereço
+                    </Button>
+                  </Box>
+                  {customer.addresses && customer.addresses.map((address, index) => (
+                    <Paper key={index} elevation={1} sx={{ p: 2, mb: 2 }}>
+                      <Box display="flex" justifyContent="space-between" alignItems="center">
+                        <Typography>
+                          {address.street}, {address.number} - {address.city}/{address.state}
+                        </Typography>
+                        {address.addressType.map((type) => (
+                          <Chip 
+                            key={type} 
+                            label={type} 
+                            color={getStatusColor(type)} 
+                            variant="outlined" 
+                          />
+                        ))}
+                        <Box>
+                          <IconButton onClick={() => {/* Edit address */}}>
+                            <Pencil />
+                          </IconButton>
+                          <IconButton onClick={() => {/* Delete address */}} color="error">
+                            <Trash />
+                          </IconButton>
+                        </Box>
+                      </Box>
+                    </Paper>
+                  ))}
+                </Grid>
 
-          <div className="form-group">
-            <label className="form-label">Senha</label>
-            <div className="password-input-container" style={{ position: 'relative' }}>
-              <input
-                id="password"
-                type={showPassword ? 'text' : 'password'}
-                className="form-control"
-                value={customer.password}
-                onChange={(e) => setCustomer({ ...customer, password: e.target.value })}
-                onBlur={(e) => handleInputChange(e, 'password')}
-                required
-                style={{ 
-                  paddingRight: '40px'
-                }}
-              />
-              <button
-                type="button"
-                onClick={togglePasswordVisibility}
-                className="password-toggle"
-                aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
-              >
-                {showPassword ? (
-                  <EyeSlash size={20} />
-                ) : (
-                  <Eye size={20} />
-                )}
-              </button>
-            </div>
-          </div>
+                <Grid item xs={12}>
+                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                    <Typography variant="h6">Métodos de Pagamento</Typography>
+                    <Button
+                      variant="contained"
+                      startIcon={<Plus />}
+                      onClick={() => setIsPaymentModalOpen(true)}
+                    >
+                      Adicionar Método de Pagamento
+                    </Button>
+                  </Box>
+                  {customer.paymentMethods && customer.paymentMethods.map((payment, index) => (
+                    <Paper key={index} elevation={1} sx={{ p: 2, mb: 2 }}>
+                      <Box display="flex" justifyContent="space-between" alignItems="center">
+                        <Typography>
+                          {payment.cardFlag} **** {payment.cardNumber.slice(-4)}
+                        </Typography>
+                        <Box>
+                          <IconButton onClick={() => {/* Edit payment */}}>
+                            <Pencil />
+                          </IconButton>
+                          <IconButton onClick={() => {/* Delete payment */}} color="error">
+                            <Trash />
+                          </IconButton>
+                        </Box>
+                      </Box>
+                    </Paper>
+                  ))}
+                </Grid>
 
-          {customer.password && (
-            <div className="form-group">
-              <label className="form-label">Confirmar Senha</label>
-              <div className="password-input-container" style={{ position: 'relative' }}>
-                <input
-                  id="confirmPassword"
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  className={`form-control ${!isPasswordValid() ? 'is-invalid' : ''}`}
-                  value={passwordConfirmation}
-                  onChange={(e) => setPasswordConfirmation(e.target.value)}
+                <Grid item xs={12}>
+                  <Box display="flex" gap={2} justifyContent="flex-end">
+                    <Button
+                      variant="outlined"
+                      onClick={() => navigate('/clientes')}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      color="primary"
+                    >
+                      Criar Cliente
+                    </Button>
+                  </Box>
+                </Grid>
+              </Grid>
+            </form>
+          </Box>
+        </Paper>
+      </Box>
+
+      <Modal
+        open={isAddressModalOpen}
+        onClose={() => setIsAddressModalOpen(false)}
+        title="Adicionar Endereço"
+      >
+        <Box component="form" onSubmit={(e) => {
+          e.preventDefault();
+          setCustomer(prev => ({
+            ...prev,
+            addresses: [...(prev.addresses || []), currentAddress]
+          }));
+          setIsAddressModalOpen(false);
+          setCurrentAddress({
+            streetType: '',
+            street: '',
+            number: '',
+            complement: '',
+            neighborhood: '',
+            city: '',
+            state: '',
+            country: '',
+            zipCode: '',
+            addressType: []
+          });
+        }}>
+          <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="CEP"
+                  name="zipCode"
+                  value={currentAddress.zipCode}
+                  onChange={handleAddressChange}
+                  onBlur={(e) => fetchAddressByCep(e.target.value)}
                   required
-                  style={{ 
-                    paddingRight: '40px'
-                  }}
                 />
-                <button
-                  type="button"
-                  onClick={toggleConfirmPasswordVisibility}
-                  className="password-toggle"
-                  aria-label={showConfirmPassword ? 'Ocultar senha' : 'Mostrar senha'}
-                >
-                  {showConfirmPassword ? (
-                    <EyeSlash size={20} />
-                  ) : (
-                    <Eye size={20} />
-                  )}
-                </button>
-              </div>
-                {!isPasswordValid() && (
-                  <small className="form-text text-muted">As senhas não coincidem</small>
-                )}
-            </div>
-          )}
-        </div>
-
-        <div className="section-header">
-          <h4>Endereços</h4>
-          <button
-            id="create-address"
-            type="button"
-            className="add-button"
-            onClick={() => {
-              setEditingAddressIndex(null);
-              setIsAddressModalOpen(true);
-            }}
-          >
-            <Plus size={20} />
-            Adicionar Endereço
-          </button>
-        </div>
-
-        <div className="items-list addresses">
-          {customer.addresses?.map((address, index) => (
-            <div key={index} className="list-item">
-              <div className="item-info">
-                <div className="item-type">
-                  {address.addressType.includes('COBRANCA') && <span className="type-tag green">Cobrança</span>}
-                  {address.addressType.includes('ENTREGA') && <span className="type-tag red">Entrega</span>}
-                  {address.addressType.includes('RESIDENCIAL') && <span className="type-tag blue">Residencial</span>}
-                </div>
-                <p>{address.street}, {address.number}</p>
-                {address.complement && <p>Complemento: {address.complement}</p>}
-                <p>{address.neighborhood}</p>
-                <p>{address.city} - {address.state}</p>
-                <p>CEP: {address.zipCode}</p>
-              </div>
-              <div className="item-actions">
-                <button 
-                  id="edit-address"
-                  type="button" 
-                  className="edit-button"
-                  onClick={() => handleEditAddress(index)}
-                >
-                  <Pencil size={16} />
-                </button>
-                <button 
-                  id="delete-address"
-                  type="button" 
-                  className="delete-button"
-                  onClick={() => handleDeleteAddress(index)}
-                >
-                  <Trash size={16} />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="section-header">
-          <h4>Métodos de Pagamento</h4>
-          <button
-            id="create-payment"
-            type="button"
-            className="add-button"
-            onClick={() => {
-              setEditingPaymentIndex(null);
-              setIsPaymentModalOpen(true);
-            }}
-          >
-            <Plus size={20} />
-            Adicionar Método de Pagamento
-          </button>
-        </div>
-
-        <div className="items-list paymentMethods">
-          {customer.paymentMethods?.map((payment, index) => (
-            <div key={index} className="list-item">
-              <div className="item-info">
-                <div className="item-type">
-                  {payment.primary && <span className="type-tag yellow">Cartão Principal</span>}
-                </div>
-                <strong>{payment.cardName}</strong>
-                <p>**** **** **** {payment.cardNumber?.slice(-4)}</p>
-                <p>Validade: {payment.cardExpiration}</p>
-              </div>
-              <div className="item-actions">
-                <button 
-                  id="edit-payment"
-                  type="button" 
-                  className="edit-button"
-                  onClick={() => handleEditPaymentMethod(index)}
-                >
-                  <Pencil size={16} />
-                </button>
-                <button 
-                  id="delete-payment"
-                  type="button" 
-                  className="delete-button"
-                  onClick={() => handleDeletePaymentMethod(index)}
-                >
-                  <Trash size={16} />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="actions">
-          <button
-            id="cancel"
-            type="button" 
-            className="secondary"
-            onClick={() => navigate('/clientes')}
-          >
-            Cancelar
-          </button>
-          <button type="submit" className="primary">
-            Cadastrar
-          </button>
-        </div>
-      </form>
-
-      <Modal
-        isOpen={isAddressModalOpen}
-        onClose={handleCloseAddressModal}
-        title={editingAddressIndex !== null ? "Editar Endereço" : "Adicionar Endereço"}
-      >
-        <div className="row-group">
-          <div className="form-group">
-            <label className="form-label">CEP</label>
-            <input
-              id="zip"
-              type="text"
-              className="form-control"
-              value={currentAddress.zipCode}
-              onChange={(e) => handleAddressInputChange(e, 'zipCode')}
-              required
-            />
-          </div>
-        </div>
-
-        <div className="row-group">
-          <div className="form-group">
-            <label className="form-label">Logradouro</label>
-            <input
-              id="street"
-              type="text"
-              className="form-control"
-              value={currentAddress.street}
-              onChange={(e) => handleAddressInputChange(e, 'street')}
-              required
-            />
-          </div>
-        </div>
-
-        <div className="row-group">
-          <div className="form-group">
-            <label className="form-label">Número</label>
-            <input
-              id="number"
-              type="text"
-              className="form-control"
-              value={currentAddress.number}
-              onChange={(e) => handleAddressInputChange(e, 'number')}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Complemento</label>
-            <input
-              id="complement"
-              type="text"
-              className="form-control"
-              value={currentAddress.complement}
-              onChange={(e) => handleAddressInputChange(e, 'complement')}
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Bairro</label>
-            <input
-              id="neighborhood"
-              type="text"
-              className="form-control"
-              value={currentAddress.neighborhood}
-              onChange={(e) => handleAddressInputChange(e, 'neighborhood')}
-              required
-            />
-          </div>
-        </div>
-
-        <div className="row-group">
-          <div className="form-group">
-            <label className="form-label">Cidade</label>
-            <input
-              id="city"
-              type="text"
-              className="form-control"
-              value={currentAddress.city}
-              onChange={(e) => handleAddressInputChange(e, 'city')}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Estado</label>
-            <input
-              id="state"
-              type="text"
-              className="form-control"
-              value={currentAddress.state}
-              onChange={(e) => handleAddressInputChange(e, 'state')}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">País</label>
-            <input
-              id="country"
-              type="text"
-              className="form-control"
-              value={currentAddress.country}
-              onChange={(e) => handleAddressInputChange(e, 'country')}
-              required
-            />
-          </div>
-        </div>
-
-        <div className="row-group">
-          <div className="form-group">
-            <label className="form-label">Tipo do Endereço</label>
-            <div className="type-group">
-              <div className="type-option">
-                <label className="switch">
-                  <input
-                    type="checkbox"
-                    checked={currentAddress.addressType.includes('COBRANCA')}
-                    onChange={(e) => {
-                      const newTypes = e.target.checked 
-                        ? [...currentAddress.addressType, 'COBRANCA']
-                        : currentAddress.addressType.filter(t => t !== 'COBRANCA');
-                      setCurrentAddress({ ...currentAddress, addressType: newTypes });
-                      setError('');
-                    }}
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Logradouro"
+                  name="street"
+                  value={currentAddress.street}
+                  onChange={handleAddressChange}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Número"
+                  name="number"
+                  value={currentAddress.number}
+                  onChange={handleAddressChange}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Complemento"
+                  name="complement"
+                  value={currentAddress.complement}
+                  onChange={handleAddressChange}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Bairro"
+                  name="neighborhood"
+                  value={currentAddress.neighborhood}
+                onChange={handleAddressChange}
+                required
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Cidade"
+                name="city"
+                value={currentAddress.city}
+                onChange={handleAddressChange}
+                required
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Estado"
+                name="state"
+                value={currentAddress.state}
+                onChange={handleAddressChange}
+                required
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="País"
+                name="country"
+                value={currentAddress.country}
+                onChange={handleAddressChange}
+                required
+              />
+            </Grid>
+            <Grid item xs={12}>
+            <FormControl component="fieldset" fullWidth>
+              <FormLabel component="legend">Tipo do Endereço</FormLabel>
+              <FormGroup row>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={currentAddress.addressType.includes('COBRANCA')}
+                        onChange={(e) => {
+                          const newTypes = e.target.checked
+                            ? [...currentAddress.addressType, 'COBRANCA']
+                            : currentAddress.addressType.filter(t => t !== 'COBRANCA');
+                          setCurrentAddress({ ...currentAddress, addressType: newTypes });
+                          setError('');
+                        }}
+                      />
+                    }
+                    label="Cobrança"
                   />
-                  <span id="billing" className="slider"></span>
-                </label>
-                <span>Cobrança</span>
-              </div>
-              <div className="type-option">
-                <label className="switch">
-                  <input 
-                    type="checkbox"
-                    checked={currentAddress.addressType.includes('ENTREGA')}
-                    onChange={(e) => {
-                      const newTypes = e.target.checked 
-                        ? [...currentAddress.addressType, 'ENTREGA']
-                        : currentAddress.addressType.filter(t => t !== 'ENTREGA');
-                      setCurrentAddress({ ...currentAddress, addressType: newTypes });
-                      setError('');
-                    }}
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={currentAddress.addressType.includes('ENTREGA')}
+                        onChange={(e) => {
+                          const newTypes = e.target.checked
+                            ? [...currentAddress.addressType, 'ENTREGA']
+                            : currentAddress.addressType.filter(t => t !== 'ENTREGA');
+                          setCurrentAddress({ ...currentAddress, addressType: newTypes });
+                          setError('');
+                        }}
+                      />
+                    }
+                    label="Entrega"
                   />
-                  <span id="delivery" className="slider"></span>
-                </label>
-                <span>Entrega</span>
-              </div>
-              <div className="type-option">
-                <label className="switch">
-                  <input 
-                    type="checkbox"
-                    checked={currentAddress.addressType.includes('RESIDENCIAL')}
-                    onChange={(e) => {
-                      const newTypes = e.target.checked 
-                        ? [...currentAddress.addressType, 'RESIDENCIAL']
-                        : currentAddress.addressType.filter(t => t !== 'RESIDENCIAL');
-                      setCurrentAddress({ ...currentAddress, addressType: newTypes });
-                      setError('');
-                    }}
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={currentAddress.addressType.includes('RESIDENCIAL')}
+                        onChange={(e) => {
+                          const newTypes = e.target.checked
+                            ? [...currentAddress.addressType, 'RESIDENCIAL']
+                            : currentAddress.addressType.filter(t => t !== 'RESIDENCIAL');
+                          setCurrentAddress({ ...currentAddress, addressType: newTypes });
+                          setError('');
+                        }}
+                      />
+                    }
+                    label="Residencial"
                   />
-                  <span id="residence" className="slider"></span>
-                </label>
-                <span>Residencial</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {currentAddress.addressType.length === 0 && (
-          <div className="alert alert-error">
-            Selecione pelo menos um tipo de endereço
-          </div>
-        )}
-
-        <div className="modal-actions">
-          <button 
-            id="cancel-address"
-            type="button" 
-            className="secondary" 
-            onClick={() => {
-              setIsAddressModalOpen(false);
-              setError('');
-              setCurrentAddress({
-                streetType: '',
-                street: '',
-                number: '',
-                complement: '',
-                neighborhood: '',
-                city: '',
-                state: '',
-                country: '',
-                zipCode: '',
-                addressType: []
-              });
-            }}
-          >
-            Cancelar
-          </button>
-          <button 
-            id="add-address"
-            type="button" 
-            className="primary" 
-            onClick={handleAddAddress}
-            disabled={currentAddress.addressType.length === 0}
-          >
-            {editingAddressIndex !== null ? "Salvar" : "Adicionar"}
-          </button>
-        </div>
+                </FormGroup>
+              </FormControl>
+            </Grid>
+          </Grid>
+          <DialogActions>
+            <Button onClick={() => setIsAddressModalOpen(false)}>Cancelar</Button>
+            <Button type="submit" variant="contained">Adicionar</Button>
+          </DialogActions>
+        </Box>
       </Modal>
 
       <Modal
-        isOpen={isPaymentModalOpen}
-        onClose={handleClosePaymentModal}
-        title={editingPaymentIndex !== null ? "Editar Método de Pagamento" : "Adicionar Método de Pagamento"}
+        open={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        title="Adicionar Método de Pagamento"
       >
-        <div className="row-group">
-          <div className="form-group">
-            <label className="form-label">Número do Cartão</label>
-            <input
-              id="cardNumber"
-              type="text"
-              className="form-control"
-              value={currentPaymentMethod.cardNumber}
-              onChange={(e) => setCurrentPaymentMethod({ ...currentPaymentMethod, cardNumber: e.target.value })}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Bandeira do Cartão</label>
-            <select
-              id="cardFlag"
-              className="form-control"
-              value={currentPaymentMethod.cardFlag}
-              onChange={(e) => setCurrentPaymentMethod({ ...currentPaymentMethod, cardFlag: e.target.value })}
-              required
-            >
-              <option value="">Selecione</option>
-              <option value="VISA">VISA</option>
-              <option value="MASTERCARD">MASTERCARD</option>
-              <option value="AMERICANEXPRESS">AMERICANEXPRESS</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="row-group">
-          <div className="form-group">
-            <label className="form-label">Nome no Cartão</label>
-            <input
-              id="cardName"
-              type="text"
-              className="form-control"
-              value={currentPaymentMethod.cardName}
-              onChange={(e) => setCurrentPaymentMethod({ ...currentPaymentMethod, cardName: e.target.value })}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Data de Expiração</label>
-            <input
-              id="cardExpiration"
-              type="text"
-              className="form-control"
-              value={currentPaymentMethod.cardExpiration}
-              onChange={(e) => handlePaymentInputChange(e, 'cardExpiration')}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">CVV</label>
-            <input
-              id="cvv"
-              type="text"
-              className="form-control"
-              value={currentPaymentMethod.cvv}
-              onChange={(e) => setCurrentPaymentMethod({ ...currentPaymentMethod, cvv: e.target.value })}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Cartão Principal</label>
-            <div className="type-group">
-              <div className="type-option">
-                <label className="switch">
-                  <input 
-                    type="checkbox"
-                    checked={currentPaymentMethod.primary}
-                    onChange={(e) => {
-                      if (e.target.checked && customer.paymentMethods?.some(p => p.primary)) {
-                        setError('Já existe um cartão principal');
-                        return;
-                      }
-                      setCurrentPaymentMethod({ ...currentPaymentMethod, primary: e.target.checked });
-                      setError('');
-                    }}
+        <Box component="form" onSubmit={(e) => {
+          e.preventDefault();
+          setCustomer(prev => ({
+            ...prev,
+            paymentMethods: [...(prev.paymentMethods || []), currentPayment]
+          }));
+          setIsPaymentModalOpen(false);
+          setCurrentPayment({
+            primary: false,
+            cardFlag: '',
+            cardNumber: '',
+            cardName: '',
+            cardExpiration: '',
+            cvv: ''
+          });
+        }}>
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Número do Cartão"
+                name="cardNumber"
+                value={currentPayment.cardNumber}
+                onChange={handlePaymentChange}
+                required
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <FormControl fullWidth>
+                <InputLabel>Bandeira do Cartão</InputLabel>
+                <Select
+                  name="cardFlag"
+                  value={currentPayment.cardFlag}
+                  onChange={handleSelectChangePayment}
+                  required
+                >
+                  <MenuItem value="VISA">VISA</MenuItem>
+                  <MenuItem value="MASTERCARD">MASTERCARD</MenuItem>
+                  <MenuItem value="AMERICANEXPRESS">AMERICANEXPRESS</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Nome no Cartão"
+                name="cardName"
+                value={currentPayment.cardName}
+                onChange={handlePaymentChange}
+                required
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Data de Expiração"
+                name="cardExpiration"
+                value={currentPayment.cardExpiration}
+                onChange={handlePaymentChange}
+                required
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="CVV"
+                name="cvv"
+                value={currentPayment.cvv}
+                onChange={handlePaymentChange}
+                required
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={currentPayment.primary}
+                    onChange={(e) => setCurrentPayment(prev => ({ ...prev, primary: e.target.checked }))}
                   />
-                  <span id="primary" className="slider"></span>
-                </label>
-                <span>Definir como Principal</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="modal-actions">
-            <button 
-              id="cancel-payment"
-              type="button" 
-              className="secondary" 
-              onClick={() => {
-                setIsPaymentModalOpen(false);
-                setError('');
-                setCurrentPaymentMethod({
-                  primary: false,
-                  cardFlag: '',
-                  cardNumber: '',
-                  cardName: '',
-                  cardExpiration: '',
-                  cvv: ''
-                });
-              }}
-            >
-              Cancelar
-            </button>
-            <button 
-              id="add-payment"
-              type="button" 
-              className="primary" 
-              onClick={handleAddPaymentMethod}
-            >
-              {editingPaymentIndex !== null ? "Salvar" : "Adicionar"}
-            </button>
-          </div>
-        </div>
+                }
+                label="Cartão Principal"
+              />
+            </Grid>
+          </Grid>
+          <DialogActions>
+            <Button onClick={() => setIsPaymentModalOpen(false)}>Cancelar</Button>
+            <Button type="submit" variant="contained">Adicionar</Button>
+          </DialogActions>
+        </Box>
       </Modal>
-    </div>
+
+      <Snackbar
+        open={!!error || !!success}
+        autoHideDuration={6000}
+        onClose={() => {
+          setError('');
+          setSuccess('');
+        }}
+      >
+        <Alert
+          severity={error ? "error" : "success"}
+          onClose={() => {
+            setError('');
+            setSuccess('');
+          }}
+        >
+          {error || success}
+        </Alert>
+      </Snackbar>
+    </Container>
   );
 };
 

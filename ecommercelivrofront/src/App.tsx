@@ -8,12 +8,15 @@ import VerItem from './Item/VerItem';
 import Carrinho from './Carrinho/Carrinho';
 // import EditarItem from './Item/EditarItem';
 import ListarItens from './Item/ListarItens';
+import Compra from './Compra/Compra';
+import VerPedidos from './Compra/VerPedidos';
+
 import { Route, Routes} from 'react-router-dom';
 
 function App() {
   return (
     <>
-      <NavBar userType="user" />
+      <NavBar userType="admin" />
       <div className="container">
         <div className="box-content">
           <Routes>
@@ -25,6 +28,8 @@ function App() {
             <Route path="/itens/criar" element={<CriarItem />} />
             <Route path="/item/ver/:id" element={<VerItem />} />
             <Route path="/carrinho" element={<Carrinho />} />
+            <Route path="/compra" element={<Compra />} />
+            <Route path="/compra/ver" element={<VerPedidos />} />
           </Routes>
         </div>
       </div>
