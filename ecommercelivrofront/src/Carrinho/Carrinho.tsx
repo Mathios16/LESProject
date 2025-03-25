@@ -68,6 +68,11 @@ const Carrinho: React.FC = () => {
     }
   };
 
+  const handleCheckout = () => {
+    // TODO: Implement checkout logic
+    console.log('Finalizar Pedido');
+  };
+
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Typography variant="h4" gutterBottom>
@@ -180,6 +185,16 @@ const Carrinho: React.FC = () => {
           </Box>
         </Box>
       </Paper>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleCheckout}
+          disabled={cartItems.length === 0}
+        >
+          Finalizar Pedido
+        </Button>
+      </Box>
     </Container>
   );
 };
