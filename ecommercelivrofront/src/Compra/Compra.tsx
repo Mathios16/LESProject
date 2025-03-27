@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Container,
   Typography,
@@ -21,6 +22,7 @@ interface CartItem {
   id: number;
   name: string;
   price: number;
+  image: string;
   quantity: number;
 }
 
@@ -41,46 +43,52 @@ interface PaymentMethod {
 }
 
 const Compra: React.FC = () => {
+  const navigate = useNavigate();
   const [cartItems, setCartItems] = useState<CartItem[]>([
-    { id: 1, name: 'Livro de React', price: 59.99, quantity: 2 },
-    { id: 2, name: 'Livro de TypeScript', price: 49.99, quantity: 1 }
+    {
+      id: 1, name: 'A cantiga dos pássaros e das serpentes',
+      image: 'https://m.media-amazon.com/images/I/61MCf2k-MgS._AC_UF1000,1000_QL80_.jpg',
+      price: 59.90, quantity: 2
+    }
   ]);
 
-  const [selectedDeliveryAddress, setSelectedDeliveryAddress] = useState<number | null>(null);
-  const [selectedBillingAddress, setSelectedBillingAddress] = useState<number | null>(null);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<number | null>(null);
   const [cep, setCep] = useState('');
   const [shippingCost, setShippingCost] = useState(0);
   const [couponCode, setCouponCode] = useState('');
   const [discount, setDiscount] = useState(0);
 
   const [addresses, setAddresses] = useState<Address[]>([
-    { 
-      id: 1, 
-      street: 'Rua Principal', 
-      number: '123', 
-      city: 'São Paulo', 
-      state: 'SP', 
-      type: ['ENTREGA', 'COBRANCA'] 
+    {
+      id: 1,
+      street: 'Rua Principal',
+      number: '123',
+      city: 'São Paulo',
+      state: 'SP',
+      type: ['ENTREGA', 'COBRANCA']
     },
-    { 
-      id: 2, 
-      street: 'Avenida Secundária', 
-      number: '456', 
-      city: 'Rio de Janeiro', 
-      state: 'RJ', 
-      type: ['RESIDENCIAL'] 
+    {
+      id: 2,
+      street: 'Avenida Secundária',
+      number: '456',
+      city: 'Rio de Janeiro',
+      state: 'RJ',
+      type: ['RESIDENCIAL']
     }
   ]);
 
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([
-    { 
-      id: 1, 
-      cardFlag: 'VISA', 
-      cardNumber: '**** **** **** 1234', 
-      cardName: 'João Silva' 
+    {
+      id: 1,
+      cardFlag: 'VISA',
+      cardNumber: '**** **** **** 1234',
+      cardName: 'João Silva'
     }
   ]);
+
+
+  const [selectedDeliveryAddress, setSelectedDeliveryAddress] = useState<number | null>(addresses[0]?.id || null);
+  const [selectedBillingAddress, setSelectedBillingAddress] = useState<number | null>(addresses[0]?.id || null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<number | null>(paymentMethods[0]?.id || null);
 
   const calculateShipping = async () => {
     // TODO: Integrate with shipping API
@@ -94,12 +102,16 @@ const Compra: React.FC = () => {
     // TODO: Integrate with coupon API
     // Mock coupon application
     if (couponCode === 'DESC10') {
-      setDiscount(calculateTotal() * 0.1);
+      setDiscount(10);
     }
   };
 
   const calculateTotal = () => {
-    return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+    return cartItems.reduce((total, item) => total + (item.price * item.quantity) + shippingCost - discount, 0);
+  };
+
+  const handleRemoveItem = (id: number) => {
+    setCartItems(cartItems.filter(item => item.id !== id));
   };
 
   return (
@@ -165,10 +177,21 @@ const Compra: React.FC = () => {
                 <Typography>{item.name}</Typography>
                 <Typography>
                   {item.quantity} x R$ {item.price.toFixed(2)}
+                  <br />
+                  Subtotal: R$ {(item.price * item.quantity).toFixed(2)}
                 </Typography>
+                <IconButton size="small">
+                  <Trash onClick={() => handleRemoveItem(item.id)} />
+                </IconButton>
               </Box>
             ))}
             <Divider sx={{ my: 2 }} />
+            <Typography align="right">
+              Desconto: R$ {discount.toFixed(2)}
+            </Typography>
+            <Typography align="right">
+              Frete: R$ {shippingCost.toFixed(2)}
+            </Typography>
             <Typography variant="h6" align="right">
               Total: R$ {calculateTotal().toFixed(2)}
             </Typography>
@@ -186,8 +209,8 @@ const Compra: React.FC = () => {
               </IconButton>
             </Box>
             <FormControl component="fieldset" fullWidth>
-              <RadioGroup 
-                value={selectedDeliveryAddress} 
+              <RadioGroup
+                value={selectedDeliveryAddress}
                 onChange={(e) => setSelectedDeliveryAddress(Number(e.target.value))}
               >
                 {addresses.map((address) => (
@@ -211,8 +234,8 @@ const Compra: React.FC = () => {
               </IconButton>
             </Box>
             <FormControl component="fieldset" fullWidth>
-              <RadioGroup 
-                value={selectedBillingAddress} 
+              <RadioGroup
+                value={selectedBillingAddress}
                 onChange={(e) => setSelectedBillingAddress(Number(e.target.value))}
               >
                 {addresses.map((address) => (
@@ -236,8 +259,8 @@ const Compra: React.FC = () => {
               </IconButton>
             </Box>
             <FormControl component="fieldset" fullWidth>
-              <RadioGroup 
-                value={selectedPaymentMethod} 
+              <RadioGroup
+                value={selectedPaymentMethod}
                 onChange={(e) => setSelectedPaymentMethod(Number(e.target.value))}
               >
                 {paymentMethods.map((payment) => (
@@ -260,10 +283,11 @@ const Compra: React.FC = () => {
           color="primary"
           size="large"
           disabled={
-            !selectedDeliveryAddress || 
-            !selectedBillingAddress || 
+            !selectedDeliveryAddress ||
+            !selectedBillingAddress ||
             !selectedPaymentMethod
           }
+          onClick={() => navigate('/pedido/ver')}
         >
           Confirmar Pedido
         </Button>

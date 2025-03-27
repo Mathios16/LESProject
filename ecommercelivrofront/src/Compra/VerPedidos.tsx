@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Container,
   Typography,
@@ -21,6 +22,7 @@ interface OrderItem {
   name: string;
   quantity: number;
   price: number;
+  image: string;
 }
 
 interface Order {
@@ -32,25 +34,20 @@ interface Order {
 }
 
 const VerPedidos: React.FC = () => {
+  const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([
     {
       id: 1,
-      status: 'PROCESSANDO',
+      status: 'ENTREGUE',
       date: '2024-03-20',
       items: [
-        { id: 101, name: 'Livro de React', quantity: 2, price: 59.99 },
-        { id: 102, name: 'Livro de TypeScript', quantity: 1, price: 49.99 }
+        {
+          id: 1, name: 'A cantiga dos pássaros e das serpentes',
+          image: 'https://m.media-amazon.com/images/I/61MCf2k-MgS._AC_UF1000,1000_QL80_.jpg',
+          quantity: 2, price: 59.90
+        }
       ],
-      subtotal: 169.97
-    },
-    {
-      id: 2,
-      status: 'ENVIADO',
-      date: '2024-03-15',
-      items: [
-        { id: 201, name: 'Livro de Node.js', quantity: 1, price: 69.99 }
-      ],
-      subtotal: 69.99
+      subtotal: 125.70
     }
   ]);
 
@@ -64,8 +61,7 @@ const VerPedidos: React.FC = () => {
   };
 
   const handleRequestExchange = (orderId: number) => {
-    // TODO: Implement exchange request logic
-    console.log(`Solicitar troca para pedido ${orderId}`);
+    navigate(`/pedido/${orderId}/troca`);
   };
 
   return (
@@ -75,28 +71,28 @@ const VerPedidos: React.FC = () => {
       </Typography>
 
       {orders.map((order) => (
-        <Paper 
-          key={order.id} 
-          elevation={3} 
-          sx={{ 
-            p: 3, 
-            mb: 3, 
-            borderLeft: `4px solid ${getStatusColor(order.status) === 'warning' ? 'orange' : 
-                          getStatusColor(order.status) === 'primary' ? 'blue' : 
-                          getStatusColor(order.status) === 'success' ? 'green' : 'red'}` 
+        <Paper
+          key={order.id}
+          elevation={3}
+          sx={{
+            p: 3,
+            mb: 3,
+            borderLeft: `4px solid ${getStatusColor(order.status) === 'warning' ? 'orange' :
+              getStatusColor(order.status) === 'primary' ? 'blue' :
+                getStatusColor(order.status) === 'success' ? 'green' : 'red'}`
           }}
         >
           <Grid container spacing={2} alignItems="center">
             <Grid item xs={12} sm={6}>
               <Typography variant="h6">
-                Pedido #{order.id} - {order.date}
+                Pedido #{order.id}
               </Typography>
             </Grid>
             <Grid item xs={12} sm={6} sx={{ textAlign: 'right' }}>
-              <Chip 
-                label={order.status} 
-                color={getStatusColor(order.status)} 
-                variant="outlined" 
+              <Chip
+                label={order.status}
+                color={getStatusColor(order.status)}
+                variant="outlined"
               />
             </Grid>
           </Grid>
@@ -128,12 +124,12 @@ const VerPedidos: React.FC = () => {
             </Table>
           </TableContainer>
 
-          <Box 
-            sx={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center', 
-              mt: 2 
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mt: 2
             }}
           >
             <Typography variant="h6">

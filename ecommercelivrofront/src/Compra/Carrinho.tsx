@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Container,
   Typography,
@@ -13,16 +14,20 @@ import {
   Button,
   Box,
   Grid,
+  IconButton
 } from '@mui/material';
+import { Trash } from '@phosphor-icons/react';
 
 interface CartItem {
   id: number;
   title: string;
   price: number;
+  image: string;
   quantity: number;
 }
 
 const Carrinho: React.FC = () => {
+  const navigate = useNavigate();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [cep, setCep] = useState('');
   const [shippingCost, setShippingCost] = useState(0);
@@ -32,8 +37,11 @@ const Carrinho: React.FC = () => {
   useEffect(() => {
     // TODO: Fetch cart items from API/localStorage
     const mockItems: CartItem[] = [
-      { id: 1, title: 'Livro 1', price: 29.90, quantity: 1 },
-      { id: 2, title: 'Livro 2', price: 39.90, quantity: 2 },
+      {
+        id: 1, title: 'A cantiga dos pássaros e das serpentes',
+        image: 'https://m.media-amazon.com/images/I/61MCf2k-MgS._AC_UF1000,1000_QL80_.jpg',
+        price: 59.90, quantity: 1
+      }
     ];
     setCartItems(mockItems);
   }, []);
@@ -52,20 +60,24 @@ const Carrinho: React.FC = () => {
     ));
   };
 
-  const calculateShipping = async () => {
-    // TODO: Integrate with shipping API
-    // Mock shipping calculation
-    if (cep.length === 8) {
-      setShippingCost(15.90);
-    }
-  };
+  // const calculateShipping = async () => {
+  //   // TODO: Integrate with shipping API
+  //   // Mock shipping calculation
+  //   if (cep.length === 8) {
+  //     setShippingCost(15.90);
+  //   }
+  // };
 
-  const applyCoupon = () => {
-    // TODO: Integrate with coupon API
-    // Mock coupon application
-    if (couponCode === 'DESC10') {
-      setDiscount(calculateSubtotal() * 0.1);
-    }
+  // const applyCoupon = () => {
+  //   // TODO: Integrate with coupon API
+  //   // Mock coupon application
+  //   if (couponCode === 'DESC10') {
+  //     setDiscount(calculateSubtotal() * 0.1);
+  //   }
+  // };
+
+  const handleRemoveItem = (id: number) => {
+    setCartItems(cartItems.filter(item => item.id !== id));
   };
 
   const handleCheckout = () => {
@@ -92,7 +104,16 @@ const Carrinho: React.FC = () => {
           <TableBody>
             {cartItems.map((item) => (
               <TableRow key={item.id}>
-                <TableCell>{item.title}</TableCell>
+                <TableCell>
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <img
+                      src={item.image}
+                      alt={item.title}
+                      style={{ width: '50px', height: '50px', objectFit: 'cover' }}
+                    />
+                    <span>{item.title}</span>
+                  </Box>
+                </TableCell>
                 <TableCell align="right">R$ {item.price.toFixed(2)}</TableCell>
                 <TableCell align="center">
                   <TextField
@@ -106,13 +127,18 @@ const Carrinho: React.FC = () => {
                 <TableCell align="right">
                   R$ {(item.price * item.quantity).toFixed(2)}
                 </TableCell>
+                <TableCell align="right">
+                  <IconButton size="small">
+                    <Trash onClick={() => handleRemoveItem(item.id)} />
+                  </IconButton>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </TableContainer>
 
-      <Grid container spacing={3}>
+      {/* <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <Paper sx={{ p: 2 }}>
             <Typography variant="h6" gutterBottom>
@@ -158,27 +184,13 @@ const Carrinho: React.FC = () => {
             </Box>
           </Paper>
         </Grid>
-      </Grid>
+      </Grid> */}
 
       <Paper sx={{ p: 2, mt: 3 }}>
         <Typography variant="h6" gutterBottom>
           Resumo do Pedido
         </Typography>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-            <Typography>Subtotal:</Typography>
-            <Typography>R$ {calculateSubtotal().toFixed(2)}</Typography>
-          </Box>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-            <Typography>Frete:</Typography>
-            <Typography>R$ {shippingCost.toFixed(2)}</Typography>
-          </Box>
-          {discount > 0 && (
-            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Typography>Desconto:</Typography>
-              <Typography>-R$ {discount.toFixed(2)}</Typography>
-            </Box>
-          )}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold' }}>
             <Typography variant="h6">Total:</Typography>
             <Typography variant="h6">R$ {calculateTotal().toFixed(2)}</Typography>
@@ -189,7 +201,7 @@ const Carrinho: React.FC = () => {
         <Button
           variant="contained"
           color="primary"
-          onClick={handleCheckout}
+          onClick={() => navigate('/compra')}
           disabled={cartItems.length === 0}
         >
           Finalizar Pedido

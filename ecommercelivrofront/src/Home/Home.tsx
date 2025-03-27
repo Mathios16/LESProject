@@ -6,7 +6,7 @@ const sampleItems = [
   {
     id: 1,
     title: 'A cantiga dos pássaros e das serpentes',
-    price: 10.99,
+    price: 59.90,
     image: 'https://m.media-amazon.com/images/I/61MCf2k-MgS._AC_UF1000,1000_QL80_.jpg',
     category: [{ id: 1, name: 'Ação' }]
   },
@@ -34,12 +34,12 @@ const sampleItems = [
 ];
 
 const Home: React.FC = () => {
-  const [itemsByCategory, setItemsByCategory] = useState<{[key: string]: any[]}>({});
+  const [itemsByCategory, setItemsByCategory] = useState<{ [key: string]: any[] }>({});
   const navigate = useNavigate();
 
   useEffect(() => {
     // Group items by category
-    const categorizedItems = sampleItems.reduce((acc: {[key: string]: any[]}, item) => {
+    const categorizedItems = sampleItems.reduce((acc: { [key: string]: any[] }, item) => {
       item.category.forEach(cat => {
         if (!acc[cat.name]) {
           acc[cat.name] = [];
@@ -65,8 +65,8 @@ const Home: React.FC = () => {
           <h2 className="category-title">{category}</h2>
           <div className="items-grid">
             {items.map((item, index) => (
-              <div 
-                key={index} 
+              <div
+                key={index}
                 className="item-card"
                 onClick={() => handleItemClick(item)}
               >

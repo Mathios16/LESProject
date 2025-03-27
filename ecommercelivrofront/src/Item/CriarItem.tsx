@@ -1,7 +1,35 @@
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, X, Trash, Pencil, Eye, EyeSlash } from '@phosphor-icons/react';
-import Modal from '../Auxiliares/Modal';
+import {
+  Container,
+  Typography,
+  TextField,
+  Button,
+  Grid,
+  Paper,
+  Box,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Snackbar,
+  Alert,
+  Chip
+} from '@mui/material';
+
+import { SelectChangeEvent } from '@mui/material/Select';
+
+interface Category {
+  id: number;
+  name: string;
+  tag?: string;
+}
 
 interface Item {
   title: string;
@@ -22,12 +50,6 @@ interface Item {
   category?: Category[];
 }
 
-interface Category {
-  id: number;
-  name: string;
-  tag?: string;
-}
-
 const CriarItem: React.FC = () => {
   const navigate = useNavigate();
 
@@ -40,16 +62,38 @@ const CriarItem: React.FC = () => {
   const [categoryTags] = useState(['blue', 'green', 'red', 'yellow', 'purple', 'grey', 'black']);
   const [usedTags, setUsedTags] = useState<string[]>([]);
 
+  const [item, setItem] = useState<Item>({
+    title: '',
+    description: '',
+    price: 0,
+    date: '',
+    edition: '',
+    isbn: '',
+    pages: 0,
+    synopsis: '',
+    publisher: '',
+    pricingGroup: '',
+    height: 0,
+    width: 0,
+    depth: 0,
+    barcode: 0,
+  });
+
   const fetchCategories = async (searchTerm: string) => {
     let categories = [];
 
-    setAvailableCategories([{'id': 1, 'name': 'romance', 'tag': 'blue'}]);
+    setAvailableCategories([{ 'id': 1, 'name': 'romance', 'tag': 'blue' }]);
+  };
 
-    // const response = await fetch('http://localhost:8080/booksCategories?name=' + searchTerm);
-    // const data = await response.json();
-    // categories = data;
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setItem(prev => ({ ...prev, [name]: value }));
+  };
 
-    // setAvailableCategories(categories);
+  const handleSelectChange = (e: SelectChangeEvent<string>) => {
+    const name = e.target.name as keyof Item;
+    const value = e.target.value;
+    setItem(prev => ({ ...prev, [name]: value }));
   };
 
   const handleCategorySearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -61,7 +105,6 @@ const CriarItem: React.FC = () => {
   };
 
   const handleCategorySelect = (category: Category) => {
-
     if (selectedCategories.some(c => c.id === category.id)) return;
 
     const availableTags = categoryTags.filter(tag => !usedTags.includes(tag));
@@ -78,7 +121,7 @@ const CriarItem: React.FC = () => {
   const removeCategory = (categoryToRemove: Category & { tag?: string }) => {
     const updatedCategories = selectedCategories.filter(c => c.id !== categoryToRemove.id);
     setSelectedCategories(updatedCategories);
-    
+
     if (categoryToRemove.tag) {
       setUsedTags(usedTags.filter(tag => tag !== categoryToRemove.tag));
     }
@@ -87,142 +130,224 @@ const CriarItem: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-
   };
 
   return (
-    <div className="item-container">
-      <div className="header">
-        <h1>Cadastro de Livro</h1>
-      </div>
+    <Container maxWidth="md">
+      <Paper elevation={3} sx={{ p: 3, mt: 4 }}>
+        <Typography variant="h4" gutterBottom>
+          Cadastro de Livro
+        </Typography>
 
-      {error && <div className="alert alert-error">{error}</div>}
-      {success && <div className="alert alert-success">{success}</div>}
+        {error && (
+          <Snackbar open={!!error} autoHideDuration={6000} onClose={() => setError('')}>
+            <Alert onClose={() => setError('')} severity="error" sx={{ width: '100%' }}>
+              {error}
+            </Alert>
+          </Snackbar>
+        )}
 
-      <form className="form" onSubmit={handleSubmit}>
-        <div className="row-group">
-          <div className="form-group">
-            <label className="form-label" htmlFor="title">Título</label>
-            <input type="text" id="title" className="form-control" />
-          </div>
-          <div className="form-group">
-            <label className="form-label" htmlFor="edition">Edição</label>
-            <input type="text" id="edition" className="form-control" />
-          </div>
-          <div className="form-group">
-            <label className="form-label" htmlFor="isbn">ISBN</label>
-            <input type="text" id="isbn" className="form-control" />
-          </div>
-        </div>
-        
-        <div className="row-group">
-          <div className="form-group">
-            <label className="form-label" htmlFor="description">Descrição</label>
-            <textarea id="description" className="form-control" rows={4} />
-          </div>
-          <div className="form-group">
-            <label className="form-label" htmlFor="synopsis">Sinopse</label>
-            <textarea id="synopsis" className="form-control" rows={4} />
-          </div>
-        </div>
-        
-        <div className="row-group">
-          <div className="form-group">
-            <label className="form-label" htmlFor="pages">Número de Páginas</label>
-            <input type="number" id="pages" className="form-control" />
-          </div>
-          <div className="form-group">
-            <label className="form-label" htmlFor="price">Preço</label>
-            <input type="number" id="price" className="form-control" step="0.01" />
-          </div>
-          <div className="form-group">
-            <label className="form-label" htmlFor="date">Data</label>
-            <input type="date" id="date" className="form-control" />
-          </div>
-        </div>
+        {success && (
+          <Snackbar open={!!success} autoHideDuration={6000} onClose={() => setSuccess('')}>
+            <Alert onClose={() => setSuccess('')} severity="success" sx={{ width: '100%' }}>
+              {success}
+            </Alert>
+          </Snackbar>
+        )}
 
-        <div className="row-group">
-          <div className="form-group">
-            <label className="form-label" htmlFor="dimensions">Dimensões</label>
-            <input type="text" id="dimensions" className="form-control" />
-          </div>
-          <div className="form-group">
-            <label className="form-label" htmlFor="barcode">Código de Barra</label>
-            <input type="number" id="barcode" className="form-control" />
-          </div>
-        </div>
+        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={4}>
+              <TextField
+                fullWidth
+                label="Título"
+                name="title"
+                value={item.title}
+                onChange={handleInputChange}
+                variant="outlined"
+              />
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <TextField
+                fullWidth
+                label="Edição"
+                name="edition"
+                value={item.edition}
+                onChange={handleInputChange}
+                variant="outlined"
+              />
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <TextField
+                fullWidth
+                label="ISBN"
+                name="isbn"
+                value={item.isbn}
+                onChange={handleInputChange}
+                variant="outlined"
+              />
+            </Grid>
 
-        <div className="row-group">
-          <div className="form-group">
-            <label className="form-label" htmlFor="publisher">Editora</label>
-            <select id="publisher" className="form-control">
-              <option value="">Selecione uma editora</option>
-            </select>
-          </div>
-          <div className="form-group">
-            <label className="form-label" htmlFor="pricingGroup">Grupo de Precificação</label>
-            <select id="pricingGroup" className="form-control">
-              <option value="">Selecione um grupo de precificação</option>
-            </select>
-          </div>
-        </div>
-        
-        <div className="form-group">
-          <label className="form-label">Categorias</label>
-          <div className="category-search">
-            <input 
-              type="text" 
-              className="form-control" 
-              value={categorySearch}
-              onChange={handleCategorySearch}
-            />
-            {availableCategories.length > 0 && (
-              <div className="category-dropdown">
-                {availableCategories.map(category => (
-                  <div 
-                    key={category.id} 
-                    onClick={() => handleCategorySelect(category)}
-                    className="category-option"
-                  >
-                    {category.name}
-                  </div>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Descrição"
+                name="description"
+                value={item.description}
+                onChange={handleInputChange}
+                multiline
+                rows={4}
+                variant="outlined"
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Sinopse"
+                name="synopsis"
+                value={item.synopsis}
+                onChange={handleInputChange}
+                multiline
+                rows={4}
+                variant="outlined"
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={4}>
+              <TextField
+                fullWidth
+                label="Número de Páginas"
+                name="pages"
+                type="number"
+                value={item.pages}
+                onChange={handleInputChange}
+                variant="outlined"
+              />
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <TextField
+                fullWidth
+                label="Preço"
+                name="price"
+                type="number"
+                value={item.price}
+                onChange={handleInputChange}
+                variant="outlined"
+                inputProps={{ step: 0.01 }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <TextField
+                fullWidth
+                label="Data"
+                name="date"
+                type="date"
+                value={item.date}
+                onChange={handleInputChange}
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Dimensões"
+                name="dimensions"
+                value={`${item.height} x ${item.width} x ${item.depth}`}
+                onChange={handleInputChange}
+                variant="outlined"
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Código de Barra"
+                name="barcode"
+                type="number"
+                value={item.barcode}
+                onChange={handleInputChange}
+                variant="outlined"
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth variant="outlined">
+                <InputLabel>Editora</InputLabel>
+                <Select
+                  name="publisher"
+                  value={item.publisher}
+                  onChange={handleSelectChange}
+                  label="Editora"
+                >
+                  <MenuItem value="">Selecione uma editora</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth variant="outlined">
+                <InputLabel>Grupo de Precificação</InputLabel>
+                <Select
+                  name="pricingGroup"
+                  value={item.pricingGroup}
+                  onChange={handleSelectChange}
+                  label="Grupo de Precificação"
+                >
+                  <MenuItem value="">Selecione um grupo de precificação</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Buscar Categorias"
+                value={categorySearch}
+                onChange={handleCategorySearch}
+                variant="outlined"
+              />
+              {availableCategories.length > 0 && (
+                <Box sx={{ mt: 1 }}>
+                  {availableCategories.map(category => (
+                    <Chip
+                      key={category.id}
+                      label={category.name}
+                      onClick={() => handleCategorySelect(category)}
+                      sx={{ mr: 1, mb: 1 }}
+                    />
+                  ))}
+                </Box>
+              )}
+            </Grid>
+
+            <Grid item xs={12}>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {selectedCategories.map(category => (
+                  <Chip
+                    key={category.id}
+                    label={category.name}
+                    onDelete={() => removeCategory(category)}
+                    color="primary"
+                    variant="outlined"
+                  />
                 ))}
-              </div>
-            )}
-          </div>
-          <div className="list-item">
-            {selectedCategories.map(category => (
-              <div key={category.id} className="selected-category item-info">
-                <div className="item-type">
-                  <span className={`type-tag ${category.tag}`}>{category.name}</span>
-                  <button 
-                    type="button" 
-                    onClick={() => removeCategory(category)}
-                    className="remove-category"
-                  >
-                    <X weight="bold" size={12} />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-        
-        <div className="actions">
-          <button
-            id="cancel"
-            type="button" 
-            className="secondary"
-            onClick={() => navigate('/clientes')}
-          >
-            Cancelar
-          </button>
-          <button type="submit" className="primary">
-            Cadastrar
-          </button>
-        </div>
-      </form>
-    </div>
+              </Box>
+            </Grid>
+
+            <Grid item xs={12}>
+              <Button
+                type="submit"
+                variant="contained"
+                color="primary"
+                fullWidth
+              >
+                Cadastrar Livro
+              </Button>
+            </Grid>
+          </Grid>
+        </Box>
+      </Paper>
+    </Container>
   );
 };
 

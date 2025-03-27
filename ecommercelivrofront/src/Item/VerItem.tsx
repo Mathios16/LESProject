@@ -34,7 +34,7 @@ const VerItem: React.FC = () => {
   const item = {
     id: 1,
     title: 'A cantiga dos pássaros e das serpentes',
-    price: 10.99,
+    price: 59.90,
     image: 'https://m.media-amazon.com/images/I/61MCf2k-MgS._AC_UF1000,1000_QL80_.jpg',
     category: [{ id: 1, name: 'Ação' }],
     description: 'Um livro emocionante que explora os limites da sobrevivência e do poder.',
@@ -71,28 +71,28 @@ const VerItem: React.FC = () => {
       <div className="item-detail-content">
         <div className="item-image-section">
           <div className="item-image">
-            <img 
-              src={item.image} 
-              alt={item.title} 
+            <img
+              src={item.image}
+              alt={item.title}
             />
           </div>
         </div>
-        
+
         <div className="item-info-section">
           <h1>{item.title}</h1>
-          
+
           <div className="item-meta">
             <span>Editora: {item.publisher}</span>
             <span>Edição: {item.edition}</span>
             <span>ISBN: {item.isbn}</span>
           </div>
-          
+
           <div className="item-price-section">
             <h2 className="item-price">R$ {item.price.toFixed(2)}</h2>
           </div>
-          
+
           <div className="item-quantity-selector">
-            <button 
+            <button
               onClick={() => handleQuantityChange(-1)}
               disabled={quantity <= 1}
             >
@@ -103,17 +103,17 @@ const VerItem: React.FC = () => {
               +
             </button>
           </div>
-          
+
           <div className="item-actions">
-            <button 
+            <button
               className={`btn-add-to-cart ${isInCart ? 'added' : ''}`}
               onClick={handleAddToCart}
             >
               <ShoppingCart weight="bold" />
               {isInCart ? 'Adicionado' : 'Adicionar ao Carrinho'}
             </button>
-            
-            <button 
+
+            <button
               className="btn-buy-now"
               onClick={handleBuyNow}
             >
@@ -121,17 +121,17 @@ const VerItem: React.FC = () => {
               Comprar Agora
             </button>
           </div>
-          
+
           <div className="item-description">
             <h3>Descrição</h3>
             <p>{item.description}</p>
           </div>
-          
+
           <div className="item-synopsis">
             <h3>Sinopse</h3>
             <p>{item.synopsis}</p>
           </div>
-          
+
           <div className="item-details">
             <h3>Detalhes do Livro</h3>
             <ul>
@@ -139,7 +139,7 @@ const VerItem: React.FC = () => {
               <li><strong>Dimensões:</strong> {item.height}cm x {item.width}cm x {item.depth}cm</li>
               <li><strong>Código de Barras:</strong> {item.barcode}</li>
               <li>
-                <strong>Categorias:</strong> 
+                <strong>Categorias:</strong>
                 {item.category?.map(cat => cat.name).join(', ')}
               </li>
             </ul>
