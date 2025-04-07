@@ -27,7 +27,7 @@ public class PaymentMethod {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "pym_id")
-    private int id;
+    private Long id;
 
     @Column(name = "pym_primary", nullable = false)
     private boolean primary;
@@ -54,7 +54,7 @@ public class PaymentMethod {
     private String cardFlag;
 
     @Column(name = "pym_cst_id", nullable = false)
-    private int customer;
+    private Long customer;
 
     public Timestamp getExpirationTimestamp() {
         try {

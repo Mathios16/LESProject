@@ -7,6 +7,6 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface AddressRepository extends JpaRepository<Address, Integer> {
-    List<Address> findByCustomer(int customerId);
+public interface AddressRepository extends JpaRepository<Address, Long> {
+    List<Address> findByCustomer(Long customer);
 }

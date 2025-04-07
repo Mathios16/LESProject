@@ -19,10 +19,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 
 import java.time.Duration;
-import java.util.List;
 import java.util.logging.Logger;
 import java.util.concurrent.CountDownLatch;
-import org.openqa.selenium.JavascriptExecutor;
 
 @SpringBootTest
 @TestPropertySource(properties = {

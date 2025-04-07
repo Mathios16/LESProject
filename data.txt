@@ -1,0 +1,219 @@
+[
+    {
+        "id": 4,
+        "title": "A cantiga dos pássaros e das serpentes",
+        "description": "UMA HISTÓRIA DA SÉRIE JOGOS VORAZES. AMBIÇÃO O ALIMENTARÁ. COMPETIÇÃO O CONDUZIRÁ. MAS O PODER TEM O SEU PREÇO.",
+        "date": "2021-04-13T00:00:00.000+00:00",
+        "edition": "1ª edição",
+        "isbn": "6555320575",
+        "pages": 576,
+        "synopsis": "É a manhã do dia da colheita que iniciará a décima edição dos Jogos Vorazes. Na Capital, o jovem de dezoito anos Coriolanus Snow se prepara para sua oportunidade de glória como um mentor dos Jogos. A outrora importante casa Snow passa por tempos difíceis e o destino dela depende da pequena chance de Coriolanus ser capaz de encantar, enganar e manipular seus colegas estudantes para conseguir mentorar o tributo vencedor. A sorte não está a favor dele. A ele foi dada a tarefa humilhante de mentorar a garota tributo do Distrito 12, o pior dos piores. Os destinos dos dois estão agora interligados – toda escolha que Coriolanus fizer pode significar sucesso ou fracasso, triunfo ou ruína. Na arena, a batalha será mortal. Fora da arena, Coriolanus começa a se apegar a já condenada garota tributo... e deverá pesar a necessidade de seguir as regras e o desejo de sobreviver custe o que custar.",
+        "height": 21.0,
+        "width": 14.0,
+        "depth": 3.0,
+        "barcode": "00000001",
+        "image": "https://m.media-amazon.com/images/I/61MCf2k-MgS._SY342_.jpg",
+        "category": [
+            "FICCAO_CIENTIFICA",
+            "ADOLECENTE"
+        ],
+        "pricingGroup": "A",
+        "publisher": "ROCCO_JOVENS_LEITORES",
+        "author": "Suzanne Collins",
+        "status": "AVAILABLE",
+        "inventory": [
+            {
+                "id": 5,
+                "itemId": 4,
+                "quantity": 4,
+                "cost": 48.99,
+                "supplier": "Mercado Livre"
+            }
+        ],
+        "quantity": 4,
+        "price": 49.9698
+    },
+    {
+        "id": 5,
+        "title": "Duna: livro 1",
+        "description": "",
+        "date": "2017-04-18T00:00:00.000+00:00",
+        "edition": "2ª edição",
+        "isbn": "857657313X",
+        "pages": 680,
+        "synopsis": "Uma estonteante mistura de aventura e misticismo, ecologia e política, este romance ganhador dos prêmios Hugo e Nebula deu início a uma das mais épicas histórias de toda a ficção científica. Duna é um triunfo da imaginação, que influenciará a literatura para sempre.Esta edição inédita, com introdução de Neil Gaiman, apresenta ao leitor o universo fantástico criado por Herbert e que será adaptado ao cinema por Denis Villeneuve, diretor de A chegada e de Blade Runner 2049.",
+        "height": 23.4,
+        "width": 16.4,
+        "depth": 4.2,
+        "barcode": "00000002",
+        "image": "https://m.media-amazon.com/images/I/81zN7udGRUL._SY425_.jpg",
+        "category": [
+            "FICCAO_CIENTIFICA",
+            "ESPACIAL"
+        ],
+        "pricingGroup": "C",
+        "publisher": "ALEPH",
+        "author": "Frank Herbert",
+        "status": "AVAILABLE",
+        "inventory": [
+            {
+                "id": 6,
+                "itemId": 5,
+                "quantity": 20,
+                "cost": 60.0,
+                "supplier": "Amazon"
+            },
+            {
+                "id": 7,
+                "itemId": 5,
+                "quantity": 20,
+                "cost": 60.0,
+                "supplier": "AmazonBrasil"
+            }
+        ],
+        "quantity": 40,
+        "price": 63.6
+    },
+    {
+        "id": 6,
+        "title": "Os Analectos",
+        "description": "",
+        "date": "2006-07-03T00:00:00.000+00:00",
+        "edition": "1ª edição",
+        "isbn": "8525415634",
+        "pages": 256,
+        "synopsis": "Os ensinamentos de Confúcio (551-479 a.C.) tão lidos na China ao longo do tempo como a Bíblia foi no Ocidente estão reunidos em Os analectos, trabalho de compilação realizado por seus discípulos. O grande pensador chinês, mais do que uma filosofia, criou uma diferenciada visão de vida, na qual o ponto central é o homem moralmente ideal. Os vinte livros que compõem o Lun yü, comumente conhecido como Os analectos, reúnem um conjunto de elevados valores éticos que conduzem o homem na busca da excelência moral, a partir do cultivo de princípios como benevolência, sabedoria e coragem.Confúcio teve ainda em a vida a reputação de sábio. Embora fosse de descendência nobre, nasceu em circunstâncias bastante humildes no reino de Lu, na atual província de Shantung. Após um afastamento de dez anos, retornou à cidade natal, onde passou o resto da vida ensinando a um grupo de talentosos e devotados discípulos sobre o conceito central de sua vida, o chün tzu: um homem cujo caráter contém a virtude da benevolência e cujos atos estão de acordo com os ritos e a retidão.Esta edição se baseia na tradução do chinês para o inglês por D. C. Lau que, juntamente com um grupo de especialistas, reuniu e analisou os ensinamentos de Confúncio. Esse trabalho conjunto resultou em uma versão comentada, que conta ainda com um glossário de nomes de pessoas e lugares citados ao longo do texto e três apêndices: o primeiro, sobre a vida de Confúcio, acompanhado de uma cronologia, o segundo, sobre os discípulos responsáveis pela compilação do texto, e o terceiro, sobre a historiografia de Os analectos.",
+        "height": 17.8,
+        "width": 10.6,
+        "depth": 1.4,
+        "barcode": "00000003",
+        "image": "https://m.media-amazon.com/images/I/71ti6ltW7WL._SY522_.jpg",
+        "category": [
+            "FILOSOFIA_POLITICA"
+        ],
+        "pricingGroup": "B",
+        "publisher": "L_AND_PM",
+        "author": "Confúcio",
+        "status": "AVAILABLE",
+        "inventory": [
+            {
+                "id": 8,
+                "itemId": 6,
+                "quantity": 10,
+                "cost": 16.89,
+                "supplier": "Amazon"
+            },
+            {
+                "id": 9,
+                "itemId": 6,
+                "quantity": 20,
+                "cost": 18.0,
+                "supplier": "AmazonBrasil"
+            }
+        ],
+        "quantity": 30,
+        "price": 18.72
+    },
+    {
+        "id": 7,
+        "title": "Cosmos",
+        "description": "",
+        "date": "2017-11-06T00:00:00.000+00:00",
+        "edition": "1ª edição",
+        "isbn": "8535929886",
+        "pages": 488,
+        "synopsis": "Escrito por um dos maiores divulgadores de ciência do século XX, Cosmos retraça 14 bilhões de anos de evolução cósmica, explorando tópicos como a origem da vida, o cérebro humano, hieróglifos egípcios, missões espaciais, a morte do sol, a evolução das galáxias e as forças e indivíduos que ajudaram a moldar a ciência moderna. Numa prosa transparente, Carl Sagan revela os segredos do planeta azul habitado por uma forma de vida que apenas começa a descobrir sua própria identidade e a se aventurar no vasto oceano do espaço sideral. Aqui, o tratamento dos temas científicos está sempre imbricado com outros campos de estudo tradicionais, como história, antropologia, arte e filosofia. Publicado pela primeira vez em 1980, Cosmos reúne alguns dos conhecimentos mais avançados da época sobre a natureza, a vida e o Universo ― e se mantém até hoje como uma das mais importantes obras de divulgação científica da história. Embora diversas descobertas fascinantes tenham ocorrido nos últimos quarenta anos, o tema central deste livro nunca estará desatualizado: nosso fascínio pelo conhecimento e a prática da ciência como atividade cultural.",
+        "height": 21.0,
+        "width": 13.6,
+        "depth": 3.0,
+        "barcode": "00000005",
+        "image": "https://m.media-amazon.com/images/I/71zVhbnKmfL._SY466_.jpg",
+        "category": [
+            "ASTRONOMIA"
+        ],
+        "pricingGroup": "E",
+        "publisher": "COMPANHIA_DAS_LETRAS",
+        "author": "Carl Sagan",
+        "status": "AVAILABLE",
+        "inventory": [
+            {
+                "id": 10,
+                "itemId": 7,
+                "quantity": 50,
+                "cost": 49.99,
+                "supplier": "Amazon"
+            }
+        ],
+        "quantity": 50,
+        "price": 54.989000000000004
+    }
+]
+
+{
+    "customer": {
+        "name": "João",
+        "lastname": "Silva",
+        "gender": "MASCULINO",
+        "document": "123.456.789-00",
+        "birthdate": "2000-01-01",
+        "email": "joao.silva@test.com",
+        "password": "Test@123",
+        "phoneDdd": "11",
+        "phone": "98765-4321",
+        "phoneType": "CELULAR"
+    },
+    "addresses": [
+        {
+            "streetType": "RUA",
+            "street": "Rua A",
+            "number": "123",
+            "complement": "Apto 1",
+            "neighborhood": "Centro",
+            "city": "São Paulo",
+            "state": "SP",
+            "country": "Brasil",
+            "zipCode": "01234-567",
+            "addressType": [
+                "RESIDENCIAL"
+            ]
+        },
+        {
+            "streetType": "RUA",
+            "street": "Rua B",
+            "number": "456",
+            "complement": "",
+            "neighborhood": "Jardim",
+            "city": "São Paulo",
+            "state": "SP",
+            "country": "Brasil",
+            "zipCode": "04567-890",
+            "addressType": [
+                "ENTREGA"
+            ]
+        },
+        {
+            "streetType": "RUA",
+            "street": "Rua C",
+            "number": "789",
+            "complement": "",
+            "neighborhood": "Vila",
+            "city": "São Paulo",
+            "state": "SP",
+            "country": "Brasil",
+            "zipCode": "06789-012",
+            "addressType": [
+                "COBRANCA"
+            ]
+        }
+    ],
+    "paymentMethods": [
+        {
+            "primary": true,
+            "cardFlag": "VISA",
+            "cardNumber": "4111111111111111",
+            "cardName": "João Silva",
+            "cardExpiration": "12/30",
+            "cvv": "123"
+        }
+    ]
+}

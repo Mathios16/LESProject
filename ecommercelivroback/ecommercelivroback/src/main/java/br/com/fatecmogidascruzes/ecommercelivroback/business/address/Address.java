@@ -28,7 +28,7 @@ public class Address {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "add_id")
-    private int id;
+    private Long id;
 
     @Column(name = "add_title")
     private String title;
@@ -76,7 +76,7 @@ public class Address {
     private String zipCode;
 
     @Column(name = "add_cst_id")
-    private int customer;
+    private Long customer;
 
     public String getAddress() {
         return streetType + " " + street + ", " + number + ", " + complement + "\n" + zipCode + " - " + neighborhood
