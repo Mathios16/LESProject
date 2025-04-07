@@ -38,7 +38,7 @@ public class Customer {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "cst_id")
-  private int id;
+  private Long id;
 
   @NotBlank(message = "name: Nome não pode ser vazio")
   @Column(name = "cst_name", nullable = false)

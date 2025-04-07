@@ -2,15 +2,15 @@ package br.com.fatecmogidascruzes.ecommercelivroback.business.item.publisher;
 
 import jakarta.persistence.AttributeConverter;
 
-public class PublisherConverter implements AttributeConverter<Publisher, String> {
+public class PublisherConverter implements AttributeConverter<String, Integer> {
 
   @Override
-  public String convertToDatabaseColumn(Publisher publisher) {
-    return publisher == null ? null : publisher.name();
+  public Integer convertToDatabaseColumn(String publisher) {
+    return publisher == null ? null : Publisher.valueOf(publisher).getId();
   }
 
   @Override
-  public Publisher convertToEntityAttribute(String name) {
-    return name == null ? null : Publisher.valueOf(name);
+  public String convertToEntityAttribute(Integer id) {
+    return id == null ? null : Publisher.fromId(id).name();
   }
 }

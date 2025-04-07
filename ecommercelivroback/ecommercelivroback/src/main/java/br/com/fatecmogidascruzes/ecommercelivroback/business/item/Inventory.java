@@ -1,4 +1,4 @@
-package br.com.fatecmogidascruzes.ecommercelivroback.business.order.orderPayment;
+package br.com.fatecmogidascruzes.ecommercelivroback.business.item;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -14,19 +14,21 @@ import lombok.Setter;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity(name = "orderpayments")
-public class OrderPayment {
+@Entity(name = "inventories")
+public class Inventory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "orp_id")
     private Long id;
 
-    @Column(name = "orp_amount", nullable = false)
-    private Double amount;
+    @Column(name = "inv_itm_id", nullable = false)
+    private Long itemId;
 
-    @Column(name = "orp_payment_method_id", nullable = false)
-    private String paymentMethodId;
+    @Column(name = "inv_quantity", nullable = false)
+    private int quantity;
 
-    @Column(name = "orp_order_id", nullable = false)
-    private Long orderId;
+    @Column(name = "inv_cost", nullable = false)
+    private Double cost;
+
+    @Column(name = "inv_supplier", nullable = false)
+    private String supplier;
 }

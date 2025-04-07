@@ -4,7 +4,11 @@ public enum Publisher {
   DARKSIDE(1),
   MARVEL(2),
   DC(3),
-  HUFFPOST(4);
+  HUFFPOST(4),
+  ROCCO_JOVENS_LEITORES(5),
+  ALEPH(6),
+  L_AND_PM(7),
+  COMPANHIA_DAS_LETRAS(8);
 
   private final int id;
 

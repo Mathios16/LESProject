@@ -10,13 +10,23 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+
+import java.sql.Timestamp;
 import java.util.List;
+import java.util.OptionalDouble;
+
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CascadeType;
 
 import br.com.fatecmogidascruzes.ecommercelivroback.business.item.category.CategoryConverter;
+import br.com.fatecmogidascruzes.ecommercelivroback.business.item.pricingGroup.PricingGroup;
 import br.com.fatecmogidascruzes.ecommercelivroback.business.item.pricingGroup.PricingGroupConverter;
 import br.com.fatecmogidascruzes.ecommercelivroback.business.item.publisher.PublisherConverter;
+import br.com.fatecmogidascruzes.ecommercelivroback.business.item.statusItem.StatusItem;
+import br.com.fatecmogidascruzes.ecommercelivroback.business.item.statusItem.StatusItemConverter;
 
 @Setter
 @Getter
@@ -33,16 +43,12 @@ public class Item {
   @Column(name = "itm_title", nullable = false)
   private String title;
 
-  @Column(name = "itm_description")
+  @Column(name = "itm_description", columnDefinition = "TEXT")
   private String description;
 
-  @NotNull(message = "price: Preço não pode ser vazio")
-  @Column(name = "itm_price", nullable = false)
-  private Double price;
-
-  @NotBlank(message = "date: Data não pode ser vazia")
+  @NotNull(message = "date: Data não pode ser vazia")
   @Column(name = "itm_date", nullable = false)
-  private String date;
+  private Timestamp date;
 
   @NotBlank(message = "edition: Edição não pode ser vazia")
   @Column(name = "itm_edition", nullable = false)
@@ -56,7 +62,7 @@ public class Item {
   @Column(name = "itm_pages", nullable = false)
   private Integer pages;
 
-  @Column(name = "itm_synopsis")
+  @Column(name = "itm_synopsis", columnDefinition = "TEXT")
   private String synopsis;
 
   @NotNull(message = "height: Altura não pode ser vazia")
@@ -71,9 +77,9 @@ public class Item {
   @Column(name = "itm_depth", nullable = false)
   private Double depth;
 
-  @NotNull(message = "barcode: Codigo de barras não pode ser vazia")
+  @NotBlank(message = "barcode: Codigo de barras não pode ser vazia")
   @Column(name = "itm_barcode", nullable = false)
-  private Long barcode;
+  private String barcode;
 
   @Column(name = "itm_image")
   private String image;
@@ -93,4 +99,40 @@ public class Item {
   @Column(name = "itm_publisher", nullable = false)
   private String publisher;
 
+  @NotNull(message = "author: Autor não pode ser vazia")
+  @Column(name = "itm_author", nullable = false)
+  private String author;
+
+  @Column(name = "itm_status")
+  @Convert(converter = StatusItemConverter.class)
+  private String status;
+
+  @Cascade(CascadeType.REMOVE)
+  @OneToMany(mappedBy = "itemId")
+  private List<Inventory> inventory;
+
+  public Double getPrice() {
+    OptionalDouble cost = inventory.stream()
+        .mapToDouble(Inventory::getCost).max();
+
+    if (!cost.isPresent()) {
+      return 0.0;
+    }
+
+    return cost.getAsDouble() + (cost.getAsDouble() / 100) * PricingGroup.valueOf(pricingGroup).getPercentage();
+  }
+
+  public int getQuantity() {
+    return inventory.stream()
+        .mapToInt(Inventory::getQuantity).sum();
+  }
+
+  public void validateStatus() {
+    if (inventory.isEmpty() || inventory.stream()
+        .allMatch(inv -> inv.getQuantity() == 0)) {
+      status = StatusItem.UNAVAILABLE.name();
+    } else {
+      status = StatusItem.AVAILABLE.name();
+    }
+  }
 }

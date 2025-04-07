@@ -4,7 +4,11 @@ public enum Category {
   ACAO(1),
   FANTASIA(2),
   FICCAO_CIENTIFICA(3),
-  ROMANCE(4);
+  ROMANCE(4),
+  ADOLECENTE(5),
+  ESPACIAL(6),
+  FILOSOFIA_POLITICA(7),
+  ASTRONOMIA(8);
 
   private final int id;
 

@@ -13,8 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -97,7 +95,7 @@ public class CustomerController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Customer> getCustomerById(@PathVariable int id) {
+    public ResponseEntity<Customer> getCustomerById(@PathVariable Long id) {
         Optional<Customer> customer = customerRepository.findById(id);
 
         return ResponseEntity.ok(customer.get());
@@ -105,9 +103,13 @@ public class CustomerController {
 
     @PutMapping("/{id}")
     @Transactional(rollbackFor = Exception.class)
-    public ResponseEntity<?> updateCustomer(@PathVariable int id, @Valid @RequestBody dataCustomer data)
+    public ResponseEntity<?> updateCustomer(@PathVariable Long id, @Valid @RequestBody dataCustomer data)
             throws Exception {
         Optional<Customer> existingCustomer = customerRepository.findById(id);
+        List<Address> existingAddresses = addressRepository.findByCustomer(id);
+        List<PaymentMethod> existingPaymentMethods = paymentMethodRepository.findByCustomer(id);
+        addressRepository.deleteAll(existingAddresses);
+        paymentMethodRepository.deleteAll(existingPaymentMethods);
         if (existingCustomer.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
@@ -118,10 +120,6 @@ public class CustomerController {
 
         customer.setAddresses(addresses);
         customer.setPaymentMethods(paymentMethods);
-
-        ObjectMapper mapper = new ObjectMapper();
-        String jsonString = mapper.writeValueAsString(customer);
-        System.out.println(jsonString);
 
         customer.verifyAddresses();
         customer.verifyPaymentMethods();
@@ -139,7 +137,7 @@ public class CustomerController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCustomer(@PathVariable int id) {
+    public ResponseEntity<Void> deleteCustomer(@PathVariable Long id) {
         Optional<Customer> customer = customerRepository.findById(id);
         if (customer.isEmpty()) {
             return ResponseEntity.notFound().build();

@@ -7,6 +7,6 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface PaymentMethodRepository extends JpaRepository<PaymentMethod, Integer> {
-    List<PaymentMethod> findByCustomer(int customerId);
+public interface PaymentMethodRepository extends JpaRepository<PaymentMethod, Long> {
+    List<PaymentMethod> findByCustomer(Long customer);
 }
