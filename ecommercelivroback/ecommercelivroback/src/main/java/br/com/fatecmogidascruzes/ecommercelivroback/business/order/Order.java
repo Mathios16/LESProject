@@ -98,6 +98,7 @@ public class Order {
 
         for (Cupom cupom : cupoms) {
             if (carry > totalOrderValue && cupoms.indexOf(cupom) < cupoms.size() - 1) {
+                this.status = OrderStatus.REPROVED.name();
                 throw new IllegalArgumentException("Cupons excedem desnecessáriamente o valor da compra");
             }
             carry += cupom.getValue();
@@ -112,17 +113,17 @@ public class Order {
             return Optional.of(exchangeCoupon);
         }
 
-        double remainingValue = totalOrderValue - totalCouponValue;
-
         double totalCreditCardPayment = 0.0;
         for (OrderPayment payment : payments) {
             if (totalCouponValue != 0 && payment.getAmount() < 10.0 && totalOrderValue >= 10) {
+                this.status = OrderStatus.REPROVED.name();
                 throw new IllegalArgumentException("Valor mínimo de pagamento é R$10,00 ");
             }
             totalCreditCardPayment += payment.getAmount();
         }
 
-        if (totalCreditCardPayment < remainingValue) {
+        if (totalCreditCardPayment < this.getTotal()) {
+            this.status = OrderStatus.REPROVED.name();
             throw new IllegalArgumentException("Valor de pagamento insuficiente");
         }
 

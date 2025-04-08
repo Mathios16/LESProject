@@ -8,8 +8,8 @@ import br.com.fatecmogidascruzes.ecommercelivroback.business.order.cupom.Cupom;
 import br.com.fatecmogidascruzes.ecommercelivroback.business.order.orderPayment.OrderPayment;
 
 public record dataOrder(Long id, Long customerId, Long addressId, List<OrderPayment> orderPayments, List<Cupom> cupoms,
-                Double freight,
-                Double subTotal, Double total, String status, List<dataOrderItem> items) {
+                Double freight, Double discount, Double subTotal, Double total, String status,
+                List<dataOrderItem> items) {
         public static dataOrder fromOrder(Order order) {
                 return new dataOrder(
                                 order.getId(),
@@ -18,6 +18,7 @@ public record dataOrder(Long id, Long customerId, Long addressId, List<OrderPaym
                                 order.getPayments(),
                                 order.getCupoms(),
                                 order.getFreight(),
+                                order.getDiscount(),
                                 order.getSubTotal(),
                                 order.getTotal(),
                                 order.getStatus(),
