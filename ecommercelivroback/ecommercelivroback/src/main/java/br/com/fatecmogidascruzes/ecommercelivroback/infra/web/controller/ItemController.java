@@ -43,17 +43,18 @@ public class ItemController {
     @PostMapping
     @Transactional(rollbackFor = Exception.class)
     public ResponseEntity<?> createItem(@Valid @RequestBody dataItem data) throws Exception {
-        Item item = data.item();
-        List<Inventory> inventories = data.inventory();
+        Item savedItem = itemRepository.save(data.item());
 
-        item.setInventory(inventories);
+        if (data.inventory().isPresent()) {
+            List<Inventory> inventories = data.inventory().get();
 
-        item.validateStatus();
+            inventories.forEach(inventory -> inventory.setItemId(savedItem.getId()));
+            inventoryRepository.saveAll(inventories);
 
-        Item savedItem = itemRepository.save(item);
+            savedItem.setInventory(inventories);
 
-        inventories.forEach(inventory -> inventory.setItemId(savedItem.getId()));
-        inventoryRepository.saveAll(inventories);
+            savedItem.validateStatus();
+        }
 
         return ResponseEntity.status(HttpStatus.CREATED).body(savedItem);
     }
@@ -125,21 +126,23 @@ public class ItemController {
         BeanUtils.copyProperties(data.item(), existingItem, "id", "inventory");
 
         List<Inventory> inventoriesToRemove = existingItem.get().getInventory().stream()
-                .filter(existingInventory -> data.inventory().stream()
+                .filter(existingInventory -> data.inventory().get().stream()
                         .noneMatch(newInventory -> Objects.equals(existingInventory.getId(), newInventory.getId())))
                 .collect(Collectors.toList());
 
         inventoryRepository.deleteAll(inventoriesToRemove);
         existingItem.get().getInventory().removeAll(inventoriesToRemove);
 
-        List<Inventory> inventories = data.inventory();
+        if (data.inventory().isPresent()) {
+            List<Inventory> inventories = data.inventory().get();
 
-        existingItem.get().setInventory(inventories);
+            existingItem.get().setInventory(inventories);
 
-        existingItem.get().validateStatus();
+            existingItem.get().validateStatus();
 
-        inventories.forEach(inventory -> inventory.setItemId(existingItem.get().getId()));
-        inventoryRepository.saveAll(inventories);
+            inventories.forEach(inventory -> inventory.setItemId(existingItem.get().getId()));
+            inventoryRepository.saveAll(inventories);
+        }
 
         Item updatedItem = itemRepository.save(existingItem.get());
 

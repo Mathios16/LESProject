@@ -25,7 +25,7 @@ public class OrderPayment {
     private Double amount;
 
     @Column(name = "orp_payment_method_id", nullable = false)
-    private String paymentMethodId;
+    private Long paymentMethodId;
 
     @Column(name = "orp_order_id", nullable = false)
     private Long orderId;

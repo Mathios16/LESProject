@@ -34,13 +34,10 @@ public class CartItem {
     @Column(name = "cti_quantity", nullable = false)
     private int quantity;
 
-    @Column(name = "cti_price", nullable = false)
-    private double price;
-
     @Column(name = "cti_cart_id", nullable = false)
     private Long cartId;
 
-    public double getTotal() {
-        return quantity * price;
+    public double getPrice() {
+        return quantity * item.getPrice();
     }
 }

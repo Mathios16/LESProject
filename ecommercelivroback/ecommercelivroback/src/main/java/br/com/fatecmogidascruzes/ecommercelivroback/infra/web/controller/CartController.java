@@ -11,9 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import br.com.fatecmogidascruzes.ecommercelivroback.business.address.Address;
 import br.com.fatecmogidascruzes.ecommercelivroback.business.customer.Customer;
 import br.com.fatecmogidascruzes.ecommercelivroback.business.item.Item;
@@ -132,7 +129,6 @@ public class CartController {
                     cartItem.setItem(item);
                     cartItem.setItemId(item.getId());
                     cartItem.setQuantity(newCartItem.quantity());
-                    cartItem.setPrice(item.getPrice());
                     cartItems.add(cartItem);
                 }
             });

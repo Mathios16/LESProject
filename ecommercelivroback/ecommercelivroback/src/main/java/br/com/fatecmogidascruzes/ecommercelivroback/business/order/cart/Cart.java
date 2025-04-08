@@ -52,7 +52,7 @@ public class Cart {
     public Double getFreight() {
         Double freight = 0.0;
         if (items.size() >= 3) {
-            freight += items.stream().mapToDouble(CartItem::getTotal).sum() * 0.1;
+            freight += items.stream().mapToDouble(CartItem::getPrice).sum() * 0.1;
         }
         if (address != null && !address.getState().contains("SP")) {
             freight += 10.0;
@@ -62,7 +62,7 @@ public class Cart {
 
     public Double getSubTotal() {
         return items.stream()
-                .mapToDouble(CartItem::getTotal)
+                .mapToDouble(CartItem::getPrice)
                 .sum();
     }
 
