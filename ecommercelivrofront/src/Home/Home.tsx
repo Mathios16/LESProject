@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+interface Item {
+  id: number;
+  title: string;
+  price: number;
+  image: string;
+  category: { id: number; name: string }[];
+}
 // Sample data - in a real app, this would come from an API
 const sampleItems = [
   {
@@ -33,11 +40,47 @@ const sampleItems = [
   }
 ];
 
+const categoriesName = {
+  ASTRONOMIA: "Astronomia",
+  FICCAO_CIENTIFICA: "Ficção Científica",
+  FANTASIA: "Fantasia",
+  ACAO: "Ação",
+  ROMANCE: "Romance",
+  ADOLECENTE: "Adolescente",
+  ESPACIAL: "Espacial",
+  FILOSOFIA_POLITICA: "Filosofia Política"
+};
+
 const Home: React.FC = () => {
+  const [items, setItems] = useState<Item[]>([]);
   const [itemsByCategory, setItemsByCategory] = useState<{ [key: string]: any[] }>({});
   const navigate = useNavigate();
 
+  const fetchItems = async () => {
+    try {
+      const response = await fetch('http://localhost:8080/items', {
+        method: 'GET',
+        credentials: 'include',
+      });
+      const data = await response.json();
+
+      // setItems(data);
+
+      // data.forEach((item: Item) => {
+      //   item.category = item.category.map(cat => ({
+      //     id: cat.id,
+      //     name: cat.name
+      //   }));
+      // });
+      return data;
+    } catch (error) {
+      console.error('Error fetching items:', error);
+      return [];
+    }
+  };
+
   useEffect(() => {
+    fetchItems();
     // Group items by category
     const categorizedItems = sampleItems.reduce((acc: { [key: string]: any[] }, item) => {
       item.category.forEach(cat => {
@@ -48,7 +91,6 @@ const Home: React.FC = () => {
       });
       return acc;
     }, {});
-
     setItemsByCategory(categorizedItems);
   }, []);
 
