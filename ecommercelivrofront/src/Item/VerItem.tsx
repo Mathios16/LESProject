@@ -1,10 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, } from 'react';
+import { useParams } from 'react-router-dom';
 import { ShoppingCart, CreditCard } from '@phosphor-icons/react';
-
-interface Category {
-  id: number;
-  name: string;
-}
 
 interface Item {
   id: number;
@@ -23,42 +19,71 @@ interface Item {
   depth: number;
   barcode: number;
   image: string;
-  category?: Category[];
+  category?: String[];
   tag?: string;
 }
+
+const categoriesName = [
+  { id: "ASTRONOMIA", name: "Astronomia" },
+  { id: "FICCAO_CIENTIFICA", name: "Ficção Científica" },
+  { id: "FANTASIA", name: "Fantasia" },
+  { id: "ACAO", name: "Ação" },
+  { id: "ROMANCE", name: "Romance" },
+  { id: "ADOLECENTE", name: "Adolescente" },
+  { id: "ESPACIAL", name: "Espacial" },
+  { id: "FILOSOFIA_POLITICA", name: "Filosofia Política" }
+];
 
 const VerItem: React.FC = () => {
   const [quantity, setQuantity] = useState(1);
   const [isInCart, setIsInCart] = useState(false);
+  const [item, setItem] = useState<Item>();
+  const { id } = useParams();
+  const [isLoading, setIsLoading] = useState(true);
 
-  const item = {
-    id: 1,
-    title: 'A cantiga dos pássaros e das serpentes',
-    price: 59.90,
-    image: 'https://m.media-amazon.com/images/I/61MCf2k-MgS._AC_UF1000,1000_QL80_.jpg',
-    category: [{ id: 1, name: 'Ação' }],
-    description: 'Um livro emocionante que explora os limites da sobrevivência e do poder.',
-    date: '2023-01-01',
-    edition: '1ª Edição',
-    isbn: '978-0-3856-1734-4',
-    pages: 517,
-    synopsis: 'Décadas antes de Katniss Everdeen, a 10ª edição anual dos Jogos Vorazes vai revelar como a traição pode surgir nos lugares mais inesperados.',
-    publisher: 'Rocco',
-    pricingGroup: 'A',
-    height: 23,
-    width: 16,
-    depth: 3,
-    barcode: 7890123456,
+  const fetchItem = async () => {
+
+    try {
+      setIsLoading(true);
+      const response = await fetch(`http://localhost:8080/items/${id}`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+      const data = await response.json();
+      setItem(data);
+      setIsLoading(false);
+
+    } catch (error) {
+      console.error('Error fetching items:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  useEffect(() => {
+    fetchItem();
+  }, [id]);
+
+  if (!item) {
+    return <div>Item não encontrado</div>;
+  }
 
   const handleQuantityChange = (change: number) => {
     setQuantity(Math.max(1, quantity + change));
   };
 
-  const handleAddToCart = () => {
-    // TODO: Implement actual cart functionality
-    setIsInCart(true);
-    alert(`${quantity} ${item.title}(s) adicionado(s) ao carrinho!`);
+  const handleAddToCart = async () => {
+    try {
+      await fetch(`http://localhost:8080/cart/25`, {
+        method: 'POST',
+        credentials: 'include',
+
+      });
+      setIsInCart(true);
+      alert(`${quantity} ${item.title}(s) adicionado(s) ao carrinho!`);
+    } catch (error) {
+      console.error('Error inserting items:', error);
+    }
   };
 
   const handleBuyNow = () => {
@@ -77,7 +102,6 @@ const VerItem: React.FC = () => {
             />
           </div>
         </div>
-
         <div className="item-info-section">
           <h1>{item.title}</h1>
 
@@ -140,7 +164,7 @@ const VerItem: React.FC = () => {
               <li><strong>Código de Barras:</strong> {item.barcode}</li>
               <li>
                 <strong>Categorias:</strong>
-                {item.category?.map(cat => cat.name).join(', ')}
+                {item.category?.map(cat => categoriesName.find(c => c.id === cat)?.name).join(', ')}
               </li>
             </ul>
           </div>

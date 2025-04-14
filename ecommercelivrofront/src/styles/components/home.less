@@ -1,10 +1,6 @@
 @import (reference) '../../styles/variables.less';
 
-.home-container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 2rem;
-  
+.container {
   > h1 {
     text-align: center;
     color: @primary-color;
@@ -13,6 +9,24 @@
     border-bottom: 3px solid @primary-color;
     padding-bottom: 1rem;
   }
+}
+
+.home-container {
+  align-items: baseline;
+}
+
+.home-search div{
+  padding: 0.2rem;
+}
+
+.line-inputs {
+  display:grid;
+  grid-template-columns: 110px 110px;
+}
+
+.home-list {
+  margin: 0;
+  padding: 2rem;
 }
 
 .category-section {
@@ -27,7 +41,7 @@
   }
   
   .items-grid {
-    display: grid;
+    display: flex;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 1.5rem;
   }
@@ -40,14 +54,16 @@
     transition: all 0.3s ease;
     cursor: pointer;
     
-    &:hover {
+    &:hover { 
       transform: scale(1.05);
       box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
     }
     
     .item-image {
       height: 350px;
+      width: 250px;
       overflow: hidden;
+      align-self: center;
       
       img {
         width: 100%;
@@ -62,6 +78,7 @@
       background-color: @background-color;
       
       h3 {
+        width: 200px;
         font-size: 1.2rem;
         color: @primary-color;
         margin-bottom: 0.5rem;

@@ -65,6 +65,8 @@ public class ItemController {
             @RequestParam(required = false) String isbn,
             @RequestParam(required = false) Timestamp dateAfter,
             @RequestParam(required = false) Timestamp dateBefore,
+            @RequestParam(required = false) Double priceMin,
+            @RequestParam(required = false) Double priceMax,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String publisher) {
         List<Item> items = itemRepository.findAll();
@@ -93,11 +95,34 @@ public class ItemController {
                     .collect(Collectors.toList());
         }
 
-        if (category != null && !category.isEmpty()) {
+        if (priceMin != null) {
             items = items.stream()
-                    .filter(item -> item.getCategory().stream()
-                            .anyMatch(cat -> cat.toLowerCase().contains(category.toLowerCase())))
+                    .filter(item -> item.getPrice() >= priceMin)
                     .collect(Collectors.toList());
+        }
+
+        if (priceMax != null) {
+            items = items.stream()
+                    .filter(item -> item.getPrice() <= priceMax)
+                    .collect(Collectors.toList());
+        }
+
+        if (category != null) {
+            if (category.contains(",")) {
+                String[] categories = category.split(",");
+
+                for (String catitem : categories) {
+                    items = items.stream()
+                            .filter(item -> item.getCategory().stream()
+                                    .anyMatch(cat -> cat.toLowerCase().contains(catitem.toLowerCase())))
+                            .collect(Collectors.toList());
+                }
+            } else {
+                items = items.stream()
+                        .filter(item -> item.getCategory().stream()
+                                .anyMatch(cat -> cat.contains(category)))
+                        .collect(Collectors.toList());
+            }
         }
 
         if (publisher != null && !publisher.isEmpty()) {
