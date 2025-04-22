@@ -2,13 +2,13 @@ import { User } from "@phosphor-icons/react";
 import { Link, useMatch, useResolvedPath } from "react-router-dom";
 import { ReactNode } from 'react';
 
-const CustomLink: React.FC<{to: string, children: ReactNode, className?: string}> = ({to, children, className}) => {
+const CustomLink: React.FC<{ to: string, children: ReactNode, className?: string }> = ({ to, children, className }) => {
     const resolvedPath = useResolvedPath(to);
     const isActive = useMatch({ path: resolvedPath.pathname, end: true });
 
     return (
-        <Link 
-            to={to} 
+        <Link
+            to={to}
             className={`${className || ''} ${isActive ? 'active' : ''}`}
         >
             {children}
@@ -16,14 +16,14 @@ const CustomLink: React.FC<{to: string, children: ReactNode, className?: string}
     )
 }
 
-const NavBar: React.FC<{userType: string, userId?: number}> = ({userType, userId}) => {
+const NavBar: React.FC<{ userType: string, userId?: number }> = ({ userType, userId }) => {
     return (
-        <nav className="navbar">
+        <nav className="navbar" id="navbar" data-user-id={userId}>
             <div className="navbar-container">
                 <Link to="/" className="navbar-brand">
-                    
+
                 </Link>
-                
+
                 <div className="navbar-nav">
                     {userType === 'admin' && (
                         <>
@@ -42,7 +42,7 @@ const NavBar: React.FC<{userType: string, userId?: number}> = ({userType, userId
                 </div>
 
                 <div className="navbar-user">
-                    {userType === 'user' && <CustomLink to={ userId ? `/clientes/editar/${userId}` : '/clientes/criar'}><User size={32} weight="light" /></CustomLink>}
+                    {userType === 'user' && <CustomLink to={userId ? `/clientes/editar/${userId}` : '/clientes/criar'}><User size={32} weight="light" /></CustomLink>}
                 </div>
             </div>
         </nav>

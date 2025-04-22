@@ -65,28 +65,28 @@ public class Order {
     public Double getFreight() {
         Double freight = 0.0;
         if (items.size() >= 3) {
-            freight += items.stream().mapToDouble(OrderItem::getTotal).sum() * 0.1;
+            freight += items.stream().mapToDouble(OrderItem::getPrice).sum() * 0.1;
         }
         if (address != null && !address.getState().contains("SP")) {
             freight += 10.0;
         }
-        return freight;
+        return Math.round(freight * 100.0) / 100.0;
     }
 
     public Double getDiscount() {
-        return cupoms.stream()
+        return Math.round(cupoms.stream()
                 .mapToDouble(Cupom::getValue)
-                .sum();
+                .sum() * 100.0) / 100.0;
     }
 
     public Double getSubTotal() {
-        return items.stream()
-                .mapToDouble(OrderItem::getTotal)
-                .sum();
+        return Math.round(items.stream()
+                .mapToDouble(OrderItem::getPrice)
+                .sum() * 100.0) / 100.0;
     }
 
     public Double getTotal() {
-        return getSubTotal() + getFreight() - getDiscount();
+        return Math.round((getSubTotal() - getDiscount() + getFreight()) * 100.0) / 100.0;
     }
 
     public Optional<Cupom> verifyPayment() {
@@ -122,12 +122,12 @@ public class Order {
             totalCreditCardPayment += payment.getAmount();
         }
 
-        if (totalCreditCardPayment < this.getTotal()) {
+        if (Math.round(totalCreditCardPayment * 100.0) / 100.0 < this.getTotal()) {
             this.status = OrderStatus.REPROVED.name();
             throw new IllegalArgumentException("Valor de pagamento insuficiente");
         }
 
-        this.status = OrderStatus.APPROVED.name();
+        this.status = OrderStatus.PROCESSING.name();
         return Optional.empty();
     }
 }

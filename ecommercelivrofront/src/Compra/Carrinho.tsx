@@ -20,6 +20,7 @@ import { Trash } from '@phosphor-icons/react';
 
 interface CartItem {
   id: number;
+  itemId: number;
   title: string;
   price: number;
   image: string;
@@ -33,18 +34,60 @@ const Carrinho: React.FC = () => {
   const [shippingCost, setShippingCost] = useState(0);
   const [couponCode, setCouponCode] = useState('');
   const [discount, setDiscount] = useState(0);
+  const [userId, setUserId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    // TODO: Fetch cart items from API/localStorage
-    const mockItems: CartItem[] = [
-      {
-        id: 1, title: 'A cantiga dos pássaros e das serpentes',
-        image: 'https://m.media-amazon.com/images/I/61MCf2k-MgS._AC_UF1000,1000_QL80_.jpg',
-        price: 59.90, quantity: 1
-      }
-    ];
-    setCartItems(mockItems);
+    const navbar = document.getElementById('navbar');
+    if (navbar) {
+      setUserId(navbar.dataset.userId);
+    }
   }, []);
+
+
+  const fetchItem = async () => {
+
+    try {
+
+      let response = await fetch(`http://localhost:8080/cart/${userId}`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+
+      let cartItemData = await response.json();
+
+      cartItemData.items.forEach(async (item: { id: number, itemId: number, quantity: number }) => {
+
+        response = await fetch(`http://localhost:8080/items/${item.itemId}`, {
+          method: 'GET',
+          credentials: 'include',
+        });
+
+        const itemData = await response.json();
+
+        if (cartItems.find(cartItem => cartItem.id === item.id)) {
+          return;
+        }
+
+        setCartItems(prev => [...prev, {
+          id: item.id,
+          itemId: item.itemId,
+          title: itemData.title,
+          price: itemData.price,
+          image: itemData.image,
+          quantity: item.quantity
+        }]);
+      });
+
+    } catch (error) {
+      console.error('Error fetching items:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (userId) {
+      fetchItem();
+    }
+  }, [userId]);
 
   const calculateSubtotal = () => {
     return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
@@ -54,35 +97,57 @@ const Carrinho: React.FC = () => {
     return calculateSubtotal() + shippingCost - discount;
   };
 
-  const handleQuantityChange = (id: number, newQuantity: number) => {
+  const handleQuantityChange = async (id: number, newQuantity: number) => {
+    try {
+      let data = {
+        "items": [
+          {
+            "id": id,
+            "quantity": newQuantity
+          }
+        ]
+      };
+      await fetch(`http://localhost:8080/cart/${userId}`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+    } catch (error) {
+      console.error('Error updating quantity:', error);
+    }
     setCartItems(cartItems.map(item =>
       item.id === id ? { ...item, quantity: Math.max(1, newQuantity) } : item
     ));
   };
 
-  // const calculateShipping = async () => {
-  //   // TODO: Integrate with shipping API
-  //   // Mock shipping calculation
-  //   if (cep.length === 8) {
-  //     setShippingCost(15.90);
-  //   }
-  // };
-
-  // const applyCoupon = () => {
-  //   // TODO: Integrate with coupon API
-  //   // Mock coupon application
-  //   if (couponCode === 'DESC10') {
-  //     setDiscount(calculateSubtotal() * 0.1);
-  //   }
-  // };
-
-  const handleRemoveItem = (id: number) => {
+  const handleRemoveItem = async (id: number) => {
+    try {
+      let data = {
+        "items": [
+          {
+            "id": id
+          }
+        ]
+      };
+      await fetch(`http://localhost:8080/cart/${userId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+    } catch (error) {
+      console.error('Error updating quantity:', error);
+    }
     setCartItems(cartItems.filter(item => item.id !== id));
   };
 
-  const handleCheckout = () => {
-    // TODO: Implement checkout logic
-    console.log('Finalizar Pedido');
+  const handleCheckout = async () => {
+    navigate(`/compra`);
   };
 
   return (
@@ -137,55 +202,6 @@ const Carrinho: React.FC = () => {
           </TableBody>
         </Table>
       </TableContainer>
-
-      {/* <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              Calcular Frete
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <TextField
-                label="CEP"
-                value={cep}
-                onChange={(e) => setCep(e.target.value)}
-                size="small"
-              />
-              <Button
-                variant="contained"
-                onClick={calculateShipping}
-                disabled={cep.length !== 8}
-              >
-                Calcular
-              </Button>
-            </Box>
-          </Paper>
-        </Grid>
-
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              Cupom de Desconto
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <TextField
-                label="Código do Cupom"
-                value={couponCode}
-                onChange={(e) => setCouponCode(e.target.value)}
-                size="small"
-              />
-              <Button
-                variant="contained"
-                onClick={applyCoupon}
-                disabled={!couponCode}
-              >
-                Aplicar
-              </Button>
-            </Box>
-          </Paper>
-        </Grid>
-      </Grid> */}
-
       <Paper sx={{ p: 2, mt: 3 }}>
         <Typography variant="h6" gutterBottom>
           Resumo do Pedido
@@ -201,7 +217,7 @@ const Carrinho: React.FC = () => {
         <Button
           variant="contained"
           color="primary"
-          onClick={() => navigate('/compra')}
+          onClick={handleCheckout}
           disabled={cartItems.length === 0}
         >
           Finalizar Pedido

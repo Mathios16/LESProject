@@ -11,22 +11,36 @@ import ListarItens from './Item/ListarItens';
 import Compra from './Compra/Compra';
 import VerPedidos from './Compra/VerPedidos';
 import CriarTroca from './Troca/CriarTroca';
+import ListarPedidos from './Compra/ListarPedidos';
 
 import { Route, Routes } from 'react-router-dom';
+
+interface User {
+  id: number;
+  type: 'user' | 'admin';
+}
+
+let userType: User['type'] = 'admin';
+let userId: User['id'] = 11;
 
 function App() {
   return (
     <>
-      <NavBar userType="user" userId={1} />
+      <NavBar userType={userType} userId={userId} />
       <div className="container">
         <div className="box-content">
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/clientes" element={<ListarClientes />} />
+            {userType == 'admin' && (
+              <>
+                <Route path="/clientes" element={<ListarClientes />} />
+                <Route path="/itens" element={<ListarItens />} />
+                <Route path="/itens/criar" element={<CriarItem />} />
+                <Route path="/pedidos" element={<ListarPedidos />} />
+              </>
+            )}
             <Route path="/clientes/criar" element={<CriarCliente />} />
             <Route path="/cliente/editar/:id" element={<EditarCliente />} />
-            <Route path="/itens" element={<ListarItens />} />
-            <Route path="/itens/criar" element={<CriarItem />} />
             <Route path="/item/ver/:id" element={<VerItem />} />
             <Route path="/carrinho" element={<Carrinho />} />
             <Route path="/compra" element={<Compra />} />

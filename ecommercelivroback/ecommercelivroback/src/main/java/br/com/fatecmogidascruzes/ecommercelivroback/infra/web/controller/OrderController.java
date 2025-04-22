@@ -97,6 +97,7 @@ public class OrderController {
         if (data != null && data.cupoms() != null) {
             data.cupoms().forEach(cupom -> {
                 Cupom cupomEntity = new Cupom();
+                cupomEntity.setId(cupom.getId());
                 cupomEntity.setCode(cupom.getCode());
                 cupomEntity.setValue(cupom.getValue());
                 cupomEntity.setExpirationDate(cupom.getExpirationDate());
@@ -171,11 +172,12 @@ public class OrderController {
 
     @GetMapping("/{customerId}")
     public ResponseEntity<?> getOrder(@PathVariable Long customerId) {
-        return ResponseEntity.ok(orderRepository.findByCustomerId(customerId));
+        return ResponseEntity
+                .ok(orderRepository.findByCustomerId(customerId).stream().map(dataOrder::fromOrder).toList());
     }
 
     @GetMapping
     public ResponseEntity<List<?>> getOrders() {
-        return ResponseEntity.ok(orderRepository.findAll());
+        return ResponseEntity.ok(orderRepository.findAll().stream().map(dataOrder::fromOrder).toList());
     }
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -22,34 +22,45 @@ interface OrderItem {
   name: string;
   quantity: number;
   price: number;
-  image: string;
 }
 
 interface Order {
   id: number;
-  status: 'PROCESSANDO' | 'ENVIADO' | 'ENTREGUE' | 'CANCELADO';
-  date: string;
+  status: string;
   items: OrderItem[];
-  subtotal: number;
+  subTotal: number;
 }
 
 const VerPedidos: React.FC = () => {
   const navigate = useNavigate();
-  const [orders, setOrders] = useState<Order[]>([
-    {
-      id: 1,
-      status: 'ENTREGUE',
-      date: '2024-03-20',
-      items: [
-        {
-          id: 1, name: 'A cantiga dos pássaros e das serpentes',
-          image: 'https://m.media-amazon.com/images/I/61MCf2k-MgS._AC_UF1000,1000_QL80_.jpg',
-          quantity: 2, price: 59.90
-        }
-      ],
-      subtotal: 125.70
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [userId, setUserId] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    const navbar = document.getElementById('navbar');
+    if (navbar) {
+      setUserId(navbar.dataset.userId);
     }
-  ]);
+  }, []);
+
+  const fetchOrders = async () => {
+    try {
+      const response = await fetch(`http://localhost:8080/order/${userId}`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+      const data = await response.json();
+      setOrders(data);
+    } catch (error) {
+      console.error('Erro ao buscar pedidos:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (userId) {
+      fetchOrders();
+    }
+  }, [userId]);
 
   const getStatusColor = (status: Order['status']) => {
     switch (status) {
@@ -57,6 +68,15 @@ const VerPedidos: React.FC = () => {
       case 'ENVIADO': return 'primary';
       case 'ENTREGUE': return 'success';
       case 'CANCELADO': return 'error';
+    }
+  };
+
+  const convertStatus = (status: string) => {
+    switch (status) {
+      case 'PROCESSING': return 'PROCESSANDO';
+      case 'SHIPPED': return 'ENVIADO';
+      case 'DELIVERED': return 'ENTREGUE';
+      case 'CANCELLED': return 'CANCELADO';
     }
   };
 
@@ -69,7 +89,6 @@ const VerPedidos: React.FC = () => {
       <Typography variant="h4" gutterBottom>
         Meus Pedidos
       </Typography>
-
       {orders.map((order) => (
         <Paper
           key={order.id}
@@ -90,7 +109,7 @@ const VerPedidos: React.FC = () => {
             </Grid>
             <Grid item xs={12} sm={6} sx={{ textAlign: 'right' }}>
               <Chip
-                label={order.status}
+                label={convertStatus(order.status)}
                 color={getStatusColor(order.status)}
                 variant="outlined"
               />
@@ -114,9 +133,9 @@ const VerPedidos: React.FC = () => {
                   <TableRow key={item.id}>
                     <TableCell>{item.name}</TableCell>
                     <TableCell align="right">{item.quantity}</TableCell>
-                    <TableCell align="right">R$ {item.price.toFixed(2)}</TableCell>
+                    <TableCell align="right">R$ {(item.price / item.quantity).toFixed(2)}</TableCell>
                     <TableCell align="right">
-                      R$ {(item.quantity * item.price).toFixed(2)}
+                      R$ {(item.price).toFixed(2)}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -133,13 +152,13 @@ const VerPedidos: React.FC = () => {
             }}
           >
             <Typography variant="h6">
-              Total do Pedido: R$ {order.subtotal.toFixed(2)}
+              Total do Pedido: R$ {order.subTotal.toFixed(2)}
             </Typography>
             <Button
               variant="contained"
               color="secondary"
               onClick={() => handleRequestExchange(order.id)}
-              disabled={order.status !== 'ENTREGUE'}
+              disabled={order.status !== 'DELIVERED'}
             >
               Solicitar Troca
             </Button>

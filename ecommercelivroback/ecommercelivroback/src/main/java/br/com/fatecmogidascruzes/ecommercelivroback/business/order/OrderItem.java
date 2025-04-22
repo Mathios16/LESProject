@@ -39,8 +39,4 @@ public class OrderItem {
 
     @Column(name = "ori_order_id", nullable = false)
     private Long orderId;
-
-    public double getTotal() {
-        return quantity * price;
-    }
 }

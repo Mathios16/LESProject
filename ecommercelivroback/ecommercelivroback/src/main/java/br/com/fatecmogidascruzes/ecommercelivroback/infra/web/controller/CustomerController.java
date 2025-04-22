@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -44,10 +46,20 @@ public class CustomerController {
     @PostMapping
     @Transactional(rollbackFor = Exception.class)
     public ResponseEntity<?> createCustomer(@Valid @RequestBody dataCustomer data) throws Exception {
-        Customer customer = data.customer();
         List<Address> addresses = data.addresses();
         List<PaymentMethod> paymentMethods = data.paymentMethods();
 
+        Customer customer = new Customer();
+        customer.setName(data.name());
+        customer.setLastname(data.lastname());
+        customer.setGender(data.gender());
+        customer.setDocument(data.document());
+        customer.setBirthdate(data.birthdate());
+        customer.setEmail(data.email());
+        customer.setPassword(data.password());
+        customer.setPhoneDdd(data.phoneDdd());
+        customer.setPhoneType(data.phoneType());
+        customer.setPhone(data.phone());
         customer.setAddresses(addresses);
         customer.setPaymentMethods(paymentMethods);
 
@@ -62,7 +74,7 @@ public class CustomerController {
         paymentMethods.forEach(paymentMethod -> paymentMethod.setCustomer(savedCustomer.getId()));
         paymentMethodRepository.saveAll(paymentMethods);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedCustomer);
+        return ResponseEntity.status(HttpStatus.CREATED).body(dataCustomer.fromCustomer(savedCustomer));
     }
 
     @GetMapping
@@ -106,25 +118,32 @@ public class CustomerController {
     public ResponseEntity<?> updateCustomer(@PathVariable Long id, @Valid @RequestBody dataCustomer data)
             throws Exception {
         Optional<Customer> existingCustomer = customerRepository.findById(id);
-        List<Address> existingAddresses = addressRepository.findByCustomer(id);
-        List<PaymentMethod> existingPaymentMethods = paymentMethodRepository.findByCustomer(id);
-        addressRepository.deleteAll(existingAddresses);
-        paymentMethodRepository.deleteAll(existingPaymentMethods);
+
         if (existingCustomer.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
-        Customer customer = data.customer();
         List<Address> addresses = data.addresses();
         List<PaymentMethod> paymentMethods = data.paymentMethods();
 
+        Customer customer = new Customer();
+        customer.setId(id);
+        customer.setName(data.name());
+        customer.setLastname(data.lastname());
+        customer.setGender(data.gender());
+        customer.setDocument(data.document());
+        customer.setBirthdate(data.birthdate());
+        customer.setEmail(data.email());
+        customer.setPassword(data.password());
+        customer.setPhoneDdd(data.phoneDdd());
+        customer.setPhoneType(data.phoneType());
+        customer.setPhone(data.phone());
         customer.setAddresses(addresses);
         customer.setPaymentMethods(paymentMethods);
 
         customer.verifyAddresses();
         customer.verifyPaymentMethods();
 
-        customer.setId(id);
         Customer updatedCustomer = customerRepository.save(customer);
 
         addresses.forEach(address -> address.setCustomer(updatedCustomer.getId()));
@@ -133,16 +152,31 @@ public class CustomerController {
         paymentMethods.forEach(paymentMethod -> paymentMethod.setCustomer(updatedCustomer.getId()));
         paymentMethodRepository.saveAll(paymentMethods);
 
-        return ResponseEntity.ok(updatedCustomer);
+        return ResponseEntity.ok(dataCustomer.fromCustomer(updatedCustomer));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCustomer(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteCustomer(@PathVariable Long id,
+            @RequestBody(required = false) dataCustomer data) {
         Optional<Customer> customer = customerRepository.findById(id);
         if (customer.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        customerRepository.delete(customer.get());
+
+        if (data != null) {
+            customerRepository.delete(customer.get());
+        } else {
+            List<Address> addresses = data.addresses();
+            List<PaymentMethod> paymentMethods = data.paymentMethods();
+
+            if (addresses != null) {
+                addresses.forEach(address -> addressRepository.delete(address));
+            }
+
+            if (paymentMethods != null) {
+                paymentMethods.forEach(paymentMethod -> paymentMethodRepository.delete(paymentMethod));
+            }
+        }
         return ResponseEntity.ok().build();
     }
 }

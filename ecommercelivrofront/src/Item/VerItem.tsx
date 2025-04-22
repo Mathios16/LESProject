@@ -1,6 +1,7 @@
 import React, { useState, useEffect, } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { ShoppingCart, CreditCard } from '@phosphor-icons/react';
+import { Alert, Snackbar } from '@mui/material';
 
 interface Item {
   id: number;
@@ -35,34 +36,51 @@ const categoriesName = [
 ];
 
 const VerItem: React.FC = () => {
+  const [success, setSuccess] = useState<string>('');
   const [quantity, setQuantity] = useState(1);
   const [isInCart, setIsInCart] = useState(false);
   const [item, setItem] = useState<Item>();
   const { id } = useParams();
-  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
+  const [userId, setUserId] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    const navbar = document.getElementById('navbar');
+    if (navbar) {
+      setUserId(navbar.dataset.userId);
+    }
+  }, []);
 
   const fetchItem = async () => {
 
     try {
-      setIsLoading(true);
-      const response = await fetch(`http://localhost:8080/items/${id}`, {
+      let response = await fetch(`http://localhost:8080/items/${id}`, {
         method: 'GET',
         credentials: 'include',
       });
-      const data = await response.json();
-      setItem(data);
-      setIsLoading(false);
+      const itemData = await response.json();
+      setItem(itemData);
+
+      response = await fetch(`http://localhost:8080/cart/${userId}`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+      const cartData = await response.json();
+      const cartItems = cartData.items || [];
+
+      const itemInCart = cartItems.find((cartItem: { itemId: number }) => cartItem.itemId === itemData.id);
+      setIsInCart(!!itemInCart);
 
     } catch (error) {
       console.error('Error fetching items:', error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchItem();
-  }, [id]);
+    if (userId) {
+      fetchItem();
+    }
+  }, [id, userId]);
 
   if (!item) {
     return <div>Item não encontrado</div>;
@@ -74,21 +92,31 @@ const VerItem: React.FC = () => {
 
   const handleAddToCart = async () => {
     try {
-      await fetch(`http://localhost:8080/cart/25`, {
-        method: 'POST',
+      let data = {
+        "items": [
+          {
+            "itemId": item.id,
+            "quantity": quantity,
+          }
+        ]
+      };
+      await fetch(`http://localhost:8080/cart/${userId}`, {
+        method: 'PUT',
         credentials: 'include',
-
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
       });
       setIsInCart(true);
-      alert(`${quantity} ${item.title}(s) adicionado(s) ao carrinho!`);
+      setSuccess(`${quantity} ${item.title}(s) adicionado(s) ao carrinho!`);
     } catch (error) {
       console.error('Error inserting items:', error);
     }
   };
 
-  const handleBuyNow = () => {
-    // TODO: Implement purchase flow
-    alert(`Comprando ${quantity} ${item.title}(s)`);
+  const handleSeeCart = () => {
+    navigate(`/carrinho`);
   };
 
   return (
@@ -136,14 +164,11 @@ const VerItem: React.FC = () => {
               <ShoppingCart weight="bold" />
               {isInCart ? 'Adicionado' : 'Adicionar ao Carrinho'}
             </button>
-
-            <button
-              className="btn-buy-now"
-              onClick={handleBuyNow}
-            >
-              <CreditCard weight="bold" />
-              Comprar Agora
-            </button>
+            {isInCart && (
+              <button className="btn-see-cart" onClick={handleSeeCart}>
+                Ver carrinho
+              </button>
+            )}
           </div>
 
           <div className="item-description">
@@ -170,6 +195,22 @@ const VerItem: React.FC = () => {
           </div>
         </div>
       </div>
+      <Snackbar
+        open={!!success}
+        autoHideDuration={6000}
+        onClose={() => {
+          setSuccess('');
+        }}
+      >
+        <Alert
+          severity="success"
+          onClose={() => {
+            setSuccess('');
+          }}
+        >
+          {success}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };
