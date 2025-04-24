@@ -6,7 +6,15 @@ public enum OrderStatus {
     APPROVED(3),
     CANCELLED(4),
     IN_TRANSIT(5),
-    DELIVERED(6);
+    DELIVERED(6),
+    EXCHANGE_REQUESTED(7),
+    EXCHANGE_APPROVED(8),
+    EXCHANGE_REFUSED(9),
+    EXCHANGE_COMPLETED(10),
+    RETURN_REQUESTED(11),
+    RETURN_APPROVED(12),
+    RETURN_REFUSED(13),
+    RETURN_COMPLETED(14);
 
     private final int id;
 

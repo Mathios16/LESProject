@@ -107,6 +107,9 @@ public class Item {
   @Convert(converter = StatusItemConverter.class)
   private String status;
 
+  @Column(name = "itm_statusreason")
+  private String statusReason;
+
   @Cascade(CascadeType.REMOVE)
   @OneToMany(mappedBy = "itemId")
   private List<Inventory> inventory;

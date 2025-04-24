@@ -10,7 +10,8 @@ import Carrinho from './Compra/Carrinho';
 import ListarItens from './Item/ListarItens';
 import Compra from './Compra/Compra';
 import VerPedidos from './Compra/VerPedidos';
-import CriarTroca from './Troca/CriarTroca';
+import CriarTroca from './Compra/CriarTroca';
+import CriarDevolucao from './Compra/CriarDevolucao';
 import ListarPedidos from './Compra/ListarPedidos';
 
 import { Route, Routes } from 'react-router-dom';
@@ -20,8 +21,8 @@ interface User {
   type: 'user' | 'admin';
 }
 
-let userType: User['type'] = 'admin';
-let userId: User['id'] = 11;
+let userType: User['type'] = 'user';
+let userId: User['id'] = 25;
 
 function App() {
   return (
@@ -30,22 +31,28 @@ function App() {
       <div className="container">
         <div className="box-content">
           <Routes>
-            <Route path="/" element={<Home />} />
             {userType == 'admin' && (
               <>
+                <Route path="/" element={<ListarPedidos />} />
                 <Route path="/clientes" element={<ListarClientes />} />
                 <Route path="/itens" element={<ListarItens />} />
                 <Route path="/itens/criar" element={<CriarItem />} />
                 <Route path="/pedidos" element={<ListarPedidos />} />
               </>
             )}
-            <Route path="/clientes/criar" element={<CriarCliente />} />
-            <Route path="/cliente/editar/:id" element={<EditarCliente />} />
-            <Route path="/item/ver/:id" element={<VerItem />} />
-            <Route path="/carrinho" element={<Carrinho />} />
-            <Route path="/compra" element={<Compra />} />
-            <Route path="/pedido/ver" element={<VerPedidos />} />
-            <Route path="/pedido/:id/troca" element={<CriarTroca />} />
+            {userType == 'user' && (
+              <>
+                <Route path="/" element={<Home />} />
+                <Route path="/clientes/criar" element={<CriarCliente />} />
+                <Route path="/cliente/editar/:id" element={<EditarCliente />} />
+                <Route path="/item/ver/:id" element={<VerItem />} />
+                <Route path="/carrinho" element={<Carrinho />} />
+                <Route path="/compra" element={<Compra />} />
+                <Route path="/pedido/ver" element={<VerPedidos />} />
+                <Route path="/pedido/:id/troca" element={<CriarTroca />} />
+                <Route path="/pedido/:id/devolucao" element={<CriarDevolucao />} />
+              </>
+            )}
           </Routes>
         </div>
       </div>

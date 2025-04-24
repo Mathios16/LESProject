@@ -55,28 +55,7 @@ const Carrinho: React.FC = () => {
 
       let cartItemData = await response.json();
 
-      cartItemData.items.forEach(async (item: { id: number, itemId: number, quantity: number }) => {
-
-        response = await fetch(`http://localhost:8080/items/${item.itemId}`, {
-          method: 'GET',
-          credentials: 'include',
-        });
-
-        const itemData = await response.json();
-
-        if (cartItems.find(cartItem => cartItem.id === item.id)) {
-          return;
-        }
-
-        setCartItems(prev => [...prev, {
-          id: item.id,
-          itemId: item.itemId,
-          title: itemData.title,
-          price: itemData.price,
-          image: itemData.image,
-          quantity: item.quantity
-        }]);
-      });
+      setCartItems(cartItemData.items);
 
     } catch (error) {
       console.error('Error fetching items:', error);
@@ -193,8 +172,8 @@ const Carrinho: React.FC = () => {
                   R$ {(item.price * item.quantity).toFixed(2)}
                 </TableCell>
                 <TableCell align="right">
-                  <IconButton size="small">
-                    <Trash onClick={() => handleRemoveItem(item.id)} />
+                  <IconButton size="small" onClick={() => handleRemoveItem(item.id)} >
+                    <Trash />
                   </IconButton>
                 </TableCell>
               </TableRow>

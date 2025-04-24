@@ -1,23 +1,15 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Container,
   Typography,
   Grid,
   Paper,
-  Box,
   Button,
-  TextField,
   Card,
   CardContent,
   CardMedia,
   Divider,
-  Alert,
-  AlertTitle,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemButton,
   FormControlLabel,
   Checkbox
 } from '@mui/material';
@@ -30,93 +22,104 @@ interface OrderItem {
   image: string;
 }
 
-interface ExchangeItem {
+interface ReturnItem {
   id: number;
   title: string;
   price: number;
   image: string;
 }
 
-const CriarTroca: React.FC = () => {
+const CriarDevolucao: React.FC = () => {
   const navigate = useNavigate();
-  // Mock order items
-  const [originalOrderItems] = useState<OrderItem[]>([
-    {
-      id: 1,
-      title: 'A cantiga dos pássaros e das serpentes',
-      price: 59.90,
-      image: 'https://m.media-amazon.com/images/I/61MCf2k-MgS._AC_UF1000,1000_QL80_.jpg'
+  const [error, setError] = useState<string>('');
+  const [success, setSuccess] = useState<string>('');
+  const [userId, setUserId] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    const navbar = document.getElementById('navbar');
+    if (navbar) {
+      setUserId(navbar.dataset.userId);
     }
-  ]);
+  }, []);
 
-  // Mock available exchange items
-  const [availableItems] = useState<ExchangeItem[]>([
-    {
-      id: 101,
-      title: 'Algoritmos e Estruturas de Dados',
-      price: 75.00,
-      image: 'https://example.com/algorithms-book.jpg'
-    },
-    {
-      id: 102,
-      title: 'Design de Software Orientado a Objetos',
-      price: 95.30,
-      image: 'https://example.com/oop-book.jpg'
-    },
-    {
-      id: 103,
-      title: 'Arquitetura de Computadores',
-      price: 65.20,
-      image: 'https://example.com/computer-arch-book.jpg'
+  const [orderId, setOrderId] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    const url = window.location.pathname;
+    const orderId = url.split('/').filter(Boolean)[1];
+
+    setOrderId(orderId || undefined);
+  }, []);
+
+  const [originalOrderItems, setOriginalOrderItems] = useState<OrderItem[]>([]);
+
+  useEffect(() => {
+    if (orderId) {
+      const fetchItem = async () => {
+        try {
+          const response = await fetch(`http://localhost:3000/api/orders/${orderId}`);
+          if (!response.ok) {
+            throw new Error('Erro ao buscar pedido');
+          }
+          const data = await response.json();
+          setOriginalOrderItems(data.items);
+        } catch (err) {
+          setError(err instanceof Error ? err.message : 'Erro ao buscar pedido. Tente novamente.');
+        }
+      };
+      fetchItem();
     }
-  ]);
+  }, [orderId]);
 
-  // State to track selected exchanges and search
-  const [selectedExchanges, setSelectedExchanges] = useState<{ [key: number]: ExchangeItem | null }>({});
-  const [searchTerms, setSearchTerms] = useState<{ [key: number]: string }>({});
+  const [selectedReturns, setSelectedReturns] = useState<{ [key: number]: ReturnItem | null }>({});
 
-  // const handleExchangeSelection = (originalItemId: number, exchangeItem: ExchangeItem | null) => {
-  //   setSelectedExchanges(prev => ({
-  //     ...prev,
-  //     [originalItemId]: exchangeItem
-  //   }));
-  // };
-
-  const handleExchangeSelection = (itemId: number, item: ExchangeItem) => {
-    setSelectedExchanges(prev =>
+  const handleReturnSelection = (itemId: number, item: ReturnItem) => {
+    setSelectedReturns(prev =>
       prev[itemId] ? { ...prev, [itemId]: null } : { ...prev, [itemId]: item }
     );
   };
 
-  const exchangeSummary = useMemo(() => {
+  const ReturnSummary = useMemo(() => {
     const totalOriginalValue = originalOrderItems.reduce((sum, item) => sum + item.price, 0);
-    const totalExchangeValue = Object.values(selectedExchanges)
+    const totalReturnValue = Object.values(selectedReturns)
       .filter(item => item !== null)
       .reduce((sum, item) => sum + (item?.price || 0), 0);
 
     return {
       totalOriginalValue,
-      totalExchangeValue
+      totalReturnValue
     };
-  }, [selectedExchanges, originalOrderItems]);
+  }, [selectedReturns, originalOrderItems]);
 
-  const handleSubmitExchange = () => {
-    navigate('/pedido/ver');
+  const handleSubmit = async () => {
+    let response = await fetch(`http://localhost:3000/api/returns`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        orderId: orderId,
+        items: Object.values(selectedReturns).filter(item => item !== null)
+      })
+    });
+    const returnData = await response.json();
+    setSuccess(returnData);
+    navigate(`/`);
   };
 
   return (
     <Container maxWidth="md" sx={{ mt: 4 }}>
       <Paper elevation={3} sx={{ p: 3 }}>
         <Typography variant="h4" gutterBottom>
-          Solicitar Troca de Itens
+          Solicitar Devolução de Itens
         </Typography>
 
         <Typography variant="subtitle1" sx={{ mb: 2 }}>
-          Selecione os itens que deseja trocar
+          Selecione os itens que deseja devolver
         </Typography>
 
         {originalOrderItems.map(originalItem => {
-          const selectedExchangeItem = selectedExchanges[originalItem.id];
 
           return (
             <Card key={originalItem.id} sx={{ mb: 3 }}>
@@ -141,10 +144,10 @@ const CriarTroca: React.FC = () => {
                     <FormControlLabel
                       control={
                         <Checkbox
-                          onChange={() => handleExchangeSelection(originalItem.id, originalItem)}
+                          onChange={() => handleReturnSelection(originalItem.id, originalItem)}
                         />
                       }
-                      label="Adicionar a Troca"
+                      label="Adicionar a Devolução"
                     />
                   </Grid>
                 </Grid>
@@ -157,12 +160,12 @@ const CriarTroca: React.FC = () => {
 
         <Paper elevation={2} sx={{ p: 3, mb: 2 }}>
           <Typography variant="h5" gutterBottom>
-            Resumo da Troca
+            Resumo da Devolução
           </Typography>
           <Grid container spacing={2}>
             <Grid item xs={12} sm={4}>
               <Typography variant="body1">
-                Valor Total Original: R$ {exchangeSummary.totalOriginalValue.toFixed(2)}
+                Valor Total Original: R$ {ReturnSummary.totalOriginalValue.toFixed(2)}
               </Typography>
             </Grid>
             <Grid item xs={12} sm={4}>
@@ -172,7 +175,7 @@ const CriarTroca: React.FC = () => {
                 variant="body1"
                 color='info.main'
               >
-                {`Cupom Gerado: R$ ${Math.abs(exchangeSummary.totalExchangeValue).toFixed(2)}`}
+                {`Cupom Gerado: R$ ${Math.abs(ReturnSummary.totalReturnValue).toFixed(2)}`}
               </Typography>
             </Grid>
           </Grid>
@@ -183,13 +186,13 @@ const CriarTroca: React.FC = () => {
           color="primary"
           fullWidth
           size="large"
-          onClick={handleSubmitExchange}
+          onClick={handleSubmit}
         >
-          Solicitar Troca
+          Solicitar Devolução
         </Button>
       </Paper>
     </Container>
   );
 };
 
-export default CriarTroca;
+export default CriarDevolucao;

@@ -84,6 +84,10 @@ const VerPedidos: React.FC = () => {
     navigate(`/pedido/${orderId}/troca`);
   };
 
+  const handleRequestReturn = (orderId: number) => {
+    navigate(`/pedido/${orderId}/devolucao`);
+  };
+
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Typography variant="h4" gutterBottom>
@@ -161,6 +165,14 @@ const VerPedidos: React.FC = () => {
               disabled={order.status !== 'DELIVERED'}
             >
               Solicitar Troca
+            </Button>
+            <Button
+              variant="contained"
+              color="secondary"
+              onClick={() => handleRequestReturn(order.id)}
+              disabled={order.status !== 'DELIVERED'}
+            >
+              Solicitar Devolução
             </Button>
           </Box>
         </Paper>

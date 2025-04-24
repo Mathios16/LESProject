@@ -1,5 +1,6 @@
 package br.com.fatecmogidascruzes.ecommercelivroback.business.order;
 
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 
@@ -61,6 +62,9 @@ public class Order {
     @Column(name = "ord_status")
     @Convert(converter = OrderStatusConverter.class)
     private String status;
+
+    @Column(name = "ord_date")
+    private Timestamp date;
 
     public Double getFreight() {
         Double freight = 0.0;

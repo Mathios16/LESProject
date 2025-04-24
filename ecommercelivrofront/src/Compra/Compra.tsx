@@ -453,8 +453,8 @@ const Compra: React.FC = () => {
                     Subtotal: R$ {(item.price * item.quantity).toFixed(2)}
                   </Typography>
 
-                  <IconButton size="small">
-                    <Trash onClick={() => handleRemoveItem(item.id)} />
+                  <IconButton size="small" onClick={() => handleRemoveItem(item.id)}>
+                    <Trash />
                   </IconButton>
                 </Box>
               </Box>
@@ -547,33 +547,35 @@ const Compra: React.FC = () => {
                 onChange={(e) => setCupomCode(e.target.value)}
                 size="small"
               />
-              <Button
-                variant="contained"
-                onClick={() => applyCupom(cupomCode)}
-                disabled={!cupomCode}
-              >
-                Aplicar
-              </Button>
+              <IconButton onClick={() => applyCupom(cupomCode)}>
+                <Button
+                  variant="contained"
+                  disabled={!cupomCode}
+                >
+                  Aplicar
+                </Button>
+              </IconButton>
             </Box>
           </Paper>
         </Grid>
       </Grid>
 
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-        <Button
-          variant="contained"
-          color="primary"
-          size="large"
-          disabled={
-            !selectedDeliveryAddress
-            || !orderPayments.length
-            || orderPayments.reduce((total, payment) => total + payment.amount, 0) !== Number(calculateTotal().toFixed(2))
-            || (orderPayments.some(payment => payment.amount < 10) && cupoms.reduce((total, cupom) => total + cupom.value, 0) <= calculateTotal() - 10)
-          }
-          onClick={handleSubmit}
-        >
-          Confirmar Pedido
-        </Button>
+        <IconButton onClick={handleSubmit}>
+          <Button
+            variant="contained"
+            color="primary"
+            size="large"
+            disabled={
+              !selectedDeliveryAddress
+              || !orderPayments.length
+              || orderPayments.reduce((total, payment) => total + payment.amount, 0) !== Number(calculateTotal().toFixed(2))
+              || (orderPayments.some(payment => payment.amount < 10) && cupoms.reduce((total, cupom) => total + cupom.value, 0) <= calculateTotal() - 10)
+            }
+          >
+            Confirmar Pedido
+          </Button>
+        </IconButton>
       </Box>
 
       <Modal
@@ -745,7 +747,9 @@ const Compra: React.FC = () => {
             </Grid>
           </Grid>
           <DialogActions>
-            <Button onClick={() => setIsAddressModalOpen(false)}>Cancelar</Button>
+            <IconButton onClick={() => setIsAddressModalOpen(false)}>
+              <Button>Cancelar</Button>
+            </IconButton>
             <Button type="submit" variant="contained">Adicionar</Button>
           </DialogActions>
         </Box>
@@ -840,7 +844,9 @@ const Compra: React.FC = () => {
             </Grid>
           </Grid>
           <DialogActions>
-            <Button onClick={() => setIsPaymentModalOpen(false)}>Cancelar</Button>
+            <IconButton onClick={() => setIsPaymentModalOpen(false)}>
+              <Button>Cancelar</Button>
+            </IconButton>
             <Button type="submit" variant="contained">Adicionar</Button>
           </DialogActions>
         </Box>
