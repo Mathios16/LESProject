@@ -219,7 +219,7 @@ public class OrderController {
         OrderExchange savedExchange = orderExchangeRepository.save(orderExchange);
 
         items.forEach(item -> {
-            item.setExchangeId(savedExchange.getId());
+            item.setOrderExchangeId(savedExchange.getId());
         });
 
         orderExchangeItemRepository.saveAll(items);

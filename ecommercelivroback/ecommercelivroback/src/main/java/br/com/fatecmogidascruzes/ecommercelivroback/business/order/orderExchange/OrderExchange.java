@@ -30,6 +30,6 @@ public class OrderExchange {
   @Column(name = "exc_order_items_id")
   private List<Long> orderItemsId;
 
-  @OneToMany(mappedBy = "exchange")
+  @OneToMany(mappedBy = "orderExchangeId")
   private List<OrderExchangeItem> items;
 }

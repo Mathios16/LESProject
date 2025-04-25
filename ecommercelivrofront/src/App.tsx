@@ -21,7 +21,7 @@ interface User {
   type: 'user' | 'admin';
 }
 
-let userType: User['type'] = 'user';
+let userType: User['type'] = 'admin';
 let userId: User['id'] = 25;
 
 function App() {
@@ -35,6 +35,8 @@ function App() {
               <>
                 <Route path="/" element={<ListarPedidos />} />
                 <Route path="/clientes" element={<ListarClientes />} />
+                <Route path="/clientes/criar" element={<CriarCliente />} />
+                <Route path="/cliente/editar/:id" element={<EditarCliente />} />
                 <Route path="/itens" element={<ListarItens />} />
                 <Route path="/itens/criar" element={<CriarItem />} />
                 <Route path="/pedidos" element={<ListarPedidos />} />

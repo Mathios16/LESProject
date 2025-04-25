@@ -27,6 +27,7 @@ const NavBar: React.FC<{ userType: string, userId?: number }> = ({ userType, use
                 <div className="navbar-nav">
                     {userType === 'admin' && (
                         <>
+                            <CustomLink to="/pedidos">Listar Pedidos</CustomLink>
                             <CustomLink to="/clientes/criar">Criar Cliente</CustomLink>
                             <CustomLink to="/clientes">Listar Clientes</CustomLink>
                             <CustomLink to="/itens/criar">Criar Item</CustomLink>

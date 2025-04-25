@@ -37,6 +37,6 @@ public class OrderExchangeItem {
   @Column(name = "exi_price", nullable = false)
   private double price;
 
-  @Column(name = "exi_exchange_id", nullable = false)
-  private Long exchangeId;
+  @Column(name = "exi_exchange_id")
+  private Long orderExchangeId;
 }

@@ -7,7 +7,7 @@ public record dataOrderExchangeItem(Long id, Long exchangeId, Long itemId, Strin
   public static dataOrderExchangeItem fromExchangeItem(OrderExchangeItem exchangeItem) {
     return new dataOrderExchangeItem(
         exchangeItem.getId(),
-        exchangeItem.getExchangeId(),
+        exchangeItem.getOrderExchangeId(),
         exchangeItem.getItemId(),
         exchangeItem.getItem().getTitle(),
         exchangeItem.getItem().getImage(),
