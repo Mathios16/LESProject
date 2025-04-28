@@ -2,11 +2,16 @@ package br.com.fatecmogidascruzes.ecommercelivroback.business.order.orderReturn;
 
 import java.util.List;
 
+import br.com.fatecmogidascruzes.ecommercelivroback.business.order.OrderItem;
+import br.com.fatecmogidascruzes.ecommercelivroback.business.order.cupom.Cupom;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,4 +33,21 @@ public class OrderReturn {
 
   @Column(name = "rtr_order_items_id")
   private List<Long> orderItemsId;
+
+  @OneToMany
+  @JoinColumn(name = "rtr_order_items_id", insertable = false, updatable = false)
+  private List<OrderItem> orderItems;
+
+  @Column(name = "rtr_cupom_id")
+  private Long cupomId;
+
+  @ManyToOne
+  @JoinColumn(name = "rtr_cupom_id", insertable = false, updatable = false)
+  private Cupom cupom;
+
+  public Double getValue() {
+    return orderItems.stream()
+        .mapToDouble(OrderItem::getPrice)
+        .sum();
+  }
 }

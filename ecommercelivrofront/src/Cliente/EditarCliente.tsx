@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import useUrlParams from '../Auxiliares/UrlParams';
 import { Plus, X, Trash, Pencil, Eye, EyeSlash } from '@phosphor-icons/react';
 import {
   Container,
@@ -91,8 +92,9 @@ const Modal: React.FC<ModalProps> = ({ open, onClose, title, children }) => {
 };
 
 const EditarCliente: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
+  const { type, id } = useUrlParams();
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
   const [showPassword, setShowPassword] = useState(false);
@@ -141,7 +143,7 @@ const EditarCliente: React.FC = () => {
   useEffect(() => {
     const fetchCustomer = async () => {
       try {
-        const response = await fetch(`http://172.17.0.2:8080/customers/${id}`, {
+        const response = await fetch(`http://172.17.0.2:8080/customers/${userId}`, {
           method: 'GET',
           credentials: 'include',
           headers: {
@@ -162,10 +164,10 @@ const EditarCliente: React.FC = () => {
       }
     };
 
-    if (id) {
+    if (userId) {
       fetchCustomer();
     }
-  }, [id]);
+  }, [userId]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -197,7 +199,7 @@ const EditarCliente: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch(`http://172.17.0.2:8080/customers/${id}`, {
+      const response = await fetch(`http://172.17.0.2:8080/customers/${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -210,7 +212,7 @@ const EditarCliente: React.FC = () => {
       }
 
       setSuccess('Cliente atualizado com sucesso!');
-      navigate('/clientes');
+      navigate(`/clientes${type || id ? `?type=${type}&id=${id}` : ''}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
     }
@@ -419,7 +421,9 @@ const EditarCliente: React.FC = () => {
                   <Box display="flex" gap={2} justifyContent="flex-end">
                     <Button
                       variant="outlined"
-                      onClick={() => navigate('/clientes')}
+                      onClick={() => {
+                        navigate(`/clientes${type || id ? `?type=${type}&id=${id}` : ''}`);
+                      }}
                     >
                       Cancelar
                     </Button>

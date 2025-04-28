@@ -1,5 +1,6 @@
 import React, { useState, useEffect, } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import useUrlParams from '../Auxiliares/UrlParams';
 import { ShoppingCart, CreditCard } from '@phosphor-icons/react';
 import { Alert, Snackbar } from '@mui/material';
 
@@ -36,11 +37,11 @@ const categoriesName = [
 ];
 
 const VerItem: React.FC = () => {
+  const { type, id } = useUrlParams();
   const [success, setSuccess] = useState<string>('');
   const [quantity, setQuantity] = useState(1);
   const [isInCart, setIsInCart] = useState(false);
   const [item, setItem] = useState<Item>();
-  const { id } = useParams();
   const navigate = useNavigate();
   const [userId, setUserId] = useState<string | undefined>(undefined);
 
@@ -51,10 +52,18 @@ const VerItem: React.FC = () => {
     }
   }, []);
 
+  const [itemId, setItemId] = useState<string | undefined>(undefined);
+  useEffect(() => {
+    const url = window.location.pathname;
+    const itemId = url.split('/').filter(Boolean)[2].split('?')[0];
+
+    setItemId(itemId || undefined);
+  }, []);
+
   const fetchItem = async () => {
 
     try {
-      let response = await fetch(`http://localhost:8080/items/${id}`, {
+      let response = await fetch(`http://localhost:8080/items/${itemId}`, {
         method: 'GET',
         credentials: 'include',
       });
@@ -80,7 +89,7 @@ const VerItem: React.FC = () => {
     if (userId) {
       fetchItem();
     }
-  }, [id, userId]);
+  }, [itemId, userId]);
 
   if (!item) {
     return <div>Item não encontrado</div>;
@@ -116,7 +125,7 @@ const VerItem: React.FC = () => {
   };
 
   const handleSeeCart = () => {
-    navigate(`/carrinho`);
+    navigate(`/carrinho${type || id ? `?type=${type}&id=${id}` : ''}`);
   };
 
   return (

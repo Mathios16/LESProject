@@ -68,7 +68,8 @@ public class ItemController {
             @RequestParam(required = false) Double priceMin,
             @RequestParam(required = false) Double priceMax,
             @RequestParam(required = false) String category,
-            @RequestParam(required = false) String publisher) {
+            @RequestParam(required = false) String publisher,
+            @RequestParam(required = false) String author) {
         List<Item> items = itemRepository.findAll();
 
         if (title != null && !title.isEmpty()) {
@@ -128,6 +129,12 @@ public class ItemController {
         if (publisher != null && !publisher.isEmpty()) {
             items = items.stream()
                     .filter(item -> item.getPublisher().toLowerCase().contains(publisher.toLowerCase()))
+                    .collect(Collectors.toList());
+        }
+
+        if (author != null && !author.isEmpty()) {
+            items = items.stream()
+                    .filter(item -> item.getAuthor().toLowerCase().contains(author.toLowerCase()))
                     .collect(Collectors.toList());
         }
 

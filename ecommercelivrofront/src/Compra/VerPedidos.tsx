@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import useUrlParams from '../Auxiliares/UrlParams';
 import {
   Container,
   Typography,
@@ -29,10 +30,12 @@ interface Order {
   status: string;
   items: OrderItem[];
   subTotal: number;
+  total: number;
 }
 
 const VerPedidos: React.FC = () => {
   const navigate = useNavigate();
+  const { type, id } = useUrlParams();
   const [orders, setOrders] = useState<Order[]>([]);
   const [userId, setUserId] = useState<string | undefined>(undefined);
 
@@ -45,7 +48,7 @@ const VerPedidos: React.FC = () => {
 
   const fetchOrders = async () => {
     try {
-      const response = await fetch(`http://localhost:8080/order/${userId}`, {
+      const response = await fetch(`http://localhost:8080/order/${userId}/customer`, {
         method: 'GET',
         credentials: 'include',
       });
@@ -64,31 +67,65 @@ const VerPedidos: React.FC = () => {
 
   const getStatusColor = (status: Order['status']) => {
     switch (status) {
-      case 'PROCESSANDO': return 'warning';
-      case 'ENVIADO': return 'primary';
-      case 'ENTREGUE': return 'success';
-      case 'CANCELADO': return 'error';
+      case 'PROCESSING': return 'warning';
+      case 'IN_TRANSIT': return 'primary';
+      case 'DELIVERED': return 'success';
+      case 'CANCELLED': return 'error';
+      case 'EXCHANGE_REQUESTED': return 'warning';
+      case 'EXCHANGE_APPROVED': return 'primary';
+      case 'EXCHANGE_REFUSED': return 'error';
+      case 'EXCHANGE_COMPLETED': return 'success';
+      case 'RETURN_REQUESTED': return 'warning';
+      case 'RETURN_APPROVED': return 'primary';
+      case 'RETURN_REFUSED': return 'error';
+      case 'RETURN_COMPLETED': return 'success';
     }
   };
 
   const convertStatus = (status: string) => {
     switch (status) {
       case 'PROCESSING': return 'PROCESSANDO';
-      case 'SHIPPED': return 'ENVIADO';
-      case 'DELIVERED': return 'ENTREGUE';
+      case 'REPROVED': return 'REPROVADO';
+      case 'APPROVED': return 'APROVADO';
       case 'CANCELLED': return 'CANCELADO';
+      case 'IN_TRANSIT': return 'EM TRÂNSITO';
+      case 'DELIVERED': return 'ENTREGUE';
+      case 'EXCHANGE_REQUESTED': return 'TROCA SOLICITADA';
+      case 'EXCHANGE_APPROVED': return 'TROCA APROVADA';
+      case 'EXCHANGE_REFUSED': return 'TROCA REPROVADA';
+      case 'EXCHANGE_COMPLETED': return 'TROCA FINALIZADA';
+      case 'RETURN_REQUESTED': return 'DEVOLUÇÃO SOLICITADA';
+      case 'RETURN_APPROVED': return 'DEVOLUÇÃO APROVADA';
+      case 'RETURN_REFUSED': return 'DEVOLUÇÃO REPROVADA';
+      case 'RETURN_COMPLETED': return 'DEVOLUÇÃO FINALIZADA';
     }
   };
 
   const handleRequestExchange = (orderId: number) => {
-    navigate(`/pedido/${orderId}/troca`);
+    navigate(`/pedido/${orderId}/troca${type || id ? `?type=${type}&id=${id}` : ''}`);
   };
 
   const handleRequestReturn = (orderId: number) => {
-    navigate(`/pedido/${orderId}/devolucao`);
+    navigate(`/pedido/${orderId}/devolucao${type || id ? `?type=${type}&id=${id}` : ''}`);
   };
 
+  const getReturnCupom = async (orderId: number) => {
+    try {
+      const response = await fetch(`http://localhost:8080/order/${orderId}/return`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+      const data = await response.json();
+      console.log(data);
+    } catch (error) {
+      console.error('Erro ao buscar pedidos:', error);
+    }
+  };
+  useEffect(() => {
+    getReturnCupom(3);
+  });
   return (
+
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Typography variant="h4" gutterBottom>
         Meus Pedidos
@@ -105,20 +142,57 @@ const VerPedidos: React.FC = () => {
                 getStatusColor(order.status) === 'success' ? 'green' : 'red'}`
           }}
         >
-          <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} sm={6}>
+          <Box sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            mt: 2
+          }}>
+            <Box sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1
+            }}>
               <Typography variant="h6">
                 Pedido #{order.id}
               </Typography>
-            </Grid>
-            <Grid item xs={12} sm={6} sx={{ textAlign: 'right' }}>
+            </Box>
+            <Box sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
+              {order.status === 'DELIVERED' && (
+                <>
+                  <Button
+                    variant="contained"
+                    color="secondary"
+                    sx={{ m: 1 }}
+                    onClick={() => handleRequestExchange(order.id)}
+                  >
+                    Solicitar Troca
+                  </Button>
+                  <Button
+                    variant="contained"
+                    color="secondary"
+                    onClick={() => handleRequestReturn(order.id)}
+                  >
+                    Solicitar Devolução
+                  </Button>
+                </>
+              )}
+              {order.status === 'RETURN_COMPLETED' && (
+                <>
+                  <Typography variant="h6">
+                    Cupom de devolução: {order.id}
+                  </Typography>
+                </>
+              )}
+            </Box>
+            <Box sx={{ textAlign: 'right' }}>
               <Chip
                 label={convertStatus(order.status)}
                 color={getStatusColor(order.status)}
                 variant="outlined"
               />
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
 
           <Divider sx={{ my: 2 }} />
 
@@ -156,28 +230,14 @@ const VerPedidos: React.FC = () => {
             }}
           >
             <Typography variant="h6">
-              Total do Pedido: R$ {order.subTotal.toFixed(2)}
+              Total do Pedido: R$ {order.total.toFixed(2)}
             </Typography>
-            <Button
-              variant="contained"
-              color="secondary"
-              onClick={() => handleRequestExchange(order.id)}
-              disabled={order.status !== 'DELIVERED'}
-            >
-              Solicitar Troca
-            </Button>
-            <Button
-              variant="contained"
-              color="secondary"
-              onClick={() => handleRequestReturn(order.id)}
-              disabled={order.status !== 'DELIVERED'}
-            >
-              Solicitar Devolução
-            </Button>
+
           </Box>
         </Paper>
-      ))}
-    </Container>
+      ))
+      }
+    </Container >
   );
 };
 

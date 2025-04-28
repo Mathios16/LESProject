@@ -27,17 +27,18 @@ const NavBar: React.FC<{ userType: string, userId?: number }> = ({ userType, use
                 <div className="navbar-nav">
                     {userType === 'admin' && (
                         <>
-                            <CustomLink to="/pedidos">Listar Pedidos</CustomLink>
-                            <CustomLink to="/clientes/criar">Criar Cliente</CustomLink>
-                            <CustomLink to="/clientes">Listar Clientes</CustomLink>
-                            <CustomLink to="/itens/criar">Criar Item</CustomLink>
-                            <CustomLink to="/itens">Listar Itens</CustomLink>
+                            <CustomLink to={`/pedidos${userType || userId ? `?type=${userType}&id=${userId}` : ''}`}>Listar Pedidos</CustomLink>
+                            <CustomLink to={`/clientes/criar${userType || userId ? `?type=${userType}&id=${userId}` : ''}`}>Criar Cliente</CustomLink>
+                            <CustomLink to={`/clientes${userType || userId ? `?type=${userType}&id=${userId}` : ''}`}>Listar Clientes</CustomLink>
+                            <CustomLink to={`/itens/criar${userType || userId ? `?type=${userType}&id=${userId}` : ''}`}>Criar Item</CustomLink>
+                            <CustomLink to={`/itens${userType || userId ? `?type=${userType}&id=${userId}` : ''}`}>Listar Itens</CustomLink>
                         </>
                     )}
                     {userType === 'user' && (
                         <>
-                            <CustomLink to="/">Home</CustomLink>
-                            <CustomLink to="/carrinho">Carrinho</CustomLink>
+                            <CustomLink to={`/${userType || userId ? `?type=${userType}&id=${userId}` : ''}`}>Home</CustomLink>
+                            <CustomLink to={`/carrinho${userType || userId ? `?type=${userType}&id=${userId}` : ''}`}>Carrinho</CustomLink>
+                            <CustomLink to={`/pedidos/ver${userType || userId ? `?type=${userType}&id=${userId}` : ''}`}>Ver Pedidos</CustomLink>
                         </>
                     )}
                 </div>

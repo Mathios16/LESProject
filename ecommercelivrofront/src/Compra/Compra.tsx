@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import useUrlParams from '../Auxiliares/UrlParams';
 import {
   Container,
   Typography,
@@ -104,6 +105,7 @@ const Modal: React.FC<ModalProps> = ({ open, onClose, title, children }) => {
 
 const Compra: React.FC = () => {
   const navigate = useNavigate();
+  const { type, id } = useUrlParams();
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
@@ -419,7 +421,7 @@ const Compra: React.FC = () => {
 
     const orderData = await response.json();
     setSuccess(orderData);
-    navigate(`/`);
+    navigate(`/${type || id ? `?type=${type}&id=${id}` : ''}`);
   };
 
   return (

@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, X, Trash, Pencil, Eye, EyeSlash } from '@phosphor-icons/react';
+import useUrlParams from '../Auxiliares/UrlParams';
 import {
   Container,
   Typography,
@@ -93,6 +94,7 @@ const Modal: React.FC<ModalProps> = ({ open, onClose, title, children }) => {
 
 const CriarCliente: React.FC = () => {
   const navigate = useNavigate();
+  const { type, id } = useUrlParams();
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
   const [showPassword, setShowPassword] = useState(false);
@@ -218,7 +220,7 @@ const CriarCliente: React.FC = () => {
       }
 
       setSuccess('Cliente criado com sucesso!');
-      navigate('/clientes');
+      navigate(`/clientes${type || id ? `?type=${type}&id=${id}` : ''}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
     }
@@ -445,7 +447,9 @@ const CriarCliente: React.FC = () => {
                   <Box display="flex" gap={2} justifyContent="flex-end">
                     <Button
                       variant="outlined"
-                      onClick={() => navigate('/clientes')}
+                      onClick={() => {
+                        navigate(`/clientes${type || id ? `?type=${type}&id=${id}` : ''}`);
+                      }}
                     >
                       Cancelar
                     </Button>

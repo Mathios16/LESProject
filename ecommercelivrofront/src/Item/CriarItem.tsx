@@ -1,6 +1,4 @@
-import React, { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Plus, X, Trash, Pencil, Eye, EyeSlash } from '@phosphor-icons/react';
+import React, { useState } from 'react';
 import {
   Container,
   Typography,
@@ -13,11 +11,6 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Snackbar,
   Alert,
   Chip
@@ -51,7 +44,6 @@ interface Item {
 }
 
 const CriarItem: React.FC = () => {
-  const navigate = useNavigate();
 
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');

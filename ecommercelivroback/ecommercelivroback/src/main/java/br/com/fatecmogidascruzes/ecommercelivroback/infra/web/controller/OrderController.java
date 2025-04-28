@@ -1,5 +1,6 @@
 package br.com.fatecmogidascruzes.ecommercelivroback.infra.web.controller;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import br.com.fatecmogidascruzes.ecommercelivroback.business.order.Order;
@@ -98,6 +100,8 @@ public class OrderController {
             order.setAddressId(cart.get().getAddressId());
         }
 
+        order.setDate(new Timestamp(System.currentTimeMillis()));
+
         List<OrderPayment> payments = new ArrayList<>();
 
         if (data != null && data.orderPayments() != null) {
@@ -138,11 +142,7 @@ public class OrderController {
 
         order.verifyPayment();
 
-        Order saveOrder = new Order();
-
-        BeanUtils.copyProperties(order, saveOrder, "items", "payments", "cupoms", "address", "customer");
-
-        Order savedOrder = orderRepository.save(saveOrder);
+        Order savedOrder = orderRepository.save(order);
 
         orderItems.forEach(orderItem -> {
             orderItem.setOrderId(savedOrder.getId());
@@ -157,7 +157,6 @@ public class OrderController {
         });
         cupomRepository.saveAll(cupoms);
 
-        BeanUtils.copyProperties(order, savedOrder);
         return ResponseEntity.ok(dataOrder.fromOrder(savedOrder));
     }
 
@@ -169,10 +168,8 @@ public class OrderController {
             return ResponseEntity.notFound().build();
         }
 
-        Order updateOrder = new Order();
+        Order updateOrder = existingOrder.get();
         updateOrder.setStatus(OrderStatus.RETURN_REQUESTED.name());
-
-        BeanUtils.copyProperties(existingOrder, updateOrder, "address", "customer");
 
         orderRepository.save(updateOrder);
 
@@ -180,23 +177,41 @@ public class OrderController {
         orderReturn.setOrderId(orderId);
         orderReturn.setOrderItemsId(data.orderItemsId());
 
+        Cupom returnCupom = new Cupom();
+        returnCupom.setValue(data.value());
+        returnCupom.setExpirationDate(new Timestamp(System.currentTimeMillis() + 3600000));
+        returnCupom.setCode("RETURN" + orderId);
+
+        Cupom savedCupom = cupomRepository.save(returnCupom);
+
+        orderReturn.setCupomId(savedCupom.getId());
+
         OrderReturn savedReturn = orderReturnRepository.save(orderReturn);
 
         return ResponseEntity.ok(dataOrderReturn.fromReturn(savedReturn));
     }
 
+    @GetMapping("/{orderId}/return")
+    public ResponseEntity<?> getReturnCupom(@PathVariable Long orderId) {
+        Optional<OrderReturn> existingOrder = orderReturnRepository.findByOrderId(orderId);
+        if (existingOrder.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        OrderReturn order = existingOrder.get();
+        return ResponseEntity.ok(dataOrderReturn.fromReturn(order));
+    }
+
     @PostMapping("/{orderId}/exchange")
-    public ResponseEntity<?> exchangeOrder(@PathVariable Long orderId, dataOrderExchange data) {
+    public ResponseEntity<?> exchangeOrder(@PathVariable Long orderId, @RequestBody dataOrderExchange data) {
 
         Optional<Order> existingOrder = orderRepository.findById(orderId);
         if (existingOrder.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
-        Order updateOrder = new Order();
+        Order updateOrder = existingOrder.get();
         updateOrder.setStatus(OrderStatus.EXCHANGE_REQUESTED.name());
-
-        BeanUtils.copyProperties(existingOrder, updateOrder, "address", "customer");
 
         orderRepository.save(updateOrder);
 
@@ -228,30 +243,38 @@ public class OrderController {
     }
 
     @PutMapping("/{orderId}")
-    public ResponseEntity<?> updateOrder(@PathVariable Long orderId, dataOrder data) {
+    public ResponseEntity<?> updateOrder(@PathVariable Long orderId, @RequestBody dataOrder data) {
 
         Optional<Order> existingOrder = orderRepository.findById(orderId);
         if (existingOrder.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
-        Order updateOrder = new Order();
-        updateOrder.setAddressId(data.addressId());
-        updateOrder.setStatus(data.status());
-        updateOrder.setPayments(data.orderPayments());
-        updateOrder.setCupoms(data.cupoms());
-
-        BeanUtils.copyProperties(existingOrder, updateOrder, "address", "customer");
+        Order updateOrder = existingOrder.get();
+        if (data.addressId() != null) {
+            updateOrder.setAddressId(data.addressId());
+        }
+        if (data.status() != null) {
+            updateOrder.setStatus(data.status());
+        }
+        if (data.orderPayments() != null) {
+            updateOrder.setPayments(data.orderPayments());
+        }
+        if (data.cupoms() != null) {
+            updateOrder.setCupoms(data.cupoms());
+        }
 
         orderRepository.save(updateOrder);
 
-        return ResponseEntity.ok(updateOrder);
+        return ResponseEntity.ok(dataOrder.fromOrder(updateOrder));
     }
 
-    @GetMapping("/{customerId}")
-    public ResponseEntity<?> getOrder(@PathVariable Long customerId) {
-        return ResponseEntity
-                .ok(orderRepository.findByCustomerId(customerId).stream().map(dataOrder::fromOrder).toList());
+    @GetMapping("/{entityId}/{entity}")
+    public ResponseEntity<List<?>> getOrder(@PathVariable Long entityId, @PathVariable String entity) {
+        return entity.equals("customer")
+                ? ResponseEntity
+                        .ok(orderRepository.findByCustomerId(entityId).stream().map(dataOrder::fromOrder).toList())
+                : ResponseEntity.ok(orderRepository.findById(entityId).stream().map(dataOrder::fromOrder).toList());
     }
 
     @GetMapping

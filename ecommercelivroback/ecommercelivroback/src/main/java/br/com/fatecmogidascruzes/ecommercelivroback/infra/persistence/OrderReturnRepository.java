@@ -1,6 +1,7 @@
 package br.com.fatecmogidascruzes.ecommercelivroback.infra.persistence;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -9,5 +10,5 @@ import br.com.fatecmogidascruzes.ecommercelivroback.business.order.orderReturn.O
 
 @Repository
 public interface OrderReturnRepository extends JpaRepository<OrderReturn, Long> {
-  List<OrderReturn> findByOrderId(Long orderId);
+  Optional<OrderReturn> findByOrderId(Long orderId);
 }

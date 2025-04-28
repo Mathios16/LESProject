@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import useUrlParams from '../Auxiliares/UrlParams';
 import {
   Container,
   Typography,
@@ -29,6 +30,7 @@ interface CartItem {
 
 const Carrinho: React.FC = () => {
   const navigate = useNavigate();
+  const { type, id } = useUrlParams();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [cep, setCep] = useState('');
   const [shippingCost, setShippingCost] = useState(0);
@@ -126,7 +128,7 @@ const Carrinho: React.FC = () => {
   };
 
   const handleCheckout = async () => {
-    navigate(`/compra`);
+    navigate(`/compra${type || id ? `?type=${type}&id=${id}` : ''}`);
   };
 
   return (

@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import useUrlParams from '../Auxiliares/UrlParams';
 import {
   Container,
   Typography,
@@ -30,6 +31,7 @@ interface ReturnItem {
 
 const CriarTroca: React.FC = () => {
   const navigate = useNavigate();
+  const { type, id } = useUrlParams();
   // Mock order items
   const [originalOrderItems] = useState<OrderItem[]>([
     {
@@ -61,7 +63,7 @@ const CriarTroca: React.FC = () => {
   }, [selectedReturns, originalOrderItems]);
 
   const handleSubmitReturn = () => {
-    navigate('/pedido/ver');
+    navigate(`/pedido/ver${type || id ? `?type=${type}&id=${id}` : ''}`);
   };
 
   return (

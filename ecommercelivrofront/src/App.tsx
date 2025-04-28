@@ -14,20 +14,22 @@ import CriarTroca from './Compra/CriarTroca';
 import CriarDevolucao from './Compra/CriarDevolucao';
 import ListarPedidos from './Compra/ListarPedidos';
 
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes, useParams, useSearchParams } from 'react-router-dom';
+import React from 'react';
 
 interface User {
   id: number;
   type: 'user' | 'admin';
 }
 
-let userType: User['type'] = 'admin';
-let userId: User['id'] = 25;
 
-function App() {
+const App: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const userType = searchParams.get('type');
+  const userId = searchParams.get('id');
   return (
     <>
-      <NavBar userType={userType} userId={userId} />
+      <NavBar userType={userType || ''} userId={Number(userId || '')} />
       <div className="container">
         <div className="box-content">
           <Routes>
@@ -50,7 +52,7 @@ function App() {
                 <Route path="/item/ver/:id" element={<VerItem />} />
                 <Route path="/carrinho" element={<Carrinho />} />
                 <Route path="/compra" element={<Compra />} />
-                <Route path="/pedido/ver" element={<VerPedidos />} />
+                <Route path="/pedidos/ver" element={<VerPedidos />} />
                 <Route path="/pedido/:id/troca" element={<CriarTroca />} />
                 <Route path="/pedido/:id/devolucao" element={<CriarDevolucao />} />
               </>

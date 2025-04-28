@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import useUrlParams from '../Auxiliares/UrlParams';
 import {
   Container,
   Typography,
@@ -22,15 +23,9 @@ interface OrderItem {
   image: string;
 }
 
-interface ReturnItem {
-  id: number;
-  title: string;
-  price: number;
-  image: string;
-}
-
 const CriarDevolucao: React.FC = () => {
   const navigate = useNavigate();
+  const { type, id } = useUrlParams();
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
   const [userId, setUserId] = useState<string | undefined>(undefined);
@@ -46,7 +41,7 @@ const CriarDevolucao: React.FC = () => {
 
   useEffect(() => {
     const url = window.location.pathname;
-    const orderId = url.split('/').filter(Boolean)[1];
+    const orderId = url.split('/').filter(Boolean)[1].split('?')[0];
 
     setOrderId(orderId || undefined);
   }, []);
@@ -57,12 +52,13 @@ const CriarDevolucao: React.FC = () => {
     if (orderId) {
       const fetchItem = async () => {
         try {
-          const response = await fetch(`http://localhost:3000/api/orders/${orderId}`);
+          const response = await fetch(`http://localhost:8080/order/${orderId}/order`);
           if (!response.ok) {
             throw new Error('Erro ao buscar pedido');
           }
           const data = await response.json();
-          setOriginalOrderItems(data.items);
+          console.log(data);
+          setOriginalOrderItems(data[0].items);
         } catch (err) {
           setError(err instanceof Error ? err.message : 'Erro ao buscar pedido. Tente novamente.');
         }
@@ -71,18 +67,17 @@ const CriarDevolucao: React.FC = () => {
     }
   }, [orderId]);
 
-  const [selectedReturns, setSelectedReturns] = useState<{ [key: number]: ReturnItem | null }>({});
+  const [selectedReturns, setSelectedReturns] = useState<number[]>([]);
 
-  const handleReturnSelection = (itemId: number, item: ReturnItem) => {
+  const handleReturnSelection = (itemId: number) => {
     setSelectedReturns(prev =>
-      prev[itemId] ? { ...prev, [itemId]: null } : { ...prev, [itemId]: item }
+      prev.includes(itemId) ? prev.filter(id => id !== itemId) : [...prev, itemId]
     );
   };
 
   const ReturnSummary = useMemo(() => {
     const totalOriginalValue = originalOrderItems.reduce((sum, item) => sum + item.price, 0);
-    const totalReturnValue = Object.values(selectedReturns)
-      .filter(item => item !== null)
+    const totalReturnValue = originalOrderItems.filter(item => selectedReturns.includes(item.id))
       .reduce((sum, item) => sum + (item?.price || 0), 0);
 
     return {
@@ -92,20 +87,24 @@ const CriarDevolucao: React.FC = () => {
   }, [selectedReturns, originalOrderItems]);
 
   const handleSubmit = async () => {
-    let response = await fetch(`http://localhost:3000/api/returns`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        orderId: orderId,
-        items: Object.values(selectedReturns).filter(item => item !== null)
-      })
-    });
-    const returnData = await response.json();
-    setSuccess(returnData);
-    navigate(`/`);
+    try {
+      let response = await fetch(`http://localhost:8080/order/${orderId}/return`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          orderId: orderId,
+          items: Object.values(selectedReturns).filter(item => item !== null)
+        })
+      });
+      const returnData = await response.json();
+
+      navigate(`/pedidos/ver${type || id ? `?type=${type}&id=${id}` : ''}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao solicitar devolução. Tente novamente.');
+    }
   };
 
   return (
@@ -144,7 +143,7 @@ const CriarDevolucao: React.FC = () => {
                     <FormControlLabel
                       control={
                         <Checkbox
-                          onChange={() => handleReturnSelection(originalItem.id, originalItem)}
+                          onChange={() => handleReturnSelection(originalItem.id)}
                         />
                       }
                       label="Adicionar a Devolução"
@@ -187,6 +186,7 @@ const CriarDevolucao: React.FC = () => {
           fullWidth
           size="large"
           onClick={handleSubmit}
+          disabled={Object.values(selectedReturns).length == 0}
         >
           Solicitar Devolução
         </Button>

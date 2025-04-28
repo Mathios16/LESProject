@@ -1,6 +1,7 @@
 import { InputLabel, Select, TextField, MenuItem, FormControl, Grid, Container, Paper, Box, FormGroup, FormLabel, FormControlLabel, Checkbox } from '@mui/material';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import useUrlParams from '../Auxiliares/UrlParams';
 
 interface Item {
   id: number;
@@ -23,13 +24,14 @@ const categoriesName = [
 ];
 
 const Home: React.FC = () => {
+  const { type, id } = useUrlParams();
   const [items, setItems] = useState<Item[]>([]);
   const [itemsByCategory, setItemsByCategory] = useState<{ [key: string]: any[] }>({});
   const [searchTitle, setSearchTitle] = useState('');
-  const [searchIsbn, setSearchIsbn] = useState('');
   const [searchDateAfter, setSearchDateAfter] = useState('');
   const [searchDateBefore, setSearchDateBefore] = useState('');
   const [searchPublisher, setSearchPublisher] = useState('');
+  const [searchAuthor, setSearchAuthor] = useState('');
   const [searchPriceMin, setSearchPriceMin] = useState('');
   const [searchPriceMax, setSearchPriceMax] = useState('');
   const [searchCategory, setSearchCategory] = useState<string[]>([]);
@@ -39,10 +41,10 @@ const Home: React.FC = () => {
     try {
       const queryParams = new URLSearchParams();
       if (searchTitle) queryParams.append('title', searchTitle);
-      if (searchIsbn) queryParams.append('isbn', searchIsbn);
       if (searchDateAfter) queryParams.append('dateAfter', searchDateAfter);
       if (searchDateBefore) queryParams.append('dateBefore', searchDateBefore);
       if (searchPublisher) queryParams.append('publisher', searchPublisher);
+      if (searchAuthor) queryParams.append('author', searchAuthor);
       if (searchPriceMin) queryParams.append('priceMin', searchPriceMin);
       if (searchPriceMax) queryParams.append('priceMax', searchPriceMax);
       if (searchCategory) queryParams.append('category', categoriesName.filter(c => searchCategory.includes(c.name)).map(c => c.id).join(","));
@@ -77,12 +79,11 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     fetchItems();
-  }, [searchTitle, searchIsbn, searchDateAfter, searchDateBefore, searchPublisher, searchPriceMin, searchPriceMax, searchCategory]);
-
+  }, [searchTitle, searchDateAfter, searchDateBefore, searchPublisher, searchAuthor, searchPriceMin, searchPriceMax, searchCategory]);
 
 
   const handleItemClick = (item: any) => {
-    navigate(`/item/ver/${item.id}`);
+    navigate(`/item/ver/${item.id}${type || id ? `?type=${type}&id=${id}` : ''}`);
   };
 
   return (
@@ -108,7 +109,7 @@ const Home: React.FC = () => {
                   <TextField
                     label="Nome do autor"
                     variant="outlined"
-                    onChange={e => setSearchPublisher(e.target.value)}
+                    onChange={e => setSearchAuthor(e.target.value)}
                   />
                 </FormGroup>
                 <div className="filter-inputs">

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import useUrlParams from '../Auxiliares/UrlParams';
 import { PencilSimple, Trash } from '@phosphor-icons/react';
 import {
   Container,
@@ -51,6 +52,7 @@ interface Customer {
 }
 
 const ListarClientes: React.FC = () => {
+  const { type, id } = useUrlParams();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [searchName, setSearchName] = useState('');
   const [searchEmail, setSearchEmail] = useState('');
@@ -126,7 +128,9 @@ const ListarClientes: React.FC = () => {
           <Button
             variant="contained"
             color="primary"
-            onClick={() => navigate('/clientes/criar')}
+            onClick={() => {
+              navigate(`/clientes/criar${type || id ? `?type=${type}&id=${id}` : ''}`);
+            }}
           >
             Novo Cliente
           </Button>
@@ -190,7 +194,9 @@ const ListarClientes: React.FC = () => {
                       <TableCell align="right">
                         <IconButton
                           color="primary"
-                          onClick={() => navigate(`/clientes/editar/${customer.id}`)}
+                          onClick={() => {
+                            navigate(`/clientes/editar/${customer.id}${type || id ? `?type=${type}&id=${id}` : ''}`)
+                          }}
                         >
                           <PencilSimple />
                         </IconButton>

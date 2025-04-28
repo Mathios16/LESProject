@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import useUrlParams from '../Auxiliares/UrlParams';
 import { PencilSimple, Trash } from '@phosphor-icons/react';
 
 interface Item {
@@ -12,22 +13,24 @@ interface Item {
 
 const ListarItens: React.FC = () => {
   const navigate = useNavigate();
-  
+  const { type, id } = useUrlParams();
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
   const [items, setItems] = useState<Item[]>([]);
-  
-  return  (
+
+  return (
     <div className="item-container">
       <div className="header">
         <h1>Lista de Itens</h1>
         <div className="actions">
-          <button className="primary" onClick={() => navigate('/item/criar')}>
+          <button className="primary" onClick={() => {
+            navigate(`/item/criar${type || id ? `?type=${type}&id=${id}` : ''}`);
+          }}>
             Novo Item
           </button>
         </div>
       </div>
-      
+
       {error && <div className="alert alert-error">{error}</div>}
       {success && <div className="alert alert-success">{success}</div>}
 
@@ -98,7 +101,9 @@ const ListarItens: React.FC = () => {
                   <div className="actions">
                     <button
                       className="edit"
-                      onClick={() => navigate(`/item/editar/${item.id}`)}
+                      onClick={() => {
+                        navigate(`/item/editar/${item.id}${type || id ? `?type=${type}&id=${id}` : ''}`);
+                      }}
                     >
                       <PencilSimple size={20} />
                     </button>
