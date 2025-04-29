@@ -3,6 +3,8 @@ package br.com.fatecmogidascruzes.ecommercelivroback;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+
 import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Logger;
@@ -33,8 +35,6 @@ public class OrderE2ETest {
   private WebDriverWait wait;
   private final String BASE_URL_USER = "http://localhost:5173?type=user&id=11";
   private final String BASE_URL_ADMIN = "http://localhost:5173?type=admin&id=";
-  private final String TEST_CPF = "123.456.789-00";
-  private final String TEST_CPF_EDIT = "987.654.321-01";
   private static final Logger logger = Logger.getLogger(CustomerE2ETest.class.getName());
 
   // Static latches to ensure sequential test execution
@@ -59,6 +59,10 @@ public class OrderE2ETest {
     driver.get(BASE_URL_USER);
     setCheckboxById("search-category-Ficção Científica", "1");
     clickButtonById("item-card-10");
+    String before = driver.getCurrentUrl();
+    wait.until(ExpectedConditions.not(ExpectedConditions.urlToBe(before)));
+    assertNotEquals(before, driver.getCurrentUrl());
+
   }
 
   @Test

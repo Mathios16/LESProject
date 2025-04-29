@@ -154,13 +154,16 @@ const VerItem: React.FC = () => {
 
           <div className="item-quantity-selector">
             <button
+              id="quantity-decrease"
               onClick={() => handleQuantityChange(-1)}
               disabled={quantity <= 1}
             >
               -
             </button>
             <span>{quantity}</span>
-            <button onClick={() => handleQuantityChange(1)}>
+            <button
+              id="quantity-increase"
+              onClick={() => handleQuantityChange(1)}>
               +
             </button>
           </div>
