@@ -97,16 +97,19 @@ const Home: React.FC = () => {
                 <FormGroup className="filter-inputs">
                   <FormLabel component="legend">Pesquisar por</FormLabel>
                   <TextField
+                    id="search-title"
                     label="Nome do livro"
                     variant="outlined"
                     onChange={e => setSearchTitle(e.target.value)}
                   />
                   <TextField
+                    id="search-publisher"
                     label="Nome da editora"
                     variant="outlined"
                     onChange={e => setSearchPublisher(e.target.value)}
                   />
                   <TextField
+                    id="search-author"
                     label="Nome do autor"
                     variant="outlined"
                     onChange={e => setSearchAuthor(e.target.value)}
@@ -121,6 +124,7 @@ const Home: React.FC = () => {
                         label={category.name}
                         control={
                           <Checkbox
+                            id={`search-category-${category.name}`}
                             checked={searchCategory.includes(category.name)}
                             onChange={e => {
                               if (e.target.checked) {
@@ -139,12 +143,14 @@ const Home: React.FC = () => {
                   <FormLabel component="legend">Preço</FormLabel>
                   <div className="line-inputs">
                     <TextField
+                      id="search-price-min"
                       label="Minimo"
                       type="number"
                       variant="outlined"
                       onChange={e => setSearchPriceMin(e.target.value)}
                     />
                     <TextField
+                      id="search-price-max"
                       label="Máximo"
                       type="number"
                       variant="outlined"
@@ -156,6 +162,7 @@ const Home: React.FC = () => {
                   <FormLabel component="legend">Ano de Publicação</FormLabel>
                   <div className="line-inputs">
                     <TextField
+                      id="search-date-before"
                       label="Inicial"
                       type="number"
                       variant="outlined"
@@ -163,6 +170,7 @@ const Home: React.FC = () => {
                       onChange={e => setSearchDateBefore(e.target.value)}
                     />
                     <TextField
+                      id="search-date-after"
                       label="Final"
                       type="number"
                       variant="outlined"
@@ -182,6 +190,7 @@ const Home: React.FC = () => {
               <div className="items-grid">
                 {items.map((item, index) => (
                   <div
+                    id={`item-card-${item.id}`}
                     key={index}
                     className="item-card"
                     onClick={() => handleItemClick(item)}

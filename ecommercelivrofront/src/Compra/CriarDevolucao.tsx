@@ -57,7 +57,6 @@ const CriarDevolucao: React.FC = () => {
             throw new Error('Erro ao buscar pedido');
           }
           const data = await response.json();
-          console.log(data);
           setOriginalOrderItems(data[0].items);
         } catch (err) {
           setError(err instanceof Error ? err.message : 'Erro ao buscar pedido. Tente novamente.');
@@ -96,9 +95,11 @@ const CriarDevolucao: React.FC = () => {
         },
         body: JSON.stringify({
           orderId: orderId,
-          items: Object.values(selectedReturns).filter(item => item !== null)
+          orderItemsId: Object.values(selectedReturns).filter(item => item !== null),
+          value: ReturnSummary.totalReturnValue
         })
       });
+
       const returnData = await response.json();
 
       navigate(`/pedidos/ver${type || id ? `?type=${type}&id=${id}` : ''}`);

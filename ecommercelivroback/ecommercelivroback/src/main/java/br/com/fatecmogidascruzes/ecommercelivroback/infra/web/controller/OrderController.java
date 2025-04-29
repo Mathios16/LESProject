@@ -161,7 +161,7 @@ public class OrderController {
     }
 
     @PostMapping("/{orderId}/return")
-    public ResponseEntity<?> returnOrder(@PathVariable Long orderId, dataOrderReturn data) {
+    public ResponseEntity<?> returnOrder(@PathVariable Long orderId, @RequestBody dataOrderReturn data) {
 
         Optional<Order> existingOrder = orderRepository.findById(orderId);
         if (existingOrder.isEmpty()) {
@@ -175,11 +175,25 @@ public class OrderController {
 
         OrderReturn orderReturn = new OrderReturn();
         orderReturn.setOrderId(orderId);
-        orderReturn.setOrderItemsId(data.orderItemsId());
+        List<Long> orderItemsId = new ArrayList<>(data.orderItemsId());
+        orderReturn.setOrderItemsId(orderItemsId);
+
+        List<OrderItem> orderItems = new ArrayList<>();
+
+        data.orderItemsId().forEach(itemId -> {
+            Optional<OrderItem> existingItem = orderItemRepository.findById(itemId);
+            if (existingItem.isEmpty()) {
+                return;
+            }
+            orderItems.add(existingItem.get());
+        });
+
+        orderReturn.setOrderItems(orderItems);
 
         Cupom returnCupom = new Cupom();
         returnCupom.setValue(data.value());
-        returnCupom.setExpirationDate(new Timestamp(System.currentTimeMillis() + 3600000));
+        returnCupom.setExpirationDate(new Timestamp(System.currentTimeMillis() +
+                3600000));
         returnCupom.setCode("RETURN" + orderId);
 
         Cupom savedCupom = cupomRepository.save(returnCupom);

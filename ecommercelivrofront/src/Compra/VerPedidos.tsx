@@ -116,14 +116,30 @@ const VerPedidos: React.FC = () => {
         credentials: 'include',
       });
       const data = await response.json();
-      console.log(data);
+      return data.cupom.code ?? '';
     } catch (error) {
       console.error('Erro ao buscar pedidos:', error);
+      return '';
     }
   };
+
+  const [cupomValues, setCupomValues] = useState<Record<number, string>>({});
+
+  const loadCupomValue = async (orderId: number) => {
+    const value = await getReturnCupom(orderId);
+    setCupomValues(prev => ({ ...prev, [orderId]: value }));
+  };
+
   useEffect(() => {
-    getReturnCupom(3);
-  });
+    if (orders) {
+      orders.forEach(order => {
+        if (order.status === 'RETURN_COMPLETED') {
+          loadCupomValue(order.id);
+        }
+      });
+    }
+  }, [orders]);
+
   return (
 
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
@@ -180,7 +196,7 @@ const VerPedidos: React.FC = () => {
               {order.status === 'RETURN_COMPLETED' && (
                 <>
                   <Typography variant="h6">
-                    Cupom de devolução: {order.id}
+                    Cupom de devolução: {cupomValues[order.id] || 'Carregando...'}
                   </Typography>
                 </>
               )}
