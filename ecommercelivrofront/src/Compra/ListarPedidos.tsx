@@ -150,13 +150,13 @@ const ListarPedidos: React.FC = () => {
                 </TableHead>
                 <TableBody>
                   {orders.map((order) => (
-                    <TableRow key={order.id}>
+                    <TableRow id={`order-row-${order.id}`} key={order.id}>
                       <TableCell>{order.id}</TableCell>
                       <TableCell>{convertStatus(order.status)}</TableCell>
                       <TableCell>{order.customerName}</TableCell>
                       <TableCell>{order.addressStreet}</TableCell>
                       <TableCell align="right">
-                        <Select value={order.status} onChange={(e) => handleUpdateStatus(order.id, e.target.value)}>
+                        <Select id={`order-select-${order.id}`} value={order.status} onChange={(e) => handleUpdateStatus(order.id, e.target.value)}>
                           {getUpdateStatus(order.status).map((status) => (
                             <MenuItem key={status} value={status}>
                               {status}

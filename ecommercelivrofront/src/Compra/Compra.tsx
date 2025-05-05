@@ -478,7 +478,7 @@ const Compra: React.FC = () => {
           <Paper elevation={3} sx={{ p: 2, mb: 2 }}>
             <Box display="flex" justifyContent="space-between" alignItems="center">
               <Typography variant="h6">Endereço de Entrega</Typography>
-              <IconButton size="small" onClick={() => setIsAddressModalOpen(true)}>
+              <IconButton id="add-new-address-button" size="small" onClick={() => setIsAddressModalOpen(true)}>
                 Novo<Plus />
               </IconButton>
             </Box>
@@ -501,7 +501,7 @@ const Compra: React.FC = () => {
           <Paper elevation={3} sx={{ p: 2, mb: 2 }}>
             <Box display="flex" justifyContent="space-between" alignItems="center">
               <Typography variant="h6">Métodos de Pagamento</Typography>
-              <IconButton size="small" onClick={() => setIsPaymentModalOpen(true)}>
+              <IconButton id="add-new-payment-button" size="small" onClick={() => setIsPaymentModalOpen(true)}>
                 Novo<Plus />
               </IconButton>
             </Box>
@@ -565,6 +565,7 @@ const Compra: React.FC = () => {
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
         <IconButton onClick={handleSubmit}>
           <Button
+            id="submit-order-button"
             variant="contained"
             color="primary"
             size="large"

@@ -170,6 +170,7 @@ const VerItem: React.FC = () => {
 
           <div className="item-actions">
             <button
+              id="add-to-cart-button"
               className={`btn-add-to-cart ${isInCart ? 'added' : ''}`}
               onClick={handleAddToCart}
             >

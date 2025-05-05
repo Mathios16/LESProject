@@ -63,30 +63,159 @@ public class OrderE2ETest {
     wait.until(ExpectedConditions.not(ExpectedConditions.urlToBe(before)));
     assertNotEquals(before, driver.getCurrentUrl());
 
+    clickButtonById("add-to-cart-button");
+    wait.until(ExpectedConditions.presenceOfElementLocated(By.id("cart-success-message")));
+
   }
 
   @Test
   @Order(2)
   void shouldCreateOrder() {
+    driver.get(BASE_URL_USER);
+    // Go to cart
+    clickButtonById("cart-button");
+    wait.until(ExpectedConditions.urlContains("carrinho"));
 
+    // Proceed to checkout
+    clickButtonById("checkout-button");
+    wait.until(ExpectedConditions.urlContains("compra"));
+
+    // Add a new address
+    clickButtonById("add-new-address-button");
+    wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("address-modal")));
+
+    // Fill and submit address form
+    fillAddressForm("0", "0", "0", "Rua Teste", "123",
+        "Apto 456", "Centro", "São Paulo", "SP",
+        "Brasil", "01001000");
+
+    // Add a new payment method
+    clickButtonById("add-new-payment-button");
+    wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("payment-modal")));
+
+    // Fill and submit payment form
+    fillPaymentForm("0", "4111111111111111", "John Doe", "12/2030", "123", "VISA");
+
+    // Select delivery address if needed
+    clickButtonById("address-1");
+
+    // Select payment method if needed
+    clickButtonById("payment-1");
+
+    clickButtonById("submit-order-button");
+
+    wait.until(ExpectedConditions.urlContains("/?"));
+
+    clickButtonById("my-orders-button");
+    wait.until(ExpectedConditions.urlContains("pedidos/ver"));
+
+    // Note the order ID for future tests
+    WebElement orderIdElement = wait.until(ExpectedConditions.presenceOfElementLocated(By.id("order-id")));
+    String orderId = orderIdElement.getText().replace("Pedido #", "").trim();
+    logger.info("Created order with ID: " + orderId);
+
+    // Count down latch to allow the next test to proceed
+    latches[0].countDown();
   }
 
   @Test
   @Order(3)
   void shouldAlterOrderStatus() {
+    try {
+      // Wait for the previous test to complete
+      latches[0].await();
 
+      // Go to admin panel
+      driver.get(BASE_URL_ADMIN);
+      wait.until(ExpectedConditions.urlContains("admin"));
+
+      // Navigate to order management
+      clickButtonById("manage-orders-button");
+      wait.until(ExpectedConditions.urlContains("pedidos"));
+
+      // Change order status to "In Transit"
+      selectOptionById("order-select-1", "IN_TRANSIT");
+
+      // Change order status to "Delivered"
+      selectOptionById("order-select-1", "DELIVERED");
+
+      // Count down latch to allow the next test to proceed
+      latches[1].countDown();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      logger.severe("Test interrupted: " + e.getMessage());
+    }
   }
 
   @Test
   @Order(4)
   void shouldCreateOrderReturnRequest() {
+    try {
+      // Wait for the previous test to complete
+      latches[1].await();
 
+      // Go to user panel
+      driver.get(BASE_URL_USER);
+      wait.until(ExpectedConditions.urlContains("user"));
+
+      // Go to orders page
+      clickButtonById("my-orders-button");
+      wait.until(ExpectedConditions.urlContains("pedidos"));
+
+      // Find the order and request return
+      clickButtonById("request-return-1"); // Assuming the first order is the one we created
+      wait.until(ExpectedConditions.urlContains("devolucao"));
+
+      // Select reason for return
+      selectOptionById("return-reason", "DEFECTIVE");
+
+      // Add description
+      fillInputById("return-description", "Product arrived damaged");
+
+      // Select items to return
+      setCheckboxById("return-item-1", "1");
+
+      // Submit return request
+      clickButtonById("submit-return-request");
+
+      // Wait for confirmation
+      wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("return-request-confirmation")));
+
+      // Count down latch to allow the next test to proceed
+      latches[2].countDown();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      logger.severe("Test interrupted: " + e.getMessage());
+    }
   }
 
   @Test
   @Order(5)
   void shouldAlterOrderReturnRequestStatus() {
+    try {
+      // Wait for the previous test to complete
+      latches[2].await();
 
+      // Go to admin panel
+      driver.get(BASE_URL_ADMIN); // Using admin ID 1
+      wait.until(ExpectedConditions.urlContains("admin"));
+
+      // Navigate to return requests
+      clickButtonById("manage-orders-button");
+      wait.until(ExpectedConditions.urlContains("pedidos"));
+
+      // Approve the return request
+      selectOptionById("order-select-1", "RETURN_APPROVED");
+
+      // Change status to completed when the product is received back
+      selectOptionById("order-select-1", "RETURN_COMPLETED");
+
+      // Count down latch to allow potential future tests to proceed
+      latches[3].countDown();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      logger.severe("Test interrupted: " + e.getMessage());
+    }
   }
 
   private void fillInputById(String id, String value) {

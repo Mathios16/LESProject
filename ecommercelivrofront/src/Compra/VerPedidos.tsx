@@ -177,6 +177,7 @@ const VerPedidos: React.FC = () => {
               {order.status === 'DELIVERED' && (
                 <>
                   <Button
+                    id={`request-exchange-${order.id}`}
                     variant="contained"
                     color="secondary"
                     sx={{ m: 1 }}
@@ -185,6 +186,7 @@ const VerPedidos: React.FC = () => {
                     Solicitar Troca
                   </Button>
                   <Button
+                    id={`request-return-${order.id}`}
                     variant="contained"
                     color="secondary"
                     onClick={() => handleRequestReturn(order.id)}

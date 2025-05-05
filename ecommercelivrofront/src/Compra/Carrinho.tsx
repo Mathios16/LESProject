@@ -196,6 +196,7 @@ const Carrinho: React.FC = () => {
       </Paper>
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
         <Button
+          id="checkout-button"
           variant="contained"
           color="primary"
           onClick={handleCheckout}
