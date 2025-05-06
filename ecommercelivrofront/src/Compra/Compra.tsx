@@ -79,19 +79,20 @@ interface OrderPayment {
 }
 
 interface ModalProps {
+  id: string,
   open: boolean;
   onClose: () => void;
   title: string;
   children: React.ReactNode;
 }
 
-const Modal: React.FC<ModalProps> = ({ open, onClose, title, children }) => {
+const Modal: React.FC<ModalProps> = ({ id, open, onClose, title, children }) => {
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>
         <Box display="flex" justifyContent="space-between" alignItems="center">
           {title}
-          <IconButton onClick={onClose} size="small">
+          <IconButton id={id} onClick={onClose} size="small">
             <X />
           </IconButton>
         </Box>
@@ -582,6 +583,7 @@ const Compra: React.FC = () => {
       </Box>
 
       <Modal
+        id="address-modal"
         open={isAddressModalOpen}
         onClose={() => setIsAddressModalOpen(false)}
         title="Adicionar Endereço"
@@ -609,6 +611,7 @@ const Compra: React.FC = () => {
             <Grid item xs={12}>
               <TextField
                 fullWidth
+                id="zip"
                 label="CEP"
                 name="zipCode"
                 value={currentAddress.zipCode}
@@ -620,6 +623,7 @@ const Compra: React.FC = () => {
             <Grid item xs={12}>
               <TextField
                 fullWidth
+                id="streetType"
                 label="Tipo de Logradouro"
                 name="streetType"
                 value={currentAddress.streetType}
@@ -630,6 +634,7 @@ const Compra: React.FC = () => {
             <Grid item xs={12}>
               <TextField
                 fullWidth
+                id="street"
                 label="Logradouro"
                 name="street"
                 value={currentAddress.street}
@@ -640,6 +645,7 @@ const Compra: React.FC = () => {
             <Grid item xs={12}>
               <TextField
                 fullWidth
+                id="number"
                 label="Número"
                 name="number"
                 value={currentAddress.number}
@@ -650,6 +656,7 @@ const Compra: React.FC = () => {
             <Grid item xs={12}>
               <TextField
                 fullWidth
+                id="complement"
                 label="Complemento"
                 name="complement"
                 value={currentAddress.complement}
@@ -659,6 +666,7 @@ const Compra: React.FC = () => {
             <Grid item xs={12}>
               <TextField
                 fullWidth
+                id="neighborhood"
                 label="Bairro"
                 name="neighborhood"
                 value={currentAddress.neighborhood}
@@ -669,6 +677,7 @@ const Compra: React.FC = () => {
             <Grid item xs={12}>
               <TextField
                 fullWidth
+                id="city"
                 label="Cidade"
                 name="city"
                 value={currentAddress.city}
@@ -679,6 +688,7 @@ const Compra: React.FC = () => {
             <Grid item xs={12}>
               <TextField
                 fullWidth
+                id="state"
                 label="Estado"
                 name="state"
                 value={currentAddress.state}
@@ -689,6 +699,7 @@ const Compra: React.FC = () => {
             <Grid item xs={12}>
               <TextField
                 fullWidth
+                id="country"
                 label="País"
                 name="country"
                 value={currentAddress.country}
@@ -703,6 +714,7 @@ const Compra: React.FC = () => {
                   <FormControlLabel
                     control={
                       <Checkbox
+                        id="billing"
                         checked={currentAddress.addressType.includes('COBRANCA')}
                         onChange={(e) => {
                           const newTypes = e.target.checked
@@ -718,6 +730,7 @@ const Compra: React.FC = () => {
                   <FormControlLabel
                     control={
                       <Checkbox
+                        id="shipping"
                         checked={currentAddress.addressType.includes('ENTREGA')}
                         onChange={(e) => {
                           const newTypes = e.target.checked
@@ -733,6 +746,7 @@ const Compra: React.FC = () => {
                   <FormControlLabel
                     control={
                       <Checkbox
+                        id="residential"
                         checked={currentAddress.addressType.includes('RESIDENCIAL')}
                         onChange={(e) => {
                           const newTypes = e.target.checked
@@ -750,7 +764,7 @@ const Compra: React.FC = () => {
             </Grid>
           </Grid>
           <DialogActions>
-            <IconButton onClick={() => setIsAddressModalOpen(false)}>
+            <IconButton id="add-address" onClick={() => setIsAddressModalOpen(false)}>
               <Button>Cancelar</Button>
             </IconButton>
             <Button type="submit" variant="contained">Adicionar</Button>
@@ -759,6 +773,7 @@ const Compra: React.FC = () => {
       </Modal>
 
       <Modal
+        id="payment-modal"
         open={isPaymentModalOpen}
         onClose={() => setIsPaymentModalOpen(false)}
         title="Adicionar Método de Pagamento"
@@ -782,6 +797,7 @@ const Compra: React.FC = () => {
             <Grid item xs={12}>
               <TextField
                 fullWidth
+                id="cardNumber"
                 label="Número do Cartão"
                 name="cardNumber"
                 value={currentPayment.cardNumber}
@@ -793,6 +809,7 @@ const Compra: React.FC = () => {
               <FormControl fullWidth>
                 <InputLabel>Bandeira do Cartão</InputLabel>
                 <Select
+                  id="cardFlag"
                   name="cardFlag"
                   value={currentPayment.cardFlag}
                   onChange={handleSelectChangePayment}
@@ -807,6 +824,7 @@ const Compra: React.FC = () => {
             <Grid item xs={12}>
               <TextField
                 fullWidth
+                id="cardName"
                 label="Nome no Cartão"
                 name="cardName"
                 value={currentPayment.cardName}
@@ -817,6 +835,7 @@ const Compra: React.FC = () => {
             <Grid item xs={12}>
               <TextField
                 fullWidth
+                id="cardExpiration"
                 label="Data de Expiração"
                 name="cardExpiration"
                 value={currentPayment.cardExpiration}
@@ -827,6 +846,7 @@ const Compra: React.FC = () => {
             <Grid item xs={12}>
               <TextField
                 fullWidth
+                id="cvv"
                 label="CVV"
                 name="cvv"
                 value={currentPayment.cvv}
@@ -838,6 +858,7 @@ const Compra: React.FC = () => {
               <FormControlLabel
                 control={
                   <Checkbox
+                  id="primary"
                     checked={currentPayment.primary}
                     onChange={(e) => setCurrentPayment(prev => ({ ...prev, primary: e.target.checked }))}
                   />
@@ -847,7 +868,7 @@ const Compra: React.FC = () => {
             </Grid>
           </Grid>
           <DialogActions>
-            <IconButton onClick={() => setIsPaymentModalOpen(false)}>
+            <IconButton id="add-payment" onClick={() => setIsPaymentModalOpen(false)}>
               <Button>Cancelar</Button>
             </IconButton>
             <Button type="submit" variant="contained">Adicionar</Button>

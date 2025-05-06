@@ -59,13 +59,11 @@ public class OrderE2ETest {
     driver.get(BASE_URL_USER);
     setCheckboxById("search-category-Ficção Científica", "1");
     clickButtonById("item-card-10");
-    String before = driver.getCurrentUrl();
-    wait.until(ExpectedConditions.not(ExpectedConditions.urlToBe(before)));
-    assertNotEquals(before, driver.getCurrentUrl());
+
+    wait.until(ExpectedConditions.urlContains("item/ver"));
 
     clickButtonById("add-to-cart-button");
     wait.until(ExpectedConditions.presenceOfElementLocated(By.id("cart-success-message")));
-
   }
 
   @Test
@@ -85,9 +83,8 @@ public class OrderE2ETest {
     wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("address-modal")));
 
     // Fill and submit address form
-    fillAddressForm("0", "0", "0", "Rua Teste", "123",
-        "Apto 456", "Centro", "São Paulo", "SP",
-        "Brasil", "01001000");
+    fillAddressForm("0", "0", "0", "AVENIDA", "123", 
+    "A","01001000");
 
     // Add a new payment method
     clickButtonById("add-new-payment-button");
@@ -97,10 +94,10 @@ public class OrderE2ETest {
     fillPaymentForm("0", "4111111111111111", "John Doe", "12/2030", "123", "VISA");
 
     // Select delivery address if needed
-    clickButtonById("address-1");
+    clickButtonById("address-22");
 
     // Select payment method if needed
-    clickButtonById("payment-1");
+    clickButtonById("payment-10");
 
     clickButtonById("submit-order-button");
 
@@ -280,22 +277,18 @@ public class OrderE2ETest {
     }
   }
 
-  private void fillAddressForm(String billing, String delivery, String residence, String street, String number,
-      String complement, String neighborhood, String city, String state, String country, String zipcode) {
+  private void fillAddressForm(String billing, String delivery, String residence, String streetType,String number,
+      String complement,  String zipcode) {
     try {
       fillInputById("zip", zipcode);
-
-      fillInputById("street", street);
+      fillInputById("street", "");
+      wait.until(ExpectedConditions.not(ExpectedConditions.attributeToBe(By.id("street"), "value", "")));
+      fillInputById("streetType", streetType);
       fillInputById("number", number);
       fillInputById("complement", complement);
-      fillInputById("neighborhood", neighborhood);
-      fillInputById("city", city);
-      fillInputById("state", state);
-      fillInputById("country", country);
-
       setCheckboxById("billing", billing);
-      setCheckboxById("delivery", delivery);
-      setCheckboxById("residence", residence);
+      setCheckboxById("shipping", delivery);
+      setCheckboxById("residential", residence);
 
       clickButtonById("add-address");
       logger.info("Endereço adicionado com sucesso");

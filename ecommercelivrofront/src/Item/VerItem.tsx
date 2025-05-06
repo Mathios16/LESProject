@@ -216,6 +216,7 @@ const VerItem: React.FC = () => {
         }}
       >
         <Alert
+          id="cart-success-message"
           severity="success"
           onClose={() => {
             setSuccess('');
