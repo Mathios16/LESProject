@@ -112,7 +112,8 @@ public class Order {
             double remainingCouponValue = totalCouponValue - totalOrderValue;
             Cupom exchangeCoupon = new Cupom();
             exchangeCoupon.setValue(remainingCouponValue);
-            exchangeCoupon.setCode("teste");
+            exchangeCoupon.setCode("REMAINING_COUPON");
+            exchangeCoupon.setExpirationDate(new Timestamp(System.currentTimeMillis() + 3600000));
             totalCouponValue = totalOrderValue;
             return Optional.of(exchangeCoupon);
         }

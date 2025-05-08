@@ -140,7 +140,7 @@ public class OrderController {
 
         order.setItems(orderItems);
 
-        order.verifyPayment();
+        Optional<Cupom> remainingCoupon = order.verifyPayment();
 
         Order savedOrder = orderRepository.save(order);
 
@@ -156,6 +156,10 @@ public class OrderController {
             cupom.setOrderId(savedOrder.getId());
         });
         cupomRepository.saveAll(cupoms);
+
+        if (remainingCoupon.isPresent()) {
+            cupomRepository.save(remainingCoupon.get());
+        }
 
         return ResponseEntity.ok(dataOrder.fromOrder(savedOrder));
     }
@@ -207,13 +211,14 @@ public class OrderController {
 
     @GetMapping("/{orderId}/return")
     public ResponseEntity<?> getReturnCupom(@PathVariable Long orderId) {
-        Optional<OrderReturn> existingOrder = orderReturnRepository.findByOrderId(orderId);
+        Optional<List<OrderReturn>> existingOrder = orderReturnRepository.findByOrderId(orderId);
         if (existingOrder.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
-        OrderReturn order = existingOrder.get();
-        return ResponseEntity.ok(dataOrderReturn.fromReturn(order));
+        List<OrderReturn> orders = existingOrder.get();
+
+        return ResponseEntity.ok(orders.stream().map(dataOrderReturn::fromReturn).toList());
     }
 
     @PostMapping("/{orderId}/exchange")
@@ -254,6 +259,17 @@ public class OrderController {
         orderExchangeItemRepository.saveAll(items);
 
         return ResponseEntity.ok(dataOrderExchange.fromExchange(savedExchange));
+    }
+
+    @GetMapping("/{orderId}/exchange")
+    public ResponseEntity<?> getExchangeCupom(@PathVariable Long orderId) {
+        Optional<List<OrderExchange>> existingOrder = orderExchangeRepository.findByOrderId(orderId);
+        if (existingOrder.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        List<OrderExchange> orders = existingOrder.get();
+        return ResponseEntity.ok(orders.stream().map(dataOrderExchange::fromExchange).toList());
     }
 
     @PutMapping("/{orderId}")
