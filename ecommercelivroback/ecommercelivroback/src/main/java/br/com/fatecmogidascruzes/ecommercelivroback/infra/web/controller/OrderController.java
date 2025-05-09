@@ -28,6 +28,7 @@ import br.com.fatecmogidascruzes.ecommercelivroback.business.order.orderExchange
 import br.com.fatecmogidascruzes.ecommercelivroback.business.order.orderExchange.OrderExchangeItem;
 import br.com.fatecmogidascruzes.ecommercelivroback.business.order.orderPayment.OrderPayment;
 import br.com.fatecmogidascruzes.ecommercelivroback.business.order.orderReturn.OrderReturn;
+import br.com.fatecmogidascruzes.ecommercelivroback.business.order.orderReturn.OrderReturnItem;
 import br.com.fatecmogidascruzes.ecommercelivroback.business.order.orderStatus.OrderStatus;
 import br.com.fatecmogidascruzes.ecommercelivroback.infra.DTO.dataOrder;
 import br.com.fatecmogidascruzes.ecommercelivroback.infra.DTO.dataOrderExchange;
@@ -41,6 +42,7 @@ import br.com.fatecmogidascruzes.ecommercelivroback.infra.persistence.OrderExcha
 import br.com.fatecmogidascruzes.ecommercelivroback.infra.persistence.OrderItemRepository;
 import br.com.fatecmogidascruzes.ecommercelivroback.infra.persistence.OrderPaymentRepository;
 import br.com.fatecmogidascruzes.ecommercelivroback.infra.persistence.OrderRepository;
+import br.com.fatecmogidascruzes.ecommercelivroback.infra.persistence.OrderReturnItemRepository;
 import br.com.fatecmogidascruzes.ecommercelivroback.infra.persistence.OrderReturnRepository;
 
 @RestController
@@ -68,6 +70,8 @@ public class OrderController {
     @Autowired
     private OrderReturnRepository orderReturnRepository;
 
+    @Autowired
+    private OrderReturnItemRepository orderReturnItemRepository;
     @Autowired
     private OrderExchangeRepository orderExchangeRepository;
 
@@ -174,39 +178,31 @@ public class OrderController {
 
         Order updateOrder = existingOrder.get();
         updateOrder.setStatus(OrderStatus.RETURN_REQUESTED.name());
-
         orderRepository.save(updateOrder);
 
         OrderReturn orderReturn = new OrderReturn();
         orderReturn.setOrderId(orderId);
-        List<Long> orderItemsId = new ArrayList<>(data.orderItemsId());
-        orderReturn.setOrderItemsId(orderItemsId);
 
-        List<OrderItem> orderItems = new ArrayList<>();
-
-        data.orderItemsId().forEach(itemId -> {
-            Optional<OrderItem> existingItem = orderItemRepository.findById(itemId);
-            if (existingItem.isEmpty()) {
-                return;
-            }
-            orderItems.add(existingItem.get());
-        });
-
-        orderReturn.setOrderItems(orderItems);
+        List<OrderReturnItem> orderReturnItems = new ArrayList<>(data.orderReturnItems());
 
         Cupom returnCupom = new Cupom();
         returnCupom.setValue(data.value());
-        returnCupom.setExpirationDate(new Timestamp(System.currentTimeMillis() +
-                3600000));
+        returnCupom.setExpirationDate(new Timestamp(System.currentTimeMillis() + 3600000L)); // 1 hour validity
         returnCupom.setCode("RETURN" + orderId);
-
         Cupom savedCupom = cupomRepository.save(returnCupom);
 
         orderReturn.setCupomId(savedCupom.getId());
 
-        OrderReturn savedReturn = orderReturnRepository.save(orderReturn);
+        OrderReturn savedOrderReturn = orderReturnRepository.save(orderReturn);
 
-        return ResponseEntity.ok(dataOrderReturn.fromReturn(savedReturn));
+        for (OrderReturnItem item : orderReturnItems) {
+            item.setOrderReturnId(savedOrderReturn.getId());
+        }
+        orderReturnItemRepository.saveAll(orderReturnItems);
+
+        savedOrderReturn.setOrderReturnItems(orderReturnItems);
+
+        return ResponseEntity.ok(dataOrderReturn.fromReturn(savedOrderReturn));
     }
 
     @GetMapping("/{orderId}/return")

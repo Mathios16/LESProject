@@ -2,11 +2,14 @@ package br.com.fatecmogidascruzes.ecommercelivroback.business.order.orderExchang
 
 import java.util.List;
 
+import br.com.fatecmogidascruzes.ecommercelivroback.business.order.cupom.Cupom;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -32,4 +35,11 @@ public class OrderExchange {
 
   @OneToMany(mappedBy = "orderExchangeId")
   private List<OrderExchangeItem> items;
+
+  @Column(name = "exc_cupom_id")
+  private Long cupomId;
+
+  @ManyToOne
+  @JoinColumn(name = "exc_cupom_id", insertable = false, updatable = false)
+  private Cupom cupom;
 }

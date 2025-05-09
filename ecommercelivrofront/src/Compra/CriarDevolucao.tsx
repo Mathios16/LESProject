@@ -12,7 +12,10 @@ import {
   CardMedia,
   Divider,
   FormControlLabel,
-  Checkbox
+  Checkbox,
+  InputLabel,
+  Input,
+  TextField
 } from '@mui/material';
 
 // Mock data interfaces
@@ -21,6 +24,7 @@ interface OrderItem {
   title: string;
   price: number;
   image: string;
+  quantity: number;
 }
 
 const CriarDevolucao: React.FC = () => {
@@ -66,18 +70,22 @@ const CriarDevolucao: React.FC = () => {
     }
   }, [orderId]);
 
-  const [selectedReturns, setSelectedReturns] = useState<number[]>([]);
+  const [selectedReturns, setSelectedReturns] = useState<OrderItem[]>([]);
 
-  const handleReturnSelection = (itemId: number) => {
-    setSelectedReturns(prev =>
-      prev.includes(itemId) ? prev.filter(id => id !== itemId) : [...prev, itemId]
-    );
+  const handleReturnSelection = (itemId: number, quantity: number) => {
+    const item = originalOrderItems.find(i => i.id === itemId);
+    if (!item) return;
+
+    if (quantity > 0) {
+      setSelectedReturns(prev => [...prev, item]);
+    } else {
+      setSelectedReturns(prev => prev.filter(i => i.id !== itemId));
+    }
   };
 
   const ReturnSummary = useMemo(() => {
     const totalOriginalValue = originalOrderItems.reduce((sum, item) => sum + item.price, 0);
-    const totalReturnValue = originalOrderItems.filter(item => selectedReturns.includes(item.id))
-      .reduce((sum, item) => sum + (item?.price || 0), 0);
+    const totalReturnValue = selectedReturns.reduce((sum, item) => sum + (item?.price || 0), 0);
 
     return {
       totalOriginalValue,
@@ -95,7 +103,7 @@ const CriarDevolucao: React.FC = () => {
         },
         body: JSON.stringify({
           orderId: orderId,
-          orderItemsId: Object.values(selectedReturns).filter(item => item !== null),
+          orderReturnItems: selectedReturns,
           value: ReturnSummary.totalReturnValue
         })
       });
@@ -141,14 +149,8 @@ const CriarDevolucao: React.FC = () => {
                     <Typography variant="body2">
                       Valor: R$ {originalItem.price.toFixed(2)}
                     </Typography>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          onChange={() => handleReturnSelection(originalItem.id)}
-                        />
-                      }
-                      label="Adicionar a Devolução"
-                    />
+                    <InputLabel>Quantidade</InputLabel>
+                    <TextField type="number" value={0} onChange={(e) => handleReturnSelection(originalItem.id, parseInt(e.target.value))} />
                   </Grid>
                 </Grid>
               </CardContent>
