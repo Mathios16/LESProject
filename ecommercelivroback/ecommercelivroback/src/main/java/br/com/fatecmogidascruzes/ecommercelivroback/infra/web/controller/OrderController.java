@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import br.com.fatecmogidascruzes.ecommercelivroback.business.customer.Customer;
 import br.com.fatecmogidascruzes.ecommercelivroback.business.order.Order;
 import br.com.fatecmogidascruzes.ecommercelivroback.business.order.OrderItem;
 import br.com.fatecmogidascruzes.ecommercelivroback.business.order.cart.Cart;
@@ -37,6 +38,7 @@ import br.com.fatecmogidascruzes.ecommercelivroback.infra.persistence.AddressRep
 import br.com.fatecmogidascruzes.ecommercelivroback.infra.persistence.CartItemRepository;
 import br.com.fatecmogidascruzes.ecommercelivroback.infra.persistence.CartRepository;
 import br.com.fatecmogidascruzes.ecommercelivroback.infra.persistence.CupomRepository;
+import br.com.fatecmogidascruzes.ecommercelivroback.infra.persistence.CustomerRepository;
 import br.com.fatecmogidascruzes.ecommercelivroback.infra.persistence.OrderExchangeItemRepository;
 import br.com.fatecmogidascruzes.ecommercelivroback.infra.persistence.OrderExchangeRepository;
 import br.com.fatecmogidascruzes.ecommercelivroback.infra.persistence.OrderItemRepository;
@@ -56,6 +58,9 @@ public class OrderController {
     private OrderItemRepository orderItemRepository;
 
     @Autowired
+    private CustomerRepository customerRepository;
+
+    @Autowired
     private AddressRepository addressRepository;
 
     @Autowired
@@ -72,6 +77,7 @@ public class OrderController {
 
     @Autowired
     private OrderReturnItemRepository orderReturnItemRepository;
+
     @Autowired
     private OrderExchangeRepository orderExchangeRepository;
 
@@ -96,6 +102,12 @@ public class OrderController {
 
         Order order = new Order();
         order.setCustomerId(customerId);
+
+        Optional<Customer> customer = customerRepository.findById(customerId);
+        if (customer.isPresent()) {
+            order.setCustomer(customer.get());
+        }
+
         if (data != null && data.addressId() != null) {
             order.setAddressId(data.addressId());
             order.setAddress(addressRepository.findById(data.addressId()).get());
@@ -146,6 +158,11 @@ public class OrderController {
 
         Optional<Cupom> remainingCoupon = order.verifyPayment();
 
+        if (remainingCoupon.isPresent()) {
+            cupomRepository.save(remainingCoupon.get());
+            order.setCupomId(remainingCoupon.get().getId());
+        }
+
         Order savedOrder = orderRepository.save(order);
 
         orderItems.forEach(orderItem -> {
@@ -156,14 +173,6 @@ public class OrderController {
             payment.setOrderId(savedOrder.getId());
         });
         orderPaymentRepository.saveAll(payments);
-        cupoms.forEach(cupom -> {
-            cupom.setOrderId(savedOrder.getId());
-        });
-        cupomRepository.saveAll(cupoms);
-
-        if (remainingCoupon.isPresent()) {
-            cupomRepository.save(remainingCoupon.get());
-        }
 
         return ResponseEntity.ok(dataOrder.fromOrder(savedOrder));
     }

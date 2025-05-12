@@ -18,7 +18,6 @@ import {
   TextField
 } from '@mui/material';
 
-// Mock data interfaces
 interface OrderItem {
   id: number;
   title: string;
@@ -84,8 +83,8 @@ const CriarDevolucao: React.FC = () => {
   };
 
   const ReturnSummary = useMemo(() => {
-    const totalOriginalValue = originalOrderItems.reduce((sum, item) => sum + item.price, 0);
-    const totalReturnValue = selectedReturns.reduce((sum, item) => sum + (item?.price || 0), 0);
+    const totalOriginalValue = originalOrderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const totalReturnValue = selectedReturns.reduce((sum, item) => sum + ((item?.price || 0) * (item?.quantity || 0)), 0);
 
     return {
       totalOriginalValue,

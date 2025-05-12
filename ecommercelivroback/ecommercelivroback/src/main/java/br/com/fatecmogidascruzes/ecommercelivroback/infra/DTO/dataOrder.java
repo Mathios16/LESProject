@@ -1,7 +1,6 @@
 package br.com.fatecmogidascruzes.ecommercelivroback.infra.DTO;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import br.com.fatecmogidascruzes.ecommercelivroback.business.order.Order;
@@ -11,7 +10,7 @@ import br.com.fatecmogidascruzes.ecommercelivroback.business.order.orderPayment.
 public record dataOrder(Long id, Long customerId, String customerName, Long addressId, String addressStreet,
                 List<OrderPayment> orderPayments,
                 List<Cupom> cupoms, Double freight, Double discount, Double subTotal, Double total, String status,
-                List<dataOrderItem> items, Optional<Cupom> remainingCoupon) {
+                List<dataOrderItem> items, Long cupomId) {
         public static dataOrder fromOrder(Order order) {
                 return new dataOrder(
                                 order.getId(),
@@ -29,6 +28,6 @@ public record dataOrder(Long id, Long customerId, String customerName, Long addr
                                 order.getItems().stream()
                                                 .map(dataOrderItem::fromOrderItem)
                                                 .collect(Collectors.toList()),
-                                order.verifyPayment());
+                                order.getCupomId());
         }
 }

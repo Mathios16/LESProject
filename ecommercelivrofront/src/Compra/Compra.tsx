@@ -276,25 +276,41 @@ const Compra: React.FC = () => {
   };
 
   const applyCupom = async (code: string) => {
-    const response = await fetch(`http://localhost:8080/cupom/${code}`, {
+    const response = await fetch(`http://localhost:8080/cupom/${code}/code`, {
       method: 'GET',
       credentials: 'include',
     });
+
+    if (!response.ok) {
+      setError('Erro ao buscar cupom.');
+      return;
+    }
 
     const cupomData = await response.json();
 
     if (cupomData.id && !cupoms.find(cupom => cupom.id === cupomData.id)) {
       setCupoms(prev => [...prev, cupomData]);
-      setDiscount(discount + cupomData.value);
+      setDiscount(prevDiscount => prevDiscount + cupomData.value);
       setSuccess('Cupom aplicado com sucesso!');
-    } else {
-      setError('Cupom inválido');
+      setCupomCode('');
+    } else if (cupoms.find(cupom => cupom.id === cupomData.id)) {
+      setError('Este cupom já foi aplicado.');
+    }
+    else {
+      setError('Cupom inválido ou expirado.');
     }
   };
 
-  const calculateTotal = () => {
-    return cartItems.reduce((total, item) => total + (item.price * item.quantity) + calculateShipping() - discount, 0);
-  };
+  const calculateSubtotalAndShipping = useCallback(() => {
+    const subtotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+    const shipping = calculateShipping();
+    return subtotal + shipping;
+  }, [cartItems, addresses, selectedDeliveryAddress]);
+
+  const calculateTotal = useCallback(() => {
+    const subtotalAndShipping = calculateSubtotalAndShipping();
+    return Math.max(0, subtotalAndShipping - discount);
+  }, [calculateSubtotalAndShipping, discount]);
 
   const handleAddOrderPayment = (id: number) => {
     const total = calculateTotal();
@@ -315,51 +331,67 @@ const Compra: React.FC = () => {
 
   const handleUpdateOrderPayment = (id: number, amount: number) => {
     const total = calculateTotal();
-    const currentPaymentCount = orderPayments.length - 1;
-    const equalAmount = ((total - amount) / currentPaymentCount).toFixed(2);
+    const remainingPayments = orderPayments.filter(p => p.paymentMethodId !== id);
+    const currentPaymentCount = remainingPayments.length;
 
-    setOrderPayments(prev => [
-      ...prev.map(payment => (payment.paymentMethodId === id ?
-        {
-          ...payment,
-          amount: Number(amount.toFixed(2))
-        } : {
-          ...payment,
-          amount: Number(equalAmount)
-        }))
-    ]);
+    const validAmount = Math.max(0, Number(amount) || 0);
+    const amountToDistribute = total - validAmount;
+
+    const equalAmount = currentPaymentCount > 0
+      ? Math.max(0, amountToDistribute / currentPaymentCount)
+      : 0;
+
+    setOrderPayments(prev =>
+      prev.map(payment => {
+        if (payment.paymentMethodId === id) {
+          return { ...payment, amount: Number(validAmount.toFixed(2)) };
+        } else if (remainingPayments.some(p => p.paymentMethodId === payment.paymentMethodId)) {
+          return { ...payment, amount: Number(equalAmount.toFixed(2)) };
+        }
+        return payment;
+      })
+    );
   };
 
   const handleRemoveOrderPayment = (id: number) => {
+    const updatedPayments = orderPayments.filter(payment => payment.paymentMethodId !== id);
     const total = calculateTotal();
-    const currentPaymentCount = orderPayments.length - 1;
-    const equalAmount = (total / currentPaymentCount).toFixed(2);
-    setOrderPayments(prev => prev.filter(payment => payment.paymentMethodId !== id));
-    setOrderPayments(prev => [
-      ...prev.map(payment => ({
-        ...payment,
-        amount: Number(equalAmount)
-      }))
-    ]);
+    const currentPaymentCount = updatedPayments.length;
+
+    if (currentPaymentCount > 0) {
+      const equalAmount = (total / currentPaymentCount).toFixed(2);
+      setOrderPayments(
+        updatedPayments.map(payment => ({
+          ...payment,
+          amount: Number(equalAmount)
+        }))
+      );
+    } else {
+      setOrderPayments([]);
+    }
   };
 
-  const handleRecalculateOrderPayment = () => {
+  const handleRecalculateOrderPayment = useCallback(() => {
     const total = calculateTotal();
     const currentPaymentCount = orderPayments.length;
-    const equalAmount = (total / currentPaymentCount).toFixed(2);
+    if (currentPaymentCount > 0) {
+      const equalAmount = (total / currentPaymentCount).toFixed(2);
+      setOrderPayments(prev =>
+        prev.map(payment => ({
+          ...payment,
+          amount: Number(equalAmount)
+        }))
+      );
+    }
+  }, [orderPayments, calculateTotal]);
 
-    setOrderPayments(prev => [
-      ...prev.map(payment => ({
-        ...payment,
-        amount: Number(equalAmount)
-      }))
-    ]);
-  };
-
-  const handleRemoveItem = (id: number) => {
+  const handleRemoveItem = useCallback((id: number) => {
     setCartItems(prev => prev.filter(item => item.id !== id));
+  }, []);
+
+  useEffect(() => {
     handleRecalculateOrderPayment();
-  };
+  }, [cartItems, handleRecalculateOrderPayment]);
 
   const handleUpdateAddress = async (address: Address) => {
     let response = await fetch(`http://localhost:8080/customers/${userId}`, {
@@ -406,24 +438,80 @@ const Compra: React.FC = () => {
   };
 
   const handleSubmit = async () => {
+    const subtotalAndShipping = calculateSubtotalAndShipping();
+    const finalTotal = calculateTotal();
+    const isCoveredByCoupon = discount >= subtotalAndShipping;
+    const remainingCouponValue = Math.max(0, discount - subtotalAndShipping);
 
-    let response = await fetch(`http://localhost:8080/order/${userId}`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        addressId: selectedDeliveryAddress,
-        orderPayments: orderPayments,
-        cupoms: cupoms
-      })
-    });
+    if (!selectedDeliveryAddress) {
+      setError("Por favor, selecione um endereço de entrega.");
+      return;
+    }
 
-    const orderData = await response.json();
-    setSuccess(orderData);
-    navigate(`/${type || id ? `?type=${type}&id=${id}` : ''}`);
+    if (!isCoveredByCoupon && orderPayments.length === 0) {
+      setError("Por favor, adicione um método de pagamento.");
+      return;
+    }
+
+    if (!isCoveredByCoupon) {
+      const paymentSum = orderPayments.reduce((sum, payment) => sum + payment.amount, 0);
+      if (Math.abs(paymentSum - finalTotal) > 0.01) {
+        setError(`A soma dos pagamentos (R$ ${paymentSum.toFixed(2)}) não corresponde ao total do pedido (R$ ${finalTotal.toFixed(2)}).`);
+        return;
+      }
+      if (orderPayments.some(p => p.amount < 0)) {
+        setError("O valor do pagamento não pode ser negativo.");
+        return;
+      }
+    }
+
+    try {
+      const response = await fetch(`http://localhost:8080/order/${userId}`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          addressId: selectedDeliveryAddress,
+          orderPayments: isCoveredByCoupon ? [] : orderPayments,
+          cupoms: cupoms
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Falha ao confirmar o pedido.');
+      }
+
+      const orderData = await response.json();
+
+      let successMessage = "Pedido confirmado com sucesso!";
+      if (isCoveredByCoupon && remainingCouponValue > 0) {
+        successMessage += ` Valor do cupom gerado: R$ ${remainingCouponValue.toFixed(2)}`;
+      }
+
+      setSuccess(successMessage);
+      setCartItems([]);
+      setCupoms([]);
+      setDiscount(0);
+      setOrderPayments([]);
+
+      setTimeout(() => {
+        navigate(`/${type || id ? `?type=${type}&id=${id}` : ''}`);
+      }, 3000);
+
+    } catch (error) {
+      console.error('Error submitting order:', error);
+      setError(error instanceof Error ? error.message : 'Ocorreu um erro desconhecido.');
+    }
   };
+
+  const subtotalAndShipping = calculateSubtotalAndShipping();
+  const finalTotal = calculateTotal();
+  const isCoveredByCoupon = discount >= subtotalAndShipping;
+  const paymentSum = orderPayments.reduce((sum, payment) => sum + payment.amount, 0);
+  const isPaymentSumCorrect = Math.abs(paymentSum - finalTotal) < 0.01;
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
@@ -470,12 +558,11 @@ const Compra: React.FC = () => {
               Frete: R$ {calculateShipping().toFixed(2)}
             </Typography>
             <Typography variant="h6" align="right">
-              Total: R$ {calculateTotal().toFixed(2)}
+              Total: R$ {finalTotal.toFixed(2)}
             </Typography>
           </Paper>
         </Grid>
         <Grid item xs={12} md={4}>
-          {/* Delivery Address */}
           <Paper elevation={3} sx={{ p: 2, mb: 2 }}>
             <Box display="flex" justifyContent="space-between" alignItems="center">
               <Typography variant="h6">Endereço de Entrega</Typography>
@@ -523,8 +610,8 @@ const Compra: React.FC = () => {
                         <TextField
                           type="number"
                           value={orderPayment.amount.toFixed(2)}
-                          onChange={(e) => handleUpdateOrderPayment(orderPayment.paymentMethodId, parseInt(e.target.value))}
-                          inputProps={{ min: 1 }}
+                          onChange={(e) => handleUpdateOrderPayment(orderPayment.paymentMethodId, parseFloat(e.target.value))}
+                          inputProps={{ min: 0, step: "0.01" }}
                           size="small"
                         />
                         <IconButton size="small" onClick={() => handleRemoveOrderPayment(orderPayment.paymentMethodId)}>
@@ -549,37 +636,41 @@ const Compra: React.FC = () => {
                 value={cupomCode}
                 onChange={(e) => setCupomCode(e.target.value)}
                 size="small"
+                disabled={isCoveredByCoupon}
               />
-              <IconButton onClick={() => applyCupom(cupomCode)}>
-                <Button
-                  variant="contained"
-                  disabled={!cupomCode}
-                >
-                  Aplicar
-                </Button>
-              </IconButton>
+              <Button
+                variant="contained"
+                onClick={() => applyCupom(cupomCode)}
+                disabled={!cupomCode || isCoveredByCoupon}
+              >
+                Aplicar
+              </Button>
             </Box>
+            {isCoveredByCoupon && (
+              <Typography variant="body2" color="success.main" sx={{ mt: 1 }}>
+                O valor do cupom cobre o total da compra. Nenhum pagamento adicional é necessário.
+                <br />
+                Cupom gerado: {Math.abs(subtotalAndShipping - discount).toFixed(2)}
+              </Typography>
+            )}
           </Paper>
         </Grid>
       </Grid>
 
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-        <IconButton onClick={handleSubmit}>
-          <Button
-            id="submit-order-button"
-            variant="contained"
-            color="primary"
-            size="large"
-            disabled={
-              !selectedDeliveryAddress
-              || !orderPayments.length
-              || orderPayments.reduce((total, payment) => total + payment.amount, 0) !== Number(calculateTotal().toFixed(2))
-              || (orderPayments.some(payment => payment.amount < 10) && cupoms.reduce((total, cupom) => total + cupom.value, 0) <= calculateTotal() - 10)
-            }
-          >
-            Confirmar Pedido
-          </Button>
-        </IconButton>
+        <Button
+          id="submit-order-button"
+          variant="contained"
+          color="primary"
+          size="large"
+          onClick={handleSubmit}
+          disabled={
+            !selectedDeliveryAddress ||
+            (!isCoveredByCoupon && (!orderPayments.length || !isPaymentSumCorrect))
+          }
+        >
+          Confirmar Pedido
+        </Button>
       </Box>
 
       <Modal
@@ -858,7 +949,7 @@ const Compra: React.FC = () => {
               <FormControlLabel
                 control={
                   <Checkbox
-                  id="primary"
+                    id="primary"
                     checked={currentPayment.primary}
                     onChange={(e) => setCurrentPayment(prev => ({ ...prev, primary: e.target.checked }))}
                   />

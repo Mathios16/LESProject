@@ -56,6 +56,9 @@ public class Order {
     @OneToMany(mappedBy = "orderId")
     private List<Cupom> cupoms;
 
+    @Column(name = "ord_cupom_id")
+    private Long cupomId;
+
     @OneToMany(mappedBy = "orderId")
     private List<OrderItem> items;
 
@@ -127,7 +130,8 @@ public class Order {
             totalCreditCardPayment += payment.getAmount();
         }
 
-        if (Math.round(totalCreditCardPayment * 100.0) / 100.0 < this.getTotal()) {
+        if (Math.round(totalCreditCardPayment * 100.0) / 100.0 < this.getTotal()
+                && totalCouponValue < this.getTotal()) {
             this.status = OrderStatus.REPROVED.name();
             throw new IllegalArgumentException("Valor de pagamento insuficiente");
         }
