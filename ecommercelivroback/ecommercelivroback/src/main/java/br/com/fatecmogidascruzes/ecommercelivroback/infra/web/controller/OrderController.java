@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import br.com.fatecmogidascruzes.ecommercelivroback.business.item.Item;
 import br.com.fatecmogidascruzes.ecommercelivroback.business.order.Order;
 import br.com.fatecmogidascruzes.ecommercelivroback.business.order.OrderItem;
 import br.com.fatecmogidascruzes.ecommercelivroback.business.order.cart.Cart;
@@ -36,6 +37,7 @@ import br.com.fatecmogidascruzes.ecommercelivroback.infra.persistence.AddressRep
 import br.com.fatecmogidascruzes.ecommercelivroback.infra.persistence.CartItemRepository;
 import br.com.fatecmogidascruzes.ecommercelivroback.infra.persistence.CartRepository;
 import br.com.fatecmogidascruzes.ecommercelivroback.infra.persistence.CupomRepository;
+import br.com.fatecmogidascruzes.ecommercelivroback.infra.persistence.ItemRepository;
 import br.com.fatecmogidascruzes.ecommercelivroback.infra.persistence.OrderExchangeItemRepository;
 import br.com.fatecmogidascruzes.ecommercelivroback.infra.persistence.OrderExchangeRepository;
 import br.com.fatecmogidascruzes.ecommercelivroback.infra.persistence.OrderItemRepository;
@@ -52,6 +54,9 @@ public class OrderController {
 
     @Autowired
     private OrderItemRepository orderItemRepository;
+
+    @Autowired
+    private ItemRepository itemRepository;
 
     @Autowired
     private AddressRepository addressRepository;
@@ -132,6 +137,8 @@ public class OrderController {
 
         items.forEach(item -> {
             OrderItem orderItem = new OrderItem();
+            Optional<Item> itemEntity = itemRepository.findById(item.getItemId());
+            orderItem.setItem(itemEntity.get());
             orderItem.setItemId(item.getItemId());
             orderItem.setQuantity(item.getQuantity());
             orderItem.setPrice(item.getPrice());
