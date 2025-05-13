@@ -20,6 +20,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import br.com.fatecmogidascruzes.ecommercelivroback.business.customer.Customer;
+import br.com.fatecmogidascruzes.ecommercelivroback.business.item.Item;
 import br.com.fatecmogidascruzes.ecommercelivroback.business.order.Order;
 import br.com.fatecmogidascruzes.ecommercelivroback.business.order.OrderItem;
 import br.com.fatecmogidascruzes.ecommercelivroback.business.order.cart.Cart;
@@ -39,6 +40,7 @@ import br.com.fatecmogidascruzes.ecommercelivroback.infra.persistence.CartItemRe
 import br.com.fatecmogidascruzes.ecommercelivroback.infra.persistence.CartRepository;
 import br.com.fatecmogidascruzes.ecommercelivroback.infra.persistence.CupomRepository;
 import br.com.fatecmogidascruzes.ecommercelivroback.infra.persistence.CustomerRepository;
+import br.com.fatecmogidascruzes.ecommercelivroback.infra.persistence.ItemRepository;
 import br.com.fatecmogidascruzes.ecommercelivroback.infra.persistence.OrderExchangeItemRepository;
 import br.com.fatecmogidascruzes.ecommercelivroback.infra.persistence.OrderExchangeRepository;
 import br.com.fatecmogidascruzes.ecommercelivroback.infra.persistence.OrderItemRepository;
@@ -86,6 +88,9 @@ public class OrderController {
 
     @Autowired
     private CupomRepository cupomRepository;
+
+    @Autowired
+    private ItemRepository itemRepository;
 
     @PostMapping("/{customerId}")
     public ResponseEntity<?> createOrder(@PathVariable Long customerId, @RequestBody dataOrder data) {
@@ -146,11 +151,17 @@ public class OrderController {
 
         List<OrderItem> orderItems = new ArrayList<>();
 
-        items.forEach(item -> {
+        items.forEach(cartItem -> {
+            Optional<Item> itemEntityOpt = itemRepository.findById(cartItem.getItemId());
+            if (itemEntityOpt.isEmpty())
+                return;
+            Item actualItem = itemEntityOpt.get();
+
             OrderItem orderItem = new OrderItem();
-            orderItem.setItemId(item.getItemId());
-            orderItem.setQuantity(item.getQuantity());
-            orderItem.setPrice(item.getPrice());
+            orderItem.setItem(actualItem);
+            orderItem.setItemId(actualItem.getId());
+            orderItem.setQuantity(cartItem.getQuantity());
+            orderItem.setPrice(actualItem.getPrice());
             orderItems.add(orderItem);
         });
 
@@ -234,6 +245,16 @@ public class OrderController {
             return ResponseEntity.notFound().build();
         }
 
+        Optional<Cart> existingCart = cartRepository.findByCustomerId(existingOrder.get().getCustomerId());
+        if (existingCart.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        List<CartItem> orderItems = cartItemRepository.findByCartId(existingCart.get().getId());
+        if (orderItems.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
         Order updateOrder = existingOrder.get();
         updateOrder.setStatus(OrderStatus.EXCHANGE_REQUESTED.name());
 
@@ -241,7 +262,8 @@ public class OrderController {
 
         OrderExchange orderExchange = new OrderExchange();
         orderExchange.setOrderId(orderId);
-        orderExchange.setOrderItemsId(data.orderItemsId());
+        orderExchange.setOrderItems(data.orderItems());
+        orderExchange.setAddressId(data.addressId());
 
         List<OrderExchangeItem> items = new ArrayList<>();
 
@@ -253,15 +275,28 @@ public class OrderController {
             items.add(orderExchangeItem);
         });
 
-        orderExchange.setItems(items);
+        List<OrderPayment> payments = new ArrayList<>();
 
+        data.orderPayments().forEach(payment -> {
+            OrderPayment orderPayment = new OrderPayment();
+            orderPayment.setAmount(payment.getAmount());
+            payments.add(orderPayment);
+        });
+
+        orderExchange.setItems(items);
+        orderExchange.setPayments(payments);
         OrderExchange savedExchange = orderExchangeRepository.save(orderExchange);
 
         items.forEach(item -> {
             item.setOrderExchangeId(savedExchange.getId());
         });
 
+        payments.forEach(payment -> {
+            payment.setOrderExchangeId(savedExchange.getId());
+        });
+
         orderExchangeItemRepository.saveAll(items);
+        orderPaymentRepository.saveAll(payments);
 
         return ResponseEntity.ok(dataOrderExchange.fromExchange(savedExchange));
     }

@@ -1,8 +1,11 @@
 package br.com.fatecmogidascruzes.ecommercelivroback.business.order.orderExchange;
 
+import java.sql.Timestamp;
 import java.util.List;
 
+import br.com.fatecmogidascruzes.ecommercelivroback.business.address.Address;
 import br.com.fatecmogidascruzes.ecommercelivroback.business.order.cupom.Cupom;
+import br.com.fatecmogidascruzes.ecommercelivroback.business.order.orderPayment.OrderPayment;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -30,8 +33,18 @@ public class OrderExchange {
   @Column(name = "exc_order_id")
   private Long orderId;
 
-  @Column(name = "exc_order_items_id")
-  private List<Long> orderItemsId;
+  @Column(name = "exc_address_id")
+  private Long addressId;
+
+  @ManyToOne
+  @JoinColumn(name = "exc_address_id", insertable = false, updatable = false)
+  private Address address;
+
+  @OneToMany(mappedBy = "orderExchangeId")
+  private List<OrderPayment> payments;
+
+  @OneToMany(mappedBy = "orderExchangeId")
+  private List<OrderExchangedItem> orderItems;
 
   @OneToMany(mappedBy = "orderExchangeId")
   private List<OrderExchangeItem> items;
