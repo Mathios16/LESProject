@@ -10,5 +10,5 @@ import br.com.fatecmogidascruzes.ecommercelivroback.business.order.orderReturn.O
 
 @Repository
 public interface OrderReturnRepository extends JpaRepository<OrderReturn, Long> {
-  Optional<OrderReturn> findByOrderId(Long orderId);
+  Optional<List<OrderReturn>> findByOrderId(Long orderId);
 }

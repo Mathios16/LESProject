@@ -29,4 +29,7 @@ public class OrderPayment {
 
     @Column(name = "orp_order_id", nullable = false)
     private Long orderId;
+
+    @Column(name = "orp_order_exchange_id")
+    private Long orderExchangeId;
 }

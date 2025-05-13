@@ -31,6 +31,7 @@ interface Order {
   items: OrderItem[];
   subTotal: number;
   total: number;
+  cupomId: number;
 }
 
 const VerPedidos: React.FC = () => {
@@ -116,7 +117,44 @@ const VerPedidos: React.FC = () => {
         credentials: 'include',
       });
       const data = await response.json();
-      return data.cupom.code ?? '';
+      if (data[0].cupom) {
+        return data[0].cupom.code;
+      }
+      return '';
+    } catch (error) {
+      console.error('Erro ao buscar pedidos:', error);
+      return '';
+    }
+  };
+
+  const getExchangeCupom = async (orderId: number) => {
+    try {
+      const response = await fetch(`http://localhost:8080/order/${orderId}/exchange`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+      const data = await response.json();
+      if (data) {
+        return data.code;
+      }
+      return '';
+    } catch (error) {
+      console.error('Erro ao buscar pedidos:', error);
+      return '';
+    }
+  };
+
+  const getCupom = async (cupomId: number) => {
+    try {
+      const response = await fetch(`http://localhost:8080/cupom/${cupomId}/id`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+      const data = await response.json();
+      if (data) {
+        return data.code;
+      }
+      return '';
     } catch (error) {
       console.error('Erro ao buscar pedidos:', error);
       return '';
@@ -125,17 +163,29 @@ const VerPedidos: React.FC = () => {
 
   const [cupomValues, setCupomValues] = useState<Record<number, string>>({});
 
-  const loadCupomValue = async (orderId: number) => {
-    const value = await getReturnCupom(orderId);
-    setCupomValues(prev => ({ ...prev, [orderId]: value }));
+  const loadCupomValue = async (id: number) => {
+    const value = await getReturnCupom(id);
+    if (value) {
+      console.log(value);
+      setCupomValues(prev => ({ ...prev, [id]: value }));
+    }
+    const exchangeValue = await getExchangeCupom(id);
+    if (exchangeValue) {
+      setCupomValues(prev => ({ ...prev, [id]: exchangeValue }));
+    }
+    const cupomValue = orders.find(order => order.id === id)?.cupomId;
+    if (cupomValue) {
+      const cupom = await getCupom(cupomValue);
+      if (cupom) {
+        setCupomValues(prev => ({ ...prev, [id]: cupom }));
+      }
+    }
   };
 
   useEffect(() => {
     if (orders) {
       orders.forEach(order => {
-        if (order.status === 'RETURN_COMPLETED') {
-          loadCupomValue(order.id);
-        }
+        loadCupomValue(order.id);
       });
     }
   }, [orders]);
@@ -199,6 +249,20 @@ const VerPedidos: React.FC = () => {
                 <>
                   <Typography variant="h6">
                     Cupom de devolução: {cupomValues[order.id] || 'Carregando...'}
+                  </Typography>
+                </>
+              )}
+              {order.status === 'EXCHANGE_COMPLETED' && (
+                <>
+                  <Typography variant="h6">
+                    Cupom de troca: {cupomValues[order.id] || 'Carregando...'}
+                  </Typography>
+                </>
+              )}
+              {order.cupomId && (
+                <>
+                  <Typography variant="h6">
+                    Cupom de pedido: {cupomValues[order.id] || 'Carregando...'}
                   </Typography>
                 </>
               )}

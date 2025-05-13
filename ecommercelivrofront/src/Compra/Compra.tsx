@@ -16,7 +16,6 @@ import {
   Radio,
   IconButton,
   TextField,
-  TableCell,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -27,7 +26,10 @@ import {
   FormGroup,
   MenuItem,
   Snackbar,
-  Alert
+  Alert,
+  Card,
+  CardContent,
+  CardMedia
 } from '@mui/material';
 import { Plus, Pencil, Trash, X } from '@phosphor-icons/react';
 
@@ -276,25 +278,41 @@ const Compra: React.FC = () => {
   };
 
   const applyCupom = async (code: string) => {
-    const response = await fetch(`http://localhost:8080/cupom/${code}`, {
+    const response = await fetch(`http://localhost:8080/cupom/${code}/code`, {
       method: 'GET',
       credentials: 'include',
     });
+
+    if (!response.ok) {
+      setError('Erro ao buscar cupom.');
+      return;
+    }
 
     const cupomData = await response.json();
 
     if (cupomData.id && !cupoms.find(cupom => cupom.id === cupomData.id)) {
       setCupoms(prev => [...prev, cupomData]);
-      setDiscount(discount + cupomData.value);
+      setDiscount(prevDiscount => prevDiscount + cupomData.value);
       setSuccess('Cupom aplicado com sucesso!');
-    } else {
-      setError('Cupom inválido');
+      setCupomCode('');
+    } else if (cupoms.find(cupom => cupom.id === cupomData.id)) {
+      setError('Este cupom já foi aplicado.');
+    }
+    else {
+      setError('Cupom inválido ou expirado.');
     }
   };
 
-  const calculateTotal = () => {
-    return cartItems.reduce((total, item) => total + (item.price * item.quantity) + calculateShipping() - discount, 0);
-  };
+  const calculateSubtotalAndShipping = useCallback(() => {
+    const subtotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+    const shipping = calculateShipping();
+    return subtotal + shipping;
+  }, [cartItems, addresses, selectedDeliveryAddress]);
+
+  const calculateTotal = useCallback(() => {
+    const subtotalAndShipping = calculateSubtotalAndShipping();
+    return Math.max(0, subtotalAndShipping - discount);
+  }, [calculateSubtotalAndShipping, discount]);
 
   const handleAddOrderPayment = (id: number) => {
     const total = calculateTotal();
@@ -315,51 +333,74 @@ const Compra: React.FC = () => {
 
   const handleUpdateOrderPayment = (id: number, amount: number) => {
     const total = calculateTotal();
-    const currentPaymentCount = orderPayments.length - 1;
-    const equalAmount = ((total - amount) / currentPaymentCount).toFixed(2);
+    const remainingPayments = orderPayments.filter(p => p.paymentMethodId !== id);
+    const currentPaymentCount = remainingPayments.length;
 
-    setOrderPayments(prev => [
-      ...prev.map(payment => (payment.paymentMethodId === id ?
-        {
-          ...payment,
-          amount: Number(amount.toFixed(2))
-        } : {
-          ...payment,
-          amount: Number(equalAmount)
-        }))
-    ]);
+    const validAmount = Math.max(0, Number(amount) || 0);
+    const amountToDistribute = total - validAmount;
+
+    const equalAmount = currentPaymentCount > 0
+      ? Math.max(0, amountToDistribute / currentPaymentCount)
+      : 0;
+
+    setOrderPayments(prev =>
+      prev.map(payment => {
+        if (payment.paymentMethodId === id) {
+          return { ...payment, amount: Number(validAmount.toFixed(2)) };
+        } else if (remainingPayments.some(p => p.paymentMethodId === payment.paymentMethodId)) {
+          return { ...payment, amount: Number(equalAmount.toFixed(2)) };
+        }
+        return payment;
+      })
+    );
   };
 
   const handleRemoveOrderPayment = (id: number) => {
+    const updatedPayments = orderPayments.filter(payment => payment.paymentMethodId !== id);
     const total = calculateTotal();
-    const currentPaymentCount = orderPayments.length - 1;
-    const equalAmount = (total / currentPaymentCount).toFixed(2);
-    setOrderPayments(prev => prev.filter(payment => payment.paymentMethodId !== id));
-    setOrderPayments(prev => [
-      ...prev.map(payment => ({
-        ...payment,
-        amount: Number(equalAmount)
-      }))
-    ]);
+    const currentPaymentCount = updatedPayments.length;
+
+    if (currentPaymentCount > 0) {
+      const equalAmount = (total / currentPaymentCount).toFixed(2);
+      setOrderPayments(
+        updatedPayments.map(payment => ({
+          ...payment,
+          amount: Number(equalAmount)
+        }))
+      );
+    } else {
+      setOrderPayments([]);
+    }
   };
 
-  const handleRecalculateOrderPayment = () => {
+  const handleRecalculateOrderPayment = useCallback(() => {
     const total = calculateTotal();
-    const currentPaymentCount = orderPayments.length;
-    const equalAmount = (total / currentPaymentCount).toFixed(2);
+    setOrderPayments(prevOrderPayments => {
+      if (prevOrderPayments.length === 0) {
+        return prevOrderPayments;
+      }
+      const currentPaymentCount = prevOrderPayments.length;
+      const equalAmount = (total / currentPaymentCount).toFixed(2);
+      const needsUpdate = prevOrderPayments.some(p => p.amount.toFixed(2) !== equalAmount);
+      if (needsUpdate) {
+        return prevOrderPayments.map(payment => ({
+          ...payment,
+          amount: Number(equalAmount)
+        }));
+      }
+      return prevOrderPayments;
+    });
+  }, [calculateTotal]);
 
-    setOrderPayments(prev => [
-      ...prev.map(payment => ({
-        ...payment,
-        amount: Number(equalAmount)
-      }))
-    ]);
-  };
-
-  const handleRemoveItem = (id: number) => {
+  const handleRemoveItem = useCallback((id: number) => {
     setCartItems(prev => prev.filter(item => item.id !== id));
-    handleRecalculateOrderPayment();
-  };
+  }, []);
+
+  useEffect(() => {
+    if (orderPayments.length > 0) {
+      handleRecalculateOrderPayment();
+    }
+  }, [handleRecalculateOrderPayment]);
 
   const handleUpdateAddress = async (address: Address) => {
     let response = await fetch(`http://localhost:8080/customers/${userId}`, {
@@ -406,24 +447,80 @@ const Compra: React.FC = () => {
   };
 
   const handleSubmit = async () => {
+    const subtotalAndShipping = calculateSubtotalAndShipping();
+    const finalTotal = calculateTotal();
+    const isCoveredByCoupon = discount >= subtotalAndShipping;
+    const remainingCouponValue = Math.max(0, discount - subtotalAndShipping);
 
-    let response = await fetch(`http://localhost:8080/order/${userId}`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        addressId: selectedDeliveryAddress,
-        orderPayments: orderPayments,
-        cupoms: cupoms
-      })
-    });
+    if (!selectedDeliveryAddress) {
+      setError("Por favor, selecione um endereço de entrega.");
+      return;
+    }
 
-    const orderData = await response.json();
-    setSuccess(orderData);
-    navigate(`/${type || id ? `?type=${type}&id=${id}` : ''}`);
+    if (!isCoveredByCoupon && orderPayments.length === 0) {
+      setError("Por favor, adicione um método de pagamento.");
+      return;
+    }
+
+    if (!isCoveredByCoupon) {
+      const paymentSum = orderPayments.reduce((sum, payment) => sum + payment.amount, 0);
+      if (Math.abs(paymentSum - finalTotal) > 0.01) {
+        setError(`A soma dos pagamentos (R$ ${paymentSum.toFixed(2)}) não corresponde ao total do pedido (R$ ${finalTotal.toFixed(2)}).`);
+        return;
+      }
+      if (orderPayments.some(p => p.amount < 0)) {
+        setError("O valor do pagamento não pode ser negativo.");
+        return;
+      }
+    }
+
+    try {
+      const response = await fetch(`http://localhost:8080/order/${userId}`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          addressId: selectedDeliveryAddress,
+          orderPayments: isCoveredByCoupon ? [] : orderPayments,
+          cupoms: cupoms
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Falha ao confirmar o pedido.');
+      }
+
+      const orderData = await response.json();
+
+      let successMessage = "Pedido confirmado com sucesso!";
+      if (isCoveredByCoupon && remainingCouponValue > 0) {
+        successMessage += ` Valor do cupom gerado: R$ ${remainingCouponValue.toFixed(2)}`;
+      }
+
+      setSuccess(successMessage);
+      setCartItems([]);
+      setCupoms([]);
+      setDiscount(0);
+      setOrderPayments([]);
+
+      setTimeout(() => {
+        navigate(`/${type || id ? `?type=${type}&id=${id}` : ''}`);
+      }, 3000);
+
+    } catch (error) {
+      console.error('Error submitting order:', error);
+      setError(error instanceof Error ? error.message : 'Ocorreu um erro desconhecido.');
+    }
   };
+
+  const subtotalAndShipping = calculateSubtotalAndShipping();
+  const finalTotal = calculateTotal();
+  const isCoveredByCoupon = discount >= subtotalAndShipping;
+  const paymentSum = orderPayments.reduce((sum, payment) => sum + payment.amount, 0);
+  const isPaymentSumCorrect = Math.abs(paymentSum - finalTotal) < 0.01;
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
@@ -432,154 +529,189 @@ const Compra: React.FC = () => {
       </Typography>
 
       <Grid container spacing={3}>
-        <Grid item xs={12} md={8}>
-          <Paper elevation={3} sx={{ p: 2 }}>
+        <Grid item xs={12} md={7}>
+          <Paper elevation={3} sx={{ p: 2, mb: 3 }}>
             <Typography variant="h6" gutterBottom>
               Itens do Carrinho
             </Typography>
+            {cartItems.length === 0 && <Typography sx={{ my: 2 }}>Seu carrinho está vazio.</Typography>}
             {cartItems.map((item) => (
-              <Box key={item.id} display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <img
-                      src={item.image}
-                      alt={item.title}
-                      style={{ width: '50px', height: '50px', objectFit: 'cover' }}
-                    />
-                    <span>{item.title}</span>
+              <Card key={item.id} sx={{ display: 'flex', alignItems: 'center', mb: 2, p: 1 }}>
+                <CardMedia
+                  component="img"
+                  sx={{ width: 80, height: 80, objectFit: 'contain', mr: 2 }}
+                  image={item.image}
+                  alt={item.title}
+                />
+                <CardContent sx={{ flexGrow: 1, p: '0 !important' }}>
+                  <Box display="flex" justifyContent="space-between" alignItems="flex-start">
+                    <Box>
+                      <Typography variant="subtitle1" component="div">
+                        {item.title}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {item.quantity} x R$ {item.price.toFixed(2)}
+                      </Typography>
+                      <Typography variant="body2">
+                        Subtotal: R$ {(item.price * item.quantity).toFixed(2)}
+                      </Typography>
+                    </Box>
+                    <IconButton size="small" onClick={() => handleRemoveItem(item.id)} sx={{ mt: -1, mr: -1 }}>
+                      <Trash />
+                    </IconButton>
                   </Box>
-                </TableCell>
-                <Box display="flex" alignItems="center">
-                  <Typography>
-                    {item.quantity} x R$ {item.price.toFixed(2)}
-                    <br />
-                    Subtotal: R$ {(item.price * item.quantity).toFixed(2)}
-                  </Typography>
-
-                  <IconButton size="small" onClick={() => handleRemoveItem(item.id)}>
-                    <Trash />
-                  </IconButton>
-                </Box>
-              </Box>
+                </CardContent>
+              </Card>
             ))}
-            <Divider sx={{ my: 2 }} />
-            <Typography align="right">
-              Desconto: R$ {discount.toFixed(2)}
-            </Typography>
-            <Typography align="right">
-              Frete: R$ {calculateShipping().toFixed(2)}
-            </Typography>
-            <Typography variant="h6" align="right">
-              Total: R$ {calculateTotal().toFixed(2)}
-            </Typography>
+            {cartItems.length > 0 && <Divider sx={{ my: 2 }} />}
+            <Box sx={{ textAlign: 'right' }}>
+              <Typography>
+                Desconto: R$ {discount.toFixed(2)}
+              </Typography>
+              <Typography>
+                Frete: R$ {calculateShipping().toFixed(2)}
+              </Typography>
+              <Typography variant="h6" sx={{ mt: 1 }}>
+                Total: R$ {finalTotal.toFixed(2)}
+              </Typography>
+            </Box>
           </Paper>
         </Grid>
-        <Grid item xs={12} md={4}>
-          {/* Delivery Address */}
-          <Paper elevation={3} sx={{ p: 2, mb: 2 }}>
-            <Box display="flex" justifyContent="space-between" alignItems="center">
+
+        <Grid item xs={12} md={5}>
+          <Paper elevation={3} sx={{ p: 2, mb: 3 }}>
+            <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
               <Typography variant="h6">Endereço de Entrega</Typography>
-              <IconButton id="add-new-address-button" size="small" onClick={() => setIsAddressModalOpen(true)}>
-                Novo<Plus />
-              </IconButton>
+              <Button id="add-new-address-button" size="small" startIcon={<Plus />} onClick={() => setIsAddressModalOpen(true)}>
+                Novo
+              </Button>
             </Box>
             <FormControl component="fieldset" fullWidth>
               <RadioGroup
                 value={selectedDeliveryAddress}
-                onChange={(e) => setSelectedDeliveryAddress(Number(e.target.value))}
+                onChange={(e) => {
+                  setSelectedDeliveryAddress(Number(e.target.value));
+                  handleRecalculateOrderPayment();
+                }}
               >
                 {addresses.map((address) => (
                   <FormControlLabel
                     key={address.id}
                     value={address.id}
                     control={<Radio />}
-                    label={`${address.street}, ${address.number} - ${address.city}/${address.state}`}
+                    label={`${address.streetType} ${address.street}, ${address.number} - ${address.city}/${address.state}`}
                   />
                 ))}
+                {addresses.length === 0 && <Typography variant="body2" sx={{ mt: 1 }}>Nenhum endereço cadastrado.</Typography>}
               </RadioGroup>
             </FormControl>
           </Paper>
-          <Paper elevation={3} sx={{ p: 2, mb: 2 }}>
-            <Box display="flex" justifyContent="space-between" alignItems="center">
-              <Typography variant="h6">Métodos de Pagamento</Typography>
-              <IconButton id="add-new-payment-button" size="small" onClick={() => setIsPaymentModalOpen(true)}>
-                Novo<Plus />
-              </IconButton>
-            </Box>
-            <Box display="flex" justifyContent="space-between" flexWrap="wrap" alignItems="center">
-              {paymentMethods.map((payment) => (
-                <Box key={payment.id} display="flex" flexWrap="wrap" alignItems="center">
-                  <Typography>
-                    {payment.cardFlag} - {payment.cardNumber}
-                  </Typography>
-                  {orderPayments.filter(orderPayment => orderPayment.paymentMethodId === payment.id).length === 0 && (
-                    <IconButton className="add-order-payment" size="small" onClick={() => handleAddOrderPayment(payment.id || 1)}>
-                      <Plus />
-                    </IconButton>
-                  )}
-                  <Box display="flex" alignItems="center">
-                    {orderPayments.filter(orderPayment => orderPayment.paymentMethodId === payment.id).map(orderPayment => (
-                      <Box key={orderPayment.paymentMethodId} display="flex" alignItems="center">
+
+          {!isCoveredByCoupon && (
+            <Paper elevation={3} sx={{ p: 2, mb: 3 }}>
+              <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+                <Typography variant="h6">Métodos de Pagamento</Typography>
+                <Button id="add-new-payment-button" size="small" startIcon={<Plus />} onClick={() => setIsPaymentModalOpen(true)}>
+                  Novo
+                </Button>
+              </Box>
+              {paymentMethods.map((payment) => {
+                const orderPaymentForThisMethod = orderPayments.find(op => op.paymentMethodId === payment.id);
+                return (
+                  <Box key={payment.id} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1, p: 1, border: '1px solid lightgray', borderRadius: 1 }}>
+                    <Typography sx={{ flexGrow: 1 }}>
+                      {payment.cardFlag} **** {payment.cardNumber.slice(-4)}
+                    </Typography>
+                    {!orderPaymentForThisMethod ? (
+                      <Button size="small" startIcon={<Plus />} onClick={() => handleAddOrderPayment(payment.id || 0)}>
+                        Usar
+                      </Button>
+                    ) : (
+                      <Box display="flex" alignItems="center">
                         <TextField
                           type="number"
-                          value={orderPayment.amount.toFixed(2)}
-                          onChange={(e) => handleUpdateOrderPayment(orderPayment.paymentMethodId, parseInt(e.target.value))}
-                          inputProps={{ min: 1 }}
+                          label="Valor"
+                          value={orderPaymentForThisMethod.amount.toFixed(2)}
+                          onChange={(e) => handleUpdateOrderPayment(payment.id!, parseFloat(e.target.value))}
+                          inputProps={{ min: 0, step: "0.01" }}
                           size="small"
+                          sx={{ width: '100px', mr: 0.5 }}
                         />
-                        <IconButton size="small" onClick={() => handleRemoveOrderPayment(orderPayment.paymentMethodId)}>
+                        <IconButton size="small" onClick={() => handleRemoveOrderPayment(payment.id!)}>
                           <Trash />
                         </IconButton>
                       </Box>
-                    ))}
+                    )}
                   </Box>
-                </Box>
-              ))}
-            </Box>
-          </Paper>
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2 }}>
+                );
+              })}
+              {paymentMethods.length === 0 && <Typography variant="body2" sx={{ mt: 1 }}>Nenhum método de pagamento cadastrado.</Typography>}
+              {orderPayments.length > 0 && (
+                <Typography variant="body2" sx={{ mt: 1, textAlign: 'right' }}>
+                  Total nos pagamentos: R$ {orderPayments.reduce((sum, p) => sum + p.amount, 0).toFixed(2)}
+                </Typography>
+              )}
+            </Paper>
+          )}
+
+          <Paper elevation={3} sx={{ p: 2, mb: 3 }}>
             <Typography variant="h6" gutterBottom>
               Cupom de Desconto
             </Typography>
-            <Box sx={{ display: 'flex', gap: 2 }}>
+            <Box sx={{ display: 'flex', gap: 1 }}>
               <TextField
                 label="Código do Cupom"
                 value={cupomCode}
                 onChange={(e) => setCupomCode(e.target.value)}
                 size="small"
+                fullWidth
+                disabled={isCoveredByCoupon}
               />
-              <IconButton onClick={() => applyCupom(cupomCode)}>
-                <Button
-                  variant="contained"
-                  disabled={!cupomCode}
-                >
-                  Aplicar
-                </Button>
-              </IconButton>
+              <Button
+                variant="contained"
+                onClick={() => applyCupom(cupomCode)}
+                disabled={!cupomCode || isCoveredByCoupon}
+                sx={{ whiteSpace: 'nowrap' }}
+              >
+                Aplicar
+              </Button>
             </Box>
+            {isCoveredByCoupon && (
+              <Typography variant="body2" color="success.main" sx={{ mt: 1 }}>
+                O valor do cupom cobre o total da compra.
+                {(discount - subtotalAndShipping) > 0 &&
+                  ` Será gerado um novo cupom de R$ ${(discount - subtotalAndShipping).toFixed(2)}.`
+                }
+              </Typography>
+            )}
+            {cupoms.length > 0 && (
+              <Box mt={1}>
+                <Typography variant="body2">Cupons aplicados:</Typography>
+                {cupoms.map(c => (
+                  <Typography key={c.id} variant="caption" display="block">
+                    {c.code} (-R$ {c.value.toFixed(2)})
+                  </Typography>
+                ))}
+              </Box>
+            )}
           </Paper>
         </Grid>
       </Grid>
 
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-        <IconButton onClick={handleSubmit}>
-          <Button
-            id="submit-order-button"
-            variant="contained"
-            color="primary"
-            size="large"
-            disabled={
-              !selectedDeliveryAddress
-              || !orderPayments.length
-              || orderPayments.reduce((total, payment) => total + payment.amount, 0) !== Number(calculateTotal().toFixed(2))
-              || (orderPayments.some(payment => payment.amount < 10) && cupoms.reduce((total, cupom) => total + cupom.value, 0) <= calculateTotal() - 10)
-            }
-          >
-            Confirmar Pedido
-          </Button>
-        </IconButton>
+        <Button
+          id="submit-order-button"
+          variant="contained"
+          color="primary"
+          size="large"
+          onClick={handleSubmit}
+          disabled={
+            !selectedDeliveryAddress ||
+            (!isCoveredByCoupon && (!orderPayments.length || !isPaymentSumCorrect))
+          }
+        >
+          Confirmar Pedido
+        </Button>
       </Box>
 
       <Modal
@@ -764,10 +896,8 @@ const Compra: React.FC = () => {
             </Grid>
           </Grid>
           <DialogActions>
-            <IconButton id="add-address" onClick={() => setIsAddressModalOpen(false)}>
-              <Button>Cancelar</Button>
-            </IconButton>
-            <Button type="submit" variant="contained">Adicionar</Button>
+            <Button id="cancel-add-address" onClick={() => setIsAddressModalOpen(false)}>Cancelar</Button>
+            <Button id="submit-add-address" type="submit" variant="contained">Adicionar</Button>
           </DialogActions>
         </Box>
       </Modal>
@@ -780,20 +910,9 @@ const Compra: React.FC = () => {
       >
         <Box component="form" onSubmit={(e) => {
           e.preventDefault();
-          setPaymentMethods(prev => [...(prev || []), currentPayment]);
-          setIsPaymentModalOpen(false);
           handleUpdatePaymentMethod(currentPayment);
-          setCurrentPayment({
-            primary: false,
-            cardFlag: '',
-            cardNumber: '',
-            cardName: '',
-            cardExpiration: '',
-            cvv: '',
-            id: 0,
-          });
         }}>
-          <Grid container spacing={2}>
+          <Grid container spacing={2} sx={{ pt: 1 }}>
             <Grid item xs={12}>
               <TextField
                 fullWidth
@@ -806,18 +925,19 @@ const Compra: React.FC = () => {
               />
             </Grid>
             <Grid item xs={12}>
-              <FormControl fullWidth>
+              <FormControl fullWidth required>
                 <InputLabel>Bandeira do Cartão</InputLabel>
                 <Select
                   id="cardFlag"
                   name="cardFlag"
+                  label="Bandeira do Cartão"
                   value={currentPayment.cardFlag}
                   onChange={handleSelectChangePayment}
-                  required
                 >
                   <MenuItem value="VISA">VISA</MenuItem>
                   <MenuItem value="MASTERCARD">MASTERCARD</MenuItem>
-                  <MenuItem value="AMERICANEXPRESS">AMERICANEXPRESS</MenuItem>
+                  <MenuItem value="AMERICANEXPRESS">AMERICAN EXPRESS</MenuItem>
+                  <MenuItem value="ELO">ELO</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
@@ -832,18 +952,19 @@ const Compra: React.FC = () => {
                 required
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid item xs={6}>
               <TextField
                 fullWidth
                 id="cardExpiration"
-                label="Data de Expiração"
+                label="Data de Expiração (MM/AA)"
                 name="cardExpiration"
+                placeholder="MM/AA"
                 value={currentPayment.cardExpiration}
                 onChange={handlePaymentChange}
                 required
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid item xs={6}>
               <TextField
                 fullWidth
                 id="cvv"
@@ -858,20 +979,18 @@ const Compra: React.FC = () => {
               <FormControlLabel
                 control={
                   <Checkbox
-                  id="primary"
+                    id="primary"
                     checked={currentPayment.primary}
                     onChange={(e) => setCurrentPayment(prev => ({ ...prev, primary: e.target.checked }))}
                   />
                 }
-                label="Cartão Principal"
+                label="Definir como cartão principal"
               />
             </Grid>
           </Grid>
-          <DialogActions>
-            <IconButton id="add-payment" onClick={() => setIsPaymentModalOpen(false)}>
-              <Button>Cancelar</Button>
-            </IconButton>
-            <Button type="submit" variant="contained">Adicionar</Button>
+          <DialogActions sx={{ pb: 2, pr: 0 }}>
+            <Button onClick={() => setIsPaymentModalOpen(false)}>Cancelar</Button>
+            <Button type="submit" variant="contained">Adicionar Cartão</Button>
           </DialogActions>
         </Box>
       </Modal>

@@ -28,17 +28,22 @@ public class CupomController {
     return ResponseEntity.ok(savedCupom);
   }
 
-  @GetMapping("/{code}")
-  public ResponseEntity<?> getCupomByCode(@PathVariable String code) {
-    Optional<Cupom> cupom = cupomRepository.findByCode(code);
+  @GetMapping("/{search}/{column}")
+  public ResponseEntity<?> getCupomByCode(@PathVariable String search, @PathVariable String column) {
+    Optional<Cupom> cupom = Optional.empty();
+    if (column.equals("code")) {
+      cupom = cupomRepository.findByCode(search);
+    } else if (column.equals("id")) {
+      cupom = cupomRepository.findById(Long.parseLong(search));
+    }
 
     if (cupom.isEmpty()) {
-      return ResponseEntity.ok(new ArrayList<>());
+      return ResponseEntity.ok("");
     }
 
     if (cupom.get().getExpirationDate().before(new Timestamp(System.currentTimeMillis())) ||
         cupom.get().getOrderId() != null) {
-      return ResponseEntity.ok(new ArrayList<>());
+      return ResponseEntity.ok("");
     }
 
     return ResponseEntity.ok(cupom.get());
