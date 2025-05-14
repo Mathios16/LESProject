@@ -118,6 +118,8 @@ public class Order {
             exchangeCoupon.setCode("REMAINING_COUPON");
             exchangeCoupon.setExpirationDate(new Timestamp(System.currentTimeMillis() + 3600000));
             totalCouponValue = totalOrderValue;
+            
+            this.status = OrderStatus.PROCESSING.name();
             return Optional.of(exchangeCoupon);
         }
 

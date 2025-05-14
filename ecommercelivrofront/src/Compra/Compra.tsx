@@ -596,6 +596,7 @@ const Compra: React.FC = () => {
               >
                 {addresses.map((address) => (
                   <FormControlLabel
+                    id={`address-${address.id}`}
                     key={address.id}
                     value={address.id}
                     control={<Radio />}
@@ -623,12 +624,13 @@ const Compra: React.FC = () => {
                       {payment.cardFlag} **** {payment.cardNumber.slice(-4)}
                     </Typography>
                     {!orderPaymentForThisMethod ? (
-                      <Button size="small" startIcon={<Plus />} onClick={() => handleAddOrderPayment(payment.id || 0)}>
+                      <Button id={`add-order-payment-${payment.id}`} size="small" startIcon={<Plus />} onClick={() => handleAddOrderPayment(payment.id || 0)}>
                         Usar
                       </Button>
                     ) : (
                       <Box display="flex" alignItems="center">
                         <TextField
+                          id={`order-payment-${payment.id}`}
                           type="number"
                           label="Valor"
                           value={orderPaymentForThisMethod.amount.toFixed(2)}

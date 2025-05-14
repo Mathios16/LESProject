@@ -55,4 +55,8 @@ public class OrderExchange {
   @ManyToOne
   @JoinColumn(name = "exc_cupom_id", insertable = false, updatable = false)
   private Cupom cupom;
+
+  public Double getValue() {
+    return cupom.getValue();
+  }
 }

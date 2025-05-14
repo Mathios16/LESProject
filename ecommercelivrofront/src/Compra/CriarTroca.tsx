@@ -153,7 +153,15 @@ const CriarTroca: React.FC = () => {
           throw new Error('Erro ao buscar itens do carrinho');
         }
         const data = await response.json();
-        setCartItems(data.items || []);
+        if (data && data.items) {
+          const itemsWithUnitPrice = data.items.map((item: OrderItem) => ({
+            ...item,
+            price: item.quantity > 0 ? item.price / item.quantity : item.price,
+          }));
+          setCartItems(itemsWithUnitPrice);
+        } else {
+          setCartItems([]);
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Erro ao buscar itens do carrinho. Tente novamente.');
       }
@@ -459,6 +467,7 @@ const CriarTroca: React.FC = () => {
         quantity: item.quantityToReturn,
         price: item.price,
       })),
+      value: couponValueGenerated,
       items: cartItems,
       addressId: selectedDeliveryAddress,
       orderPayments: amountToPay > 0 ? orderPayments.map(p => ({

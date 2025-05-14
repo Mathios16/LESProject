@@ -219,6 +219,7 @@ const CriarDevolucao: React.FC = () => {
                     <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
                       <InputLabel sx={{ mr: 1, fontSize: '0.9rem' }}>Qtd. a devolver:</InputLabel>
                       <TextField
+                        id={`return-item-${originalItem.id}`}
                         type="number"
                         size="small"
                         value={selectedQty}
@@ -253,6 +254,7 @@ const CriarDevolucao: React.FC = () => {
         <Divider sx={{ my: 3 }} />
 
         <Button
+          id="submit-return-request"
           variant="contained"
           color="primary"
           fullWidth

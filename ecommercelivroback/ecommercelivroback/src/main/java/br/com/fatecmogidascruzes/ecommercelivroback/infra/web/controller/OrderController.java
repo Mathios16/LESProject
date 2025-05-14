@@ -112,6 +112,8 @@ public class OrderController {
         Optional<Customer> customer = customerRepository.findById(customerId);
         if (customer.isPresent()) {
             order.setCustomer(customer.get());
+        } else {
+            return ResponseEntity.notFound().build();
         }
 
         if (data != null && data.addressId() != null) {
@@ -208,7 +210,7 @@ public class OrderController {
 
         Cupom returnCupom = new Cupom();
         returnCupom.setValue(data.value());
-        returnCupom.setExpirationDate(new Timestamp(System.currentTimeMillis() + 3600000L)); // 1 hour validity
+        returnCupom.setExpirationDate(new Timestamp(System.currentTimeMillis() + 3600000));
         returnCupom.setCode("RETURN" + orderId);
         Cupom savedCupom = cupomRepository.save(returnCupom);
 
@@ -269,7 +271,13 @@ public class OrderController {
         List<OrderExchangeItem> items = new ArrayList<>();
 
         data.items().forEach(item -> {
+            Optional<Item> itemEntityOpt = itemRepository.findById(item.itemId());
+            if (itemEntityOpt.isEmpty())
+                return;
+            Item actualItem = itemEntityOpt.get();
+
             OrderExchangeItem orderExchangeItem = new OrderExchangeItem();
+            orderExchangeItem.setItem(actualItem);
             orderExchangeItem.setItemId(item.itemId());
             orderExchangeItem.setQuantity(item.quantity());
             orderExchangeItem.setPrice(item.price());
@@ -286,6 +294,18 @@ public class OrderController {
 
         orderExchange.setItems(items);
         orderExchange.setPayments(payments);
+
+        if (data.value() != null && data.value() > 0) {
+            Cupom exchangeCupom = new Cupom();
+            exchangeCupom.setValue(data.value());
+            exchangeCupom.setExpirationDate(new Timestamp(System.currentTimeMillis() + 3600000));
+            exchangeCupom.setCode("EXCHANGE" + orderId);
+            Cupom savedCupom = cupomRepository.save(exchangeCupom);
+
+            orderExchange.setCupomId(savedCupom.getId());
+            orderExchange.setCupom(savedCupom);
+        }
+
         OrderExchange savedExchange = orderExchangeRepository.save(orderExchange);
 
         items.forEach(item -> {

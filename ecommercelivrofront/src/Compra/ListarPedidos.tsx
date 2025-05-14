@@ -158,7 +158,7 @@ const ListarPedidos: React.FC = () => {
                       <TableCell align="right">
                         <Select id={`order-select-${order.id}`} value={order.status} onChange={(e) => handleUpdateStatus(order.id, e.target.value)}>
                           {getUpdateStatus(order.status).map((status) => (
-                            <MenuItem key={status} value={status}>
+                            <MenuItem id={`order-select-${order.id}-${status}`} key={status} value={status}>
                               {status}
                             </MenuItem>
                           ))}

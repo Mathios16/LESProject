@@ -134,8 +134,8 @@ const VerPedidos: React.FC = () => {
         credentials: 'include',
       });
       const data = await response.json();
-      if (data) {
-        return data.code;
+      if (data[0].cupom) {
+        return data[0].cupom.code;
       }
       return '';
     } catch (error) {
