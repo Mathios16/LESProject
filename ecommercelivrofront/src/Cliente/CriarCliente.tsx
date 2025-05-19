@@ -276,9 +276,9 @@ const CriarCliente: React.FC = () => {
                       onChange={handleSelectChangeCustomer}
                       required
                     >
-                      <MenuItem value="M">Masculino</MenuItem>
-                      <MenuItem value="F">Feminino</MenuItem>
-                      <MenuItem value="O">Outro</MenuItem>
+                      <MenuItem value="MASCULINO">Masculino</MenuItem>
+                      <MenuItem value="FEMININO">Feminino</MenuItem>
+                      <MenuItem value="OUTRO">Outro</MenuItem>
                     </Select>
                   </FormControl>
                 </Grid>
@@ -367,9 +367,9 @@ const CriarCliente: React.FC = () => {
                         onChange={handleSelectChangeCustomer}
                         required
                       >
-                        <MenuItem value="MOBILE">Celular</MenuItem>
-                        <MenuItem value="HOME">Residencial</MenuItem>
-                        <MenuItem value="WORK">Trabalho</MenuItem>
+                        <MenuItem value="CELULAR">Celular</MenuItem>
+                        <MenuItem value="RESIDENCIAL">Residencial</MenuItem>
+                        <MenuItem value="TRABALHO">Trabalho</MenuItem>
                       </Select>
                     </FormControl>
                   </Box>
@@ -502,6 +502,16 @@ const CriarCliente: React.FC = () => {
                 value={currentAddress.zipCode}
                 onChange={handleAddressChange}
                 onBlur={(e) => fetchAddressByCep(e.target.value)}
+                required
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Tipo de Logradouro"
+                name="streetType"
+                value={currentAddress.streetType}
+                onChange={handleAddressChange}
                 required
               />
             </Grid>

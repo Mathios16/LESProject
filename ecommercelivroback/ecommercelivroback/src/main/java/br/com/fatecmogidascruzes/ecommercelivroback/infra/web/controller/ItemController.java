@@ -7,6 +7,7 @@ import br.com.fatecmogidascruzes.ecommercelivroback.infra.persistence.ItemReposi
 import jakarta.validation.Valid;
 
 import java.sql.Timestamp;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -15,6 +16,7 @@ import java.util.Objects;
 import br.com.fatecmogidascruzes.ecommercelivroback.infra.DTO.dataItem;
 import br.com.fatecmogidascruzes.ecommercelivroback.business.item.Inventory;
 import br.com.fatecmogidascruzes.ecommercelivroback.business.item.Item;
+import br.com.fatecmogidascruzes.ecommercelivroback.business.item.category.Category;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -145,6 +147,11 @@ public class ItemController {
     public ResponseEntity<Item> getItemById(@PathVariable Long id) {
         Optional<Item> item = itemRepository.findById(id);
         return item.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/categories")
+    public ResponseEntity<List<String>> getAllCategories() {
+        return ResponseEntity.ok(Arrays.stream(Category.values()).map(Category::name).collect(Collectors.toList()));
     }
 
     @PutMapping("/{id}")

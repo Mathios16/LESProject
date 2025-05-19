@@ -163,7 +163,7 @@ public class CustomerController {
             return ResponseEntity.notFound().build();
         }
 
-        if (data != null) {
+        if (data == null) {
             customerRepository.delete(customer.get());
         } else {
             List<Address> addresses = data.addresses();

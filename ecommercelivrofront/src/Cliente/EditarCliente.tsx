@@ -24,7 +24,8 @@ import {
   Snackbar,
   Alert,
   FormGroup,
-  FormLabel
+  FormLabel,
+  Chip
 } from '@mui/material';
 
 import { SelectChangeEvent } from '@mui/material/Select';
@@ -92,7 +93,6 @@ const Modal: React.FC<ModalProps> = ({ open, onClose, title, children }) => {
 };
 
 const EditarCliente: React.FC = () => {
-  const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const { type, id } = useUrlParams();
   const [error, setError] = useState<string>('');
@@ -140,10 +140,21 @@ const EditarCliente: React.FC = () => {
     cvv: ''
   });
 
+  const [userId, setUserId] = useState('');
+  useEffect(() => {
+    const fetchUserId = async () => {
+      let url = window.location.href;
+      let id = url.split('/').pop()?.split('?')[0] || '';
+      setUserId(id);  
+    };
+
+    fetchUserId();
+  }, []);
+
   useEffect(() => {
     const fetchCustomer = async () => {
       try {
-        const response = await fetch(`http://172.17.0.2:8080/customers/${userId}`, {
+        const response = await fetch(`http://localhost:8080/customers/${userId}`, {
           method: 'GET',
           credentials: 'include',
           headers: {
@@ -199,7 +210,7 @@ const EditarCliente: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch(`http://172.17.0.2:8080/customers/${userId}`, {
+      const response = await fetch(`http://localhost:8080/customers/${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -215,6 +226,15 @@ const EditarCliente: React.FC = () => {
       navigate(`/clientes${type || id ? `?type=${type}&id=${id}` : ''}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
+    }
+  };
+  
+  const getStatusColor = (status: Address['addressType'][number]) => {
+    switch (status) {
+      case 'billing': return 'warning';
+      case 'shipping': return 'primary';
+      case 'residential': return 'success';
+      case 'primary': return 'error';
     }
   };
 
@@ -259,9 +279,9 @@ const EditarCliente: React.FC = () => {
                       onChange={handleSelectChangeCustomer}
                       required
                     >
-                      <MenuItem value="M">Masculino</MenuItem>
-                      <MenuItem value="F">Feminino</MenuItem>
-                      <MenuItem value="O">Outro</MenuItem>
+                      <MenuItem value="MASCULINO">Masculino</MenuItem>
+                      <MenuItem value="FEMININO">Feminino</MenuItem>
+                      <MenuItem value="OUTRO">Outro</MenuItem>
                     </Select>
                   </FormControl>
                 </Grid>
@@ -283,7 +303,7 @@ const EditarCliente: React.FC = () => {
                     type="date"
                     label="Data de Nascimento"
                     name="birthdate"
-                    value={customer.birthdate}
+                    value={customer.birthdate.split('T')[0]}
                     onChange={handleInputChange}
                     InputLabelProps={{ shrink: true }}
                     required
@@ -349,9 +369,9 @@ const EditarCliente: React.FC = () => {
                         onChange={handleSelectChangeCustomer}
                         required
                       >
-                        <MenuItem value="MOBILE">Celular</MenuItem>
-                        <MenuItem value="HOME">Residencial</MenuItem>
-                        <MenuItem value="WORK">Trabalho</MenuItem>
+                        <MenuItem value="CELULAR">Celular</MenuItem>
+                        <MenuItem value="RESIDENCIAL">Residencial</MenuItem>
+                        <MenuItem value="TRABALHO">Trabalho</MenuItem>
                       </Select>
                     </FormControl>
                   </Box>
@@ -374,6 +394,14 @@ const EditarCliente: React.FC = () => {
                         <Typography>
                           {address.street}, {address.number} - {address.city}/{address.state}
                         </Typography>
+                        {address.addressType.map((type) => (
+                          <Chip
+                            key={type}
+                            label={type}
+                            color={getStatusColor(type)}
+                            variant="outlined"
+                          />
+                        ))}
                         <Box>
                           <IconButton onClick={() => {/* Edit address */ }}>
                             <Pencil />
