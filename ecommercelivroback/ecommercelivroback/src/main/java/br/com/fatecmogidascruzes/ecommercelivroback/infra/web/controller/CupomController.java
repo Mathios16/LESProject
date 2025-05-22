@@ -13,7 +13,6 @@ import br.com.fatecmogidascruzes.ecommercelivroback.business.order.cupom.Cupom;
 import br.com.fatecmogidascruzes.ecommercelivroback.infra.persistence.CupomRepository;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.Optional;
 
 @RestController

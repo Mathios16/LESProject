@@ -3,8 +3,6 @@ package br.com.fatecmogidascruzes.ecommercelivroback;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-
 import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Logger;
@@ -107,7 +105,6 @@ public class OrderE2ETest {
       clickButtonById("order-select-8");
       clickButtonById("order-select-8-APROVAR");
 
-
       // Change order status to "Enviado"
       clickButtonById("order-select-8");
       clickButtonById("order-select-8-ENVIAR");
@@ -149,7 +146,7 @@ public class OrderE2ETest {
       // Submit return request
       clickButtonById("submit-return-request");
 
-    wait.until(ExpectedConditions.urlContains("/pedidos/ver?"));
+      wait.until(ExpectedConditions.urlContains("/pedidos/ver?"));
 
       // Count down latch to allow the next test to proceed
       latches[2].countDown();
@@ -205,7 +202,6 @@ public class OrderE2ETest {
       // Select delivery address if needed
       clickButtonById("address-22");
 
-      
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       logger.severe("Test interrupted: " + e.getMessage());
@@ -214,7 +210,8 @@ public class OrderE2ETest {
 
   private void fillInputById(String id, String value) {
     try {
-      WebElement input = wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("//*[contains(@id,'" + id + "')]")));
+      WebElement input = wait
+          .until(ExpectedConditions.presenceOfElementLocated(By.xpath("//*[contains(@id,'" + id + "')]")));
       input.clear();
       input.sendKeys(value);
       logger.info(String.format("Preenchido campo %s com valor: %s", id, value));
@@ -274,8 +271,8 @@ public class OrderE2ETest {
     }
   }
 
-  private void fillAddressForm(String billing, String delivery, String residence, String streetType,String number,
-      String complement,  String zipcode) {
+  private void fillAddressForm(String billing, String delivery, String residence, String streetType, String number,
+      String complement, String zipcode) {
     try {
       fillInputById("zip", zipcode);
       fillInputById("street", "");

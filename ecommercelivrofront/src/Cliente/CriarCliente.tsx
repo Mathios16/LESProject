@@ -508,6 +508,17 @@ const CriarCliente: React.FC = () => {
             <Grid item xs={12}>
               <TextField
                 fullWidth
+                id="streetType"
+                label="Tipo de Logradouro"
+                name="streetType"
+                value={currentAddress.streetType}
+                onChange={handleAddressChange}
+                required
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
                 label="Logradouro"
                 name="street"
                 value={currentAddress.street}

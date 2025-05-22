@@ -13,8 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -29,6 +27,7 @@ import br.com.fatecmogidascruzes.ecommercelivroback.infra.persistence.CustomerRe
 import br.com.fatecmogidascruzes.ecommercelivroback.infra.persistence.PaymentMethodRepository;
 
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/customers")
@@ -45,36 +44,43 @@ public class CustomerController {
 
     @PostMapping
     @Transactional(rollbackFor = Exception.class)
-    public ResponseEntity<?> createCustomer(@Valid @RequestBody dataCustomer data) throws Exception {
-        List<Address> addresses = data.addresses();
-        List<PaymentMethod> paymentMethods = data.paymentMethods();
+    public ResponseEntity<?> createCustomer(@Valid @RequestBody dataCustomer data) {
+        try {
+            List<Address> addresses = data.addresses();
+            List<PaymentMethod> paymentMethods = data.paymentMethods();
 
-        Customer customer = new Customer();
-        customer.setName(data.name());
-        customer.setLastname(data.lastname());
-        customer.setGender(data.gender());
-        customer.setDocument(data.document());
-        customer.setBirthdate(data.birthdate());
-        customer.setEmail(data.email());
-        customer.setPassword(data.password());
-        customer.setPhoneDdd(data.phoneDdd());
-        customer.setPhoneType(data.phoneType());
-        customer.setPhone(data.phone());
-        customer.setAddresses(addresses);
-        customer.setPaymentMethods(paymentMethods);
+            Customer customer = new Customer();
+            customer.setName(data.name());
+            customer.setLastname(data.lastname());
+            customer.setGender(data.gender());
+            customer.setDocument(data.document());
+            customer.setBirthdate(data.birthdate());
+            customer.setEmail(data.email());
+            customer.setPassword(data.password());
+            customer.setPhoneDdd(data.phoneDdd());
+            customer.setPhoneType(data.phoneType());
+            customer.setPhone(data.phone());
+            customer.setAddresses(addresses);
+            customer.setPaymentMethods(paymentMethods);
 
-        customer.verifyAddresses();
-        customer.verifyPaymentMethods();
+            customer.verifyAddresses();
+            customer.verifyPaymentMethods();
 
-        Customer savedCustomer = customerRepository.save(customer);
+            Customer savedCustomer = customerRepository.save(customer);
 
-        addresses.forEach(address -> address.setCustomer(savedCustomer.getId()));
-        addressRepository.saveAll(addresses);
+            addresses.forEach(address -> address.setCustomer(savedCustomer.getId()));
+            addressRepository.saveAll(addresses);
 
-        paymentMethods.forEach(paymentMethod -> paymentMethod.setCustomer(savedCustomer.getId()));
-        paymentMethodRepository.saveAll(paymentMethods);
+            paymentMethods.forEach(paymentMethod -> paymentMethod.setCustomer(savedCustomer.getId()));
+            paymentMethodRepository.saveAll(paymentMethods);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(dataCustomer.fromCustomer(savedCustomer));
+            return ResponseEntity.status(HttpStatus.CREATED).body(dataCustomer.fromCustomer(savedCustomer));
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "An unexpected error occurred while creating the customer.", e);
+        }
     }
 
     @GetMapping
@@ -108,51 +114,71 @@ public class CustomerController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Customer> getCustomerById(@PathVariable Long id) {
-        Optional<Customer> customer = customerRepository.findById(id);
-
-        return ResponseEntity.ok(customer.get());
+        Optional<Customer> customerOpt = customerRepository.findById(id);
+        if (customerOpt.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found with id: " + id);
+        }
+        return ResponseEntity.ok(customerOpt.get());
     }
 
     @PutMapping("/{id}")
     @Transactional(rollbackFor = Exception.class)
-    public ResponseEntity<?> updateCustomer(@PathVariable Long id, @Valid @RequestBody dataCustomer data)
-            throws Exception {
-        Optional<Customer> existingCustomer = customerRepository.findById(id);
+    public ResponseEntity<?> updateCustomer(@PathVariable Long id, @Valid @RequestBody dataCustomer data) {
+        Optional<Customer> existingCustomerOpt = customerRepository.findById(id);
 
-        if (existingCustomer.isEmpty()) {
-            return ResponseEntity.notFound().build();
+        if (existingCustomerOpt.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found with id: " + id);
         }
+
+        Customer customerToUpdate = existingCustomerOpt.get();
 
         List<Address> addresses = data.addresses();
         List<PaymentMethod> paymentMethods = data.paymentMethods();
 
-        Customer customer = new Customer();
-        customer.setId(id);
-        customer.setName(data.name());
-        customer.setLastname(data.lastname());
-        customer.setGender(data.gender());
-        customer.setDocument(data.document());
-        customer.setBirthdate(data.birthdate());
-        customer.setEmail(data.email());
-        customer.setPassword(data.password());
-        customer.setPhoneDdd(data.phoneDdd());
-        customer.setPhoneType(data.phoneType());
-        customer.setPhone(data.phone());
-        customer.setAddresses(addresses);
-        customer.setPaymentMethods(paymentMethods);
+        customerToUpdate.setName(data.name());
+        customerToUpdate.setLastname(data.lastname());
+        customerToUpdate.setGender(data.gender());
+        customerToUpdate.setDocument(data.document());
+        customerToUpdate.setBirthdate(data.birthdate());
+        customerToUpdate.setEmail(data.email());
+        customerToUpdate.setPassword(data.password());
+        customerToUpdate.setPhoneDdd(data.phoneDdd());
+        customerToUpdate.setPhoneType(data.phoneType());
+        customerToUpdate.setPhone(data.phone());
 
-        customer.verifyAddresses();
-        customer.verifyPaymentMethods();
+        customerToUpdate.getAddresses().clear();
+        if (addresses != null) {
+            addresses.forEach(addr -> addr.setCustomer(customerToUpdate.getId()));
+            customerToUpdate.getAddresses().addAll(addresses);
+        }
 
-        Customer updatedCustomer = customerRepository.save(customer);
+        customerToUpdate.getPaymentMethods().clear();
+        if (paymentMethods != null) {
+            paymentMethods.forEach(pm -> pm.setCustomer(customerToUpdate.getId()));
+            customerToUpdate.getPaymentMethods().addAll(paymentMethods);
+        }
 
-        addresses.forEach(address -> address.setCustomer(updatedCustomer.getId()));
-        addressRepository.saveAll(addresses);
+        try {
+            customerToUpdate.verifyAddresses();
+            customerToUpdate.verifyPaymentMethods();
 
-        paymentMethods.forEach(paymentMethod -> paymentMethod.setCustomer(updatedCustomer.getId()));
-        paymentMethodRepository.saveAll(paymentMethods);
+            Customer updatedCustomer = customerRepository.save(customerToUpdate);
 
-        return ResponseEntity.ok(dataCustomer.fromCustomer(updatedCustomer));
+            if (addresses != null) {
+                addressRepository.saveAll(addresses);
+            }
+            if (paymentMethods != null) {
+                paymentMethodRepository.saveAll(paymentMethods);
+            }
+
+            return ResponseEntity.ok(dataCustomer.fromCustomer(updatedCustomer));
+
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "An unexpected error occurred while updating the customer.", e);
+        }
     }
 
     @DeleteMapping("/{id}")
@@ -163,7 +189,7 @@ public class CustomerController {
             return ResponseEntity.notFound().build();
         }
 
-        if (data != null) {
+        if (data == null) {
             customerRepository.delete(customer.get());
         } else {
             List<Address> addresses = data.addresses();

@@ -1,6 +1,5 @@
 package br.com.fatecmogidascruzes.ecommercelivroback.business.order.orderExchange;
 
-import java.sql.Timestamp;
 import java.util.List;
 
 import br.com.fatecmogidascruzes.ecommercelivroback.business.address.Address;

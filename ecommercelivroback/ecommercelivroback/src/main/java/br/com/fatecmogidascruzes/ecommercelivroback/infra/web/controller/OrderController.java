@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,11 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import br.com.fatecmogidascruzes.ecommercelivroback.business.customer.Customer;
-import br.com.fatecmogidascruzes.ecommercelivroback.business.item.Item;
 import br.com.fatecmogidascruzes.ecommercelivroback.business.item.Item;
 import br.com.fatecmogidascruzes.ecommercelivroback.business.order.Order;
 import br.com.fatecmogidascruzes.ecommercelivroback.business.order.OrderItem;

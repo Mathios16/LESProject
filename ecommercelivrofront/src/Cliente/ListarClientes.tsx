@@ -70,7 +70,7 @@ const ListarClientes: React.FC = () => {
       if (searchDocument) queryParams.append('document', searchDocument);
       if (searchPhone) queryParams.append('phone', searchPhone);
 
-      const response = await fetch(`http://172.17.0.2:8080/customers${queryParams.toString() ? `?${queryParams.toString()}` : ''}`, {
+      const response = await fetch(`http://localhost:8080/customers${queryParams.toString() ? `?${queryParams.toString()}` : ''}`, {
         method: 'GET',
         credentials: 'include',
         headers: {
@@ -97,7 +97,7 @@ const ListarClientes: React.FC = () => {
   const handleDelete = async (id: number) => {
     if (window.confirm('Tem certeza que deseja excluir este cliente?')) {
       try {
-        const response = await fetch(`http://172.17.0.2:8080/customers/${id}`, {
+        const response = await fetch(`http://localhost:8080/customers/${id}`, {
           method: 'DELETE',
           credentials: 'include',
           headers: {
@@ -195,7 +195,7 @@ const ListarClientes: React.FC = () => {
                         <IconButton
                           color="primary"
                           onClick={() => {
-                            navigate(`/clientes/editar/${customer.id}${type || id ? `?type=${type}&id=${id}` : ''}`)
+                            navigate(`/cliente/editar/${customer.id}${type || id ? `?type=${type}&id=${id}` : ''}`)
                           }}
                         >
                           <PencilSimple />

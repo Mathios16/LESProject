@@ -92,7 +92,6 @@ const Modal: React.FC<ModalProps> = ({ open, onClose, title, children }) => {
 };
 
 const EditarCliente: React.FC = () => {
-  const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const { type, id } = useUrlParams();
   const [error, setError] = useState<string>('');
@@ -140,10 +139,20 @@ const EditarCliente: React.FC = () => {
     cvv: ''
   });
 
+  const [userId, setUserId] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    const urlSegments = window.location.pathname.split('/');
+    const userIdFromUrl = urlSegments[3].split('?')[0];
+    if (userIdFromUrl) {
+      setUserId(userIdFromUrl);
+    }
+  }, []);
+
   useEffect(() => {
     const fetchCustomer = async () => {
       try {
-        const response = await fetch(`http://172.17.0.2:8080/customers/${userId}`, {
+        const response = await fetch(`http://localhost:8080/customers/${userId}`, {
           method: 'GET',
           credentials: 'include',
           headers: {
@@ -199,7 +208,7 @@ const EditarCliente: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch(`http://172.17.0.2:8080/customers/${userId}`, {
+      const response = await fetch(`http://localhost:8080/customers/${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
