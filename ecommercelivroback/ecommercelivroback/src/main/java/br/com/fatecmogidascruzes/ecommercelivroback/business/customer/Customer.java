@@ -17,8 +17,6 @@ import jakarta.persistence.Convert;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -48,7 +46,6 @@ public class Customer {
   @Column(name = "cst_lastname", nullable = false)
   private String lastname;
 
-  @Pattern(regexp = "^\\d{3}\\.\\d{3}\\.\\d{3}\\-\\d{2}$", message = "document: Documento inválido")
   @NotBlank(message = "document: Documento não pode ser vazio")
   @Column(name = "cst_document", nullable = false, unique = true)
   private String document;
@@ -62,17 +59,14 @@ public class Customer {
   @Column(name = "cst_email", nullable = false, unique = true)
   private String email;
 
-  @Pattern(regexp = "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*\\W)[\\w\\W]{8,}$", message = "password: Senha inválida")
   @NotBlank(message = "password: Senha não pode ser vazia")
   @Column(name = "cst_password", nullable = false)
   private String password;
 
-  @Pattern(regexp = "^\\d{2}$", message = "phone: DDD inválido")
   @NotBlank(message = "phone: DDD não pode ser vazio")
   @Column(name = "cst_phoneddd", nullable = false)
   private String phoneDdd;
 
-  @Pattern(regexp = "^\\d{5}-\\d{4}|\\d{4}-\\d{4}$", message = "phone: Telefone inválido")
   @NotBlank(message = "phone: Telefone não pode ser vazio")
   @Column(name = "cst_phonenumber", nullable = false)
   private String phone;

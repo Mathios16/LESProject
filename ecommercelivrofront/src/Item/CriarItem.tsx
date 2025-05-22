@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Plus, X, Trash, Pencil } from '@phosphor-icons/react';
 import {
   Container,
   Typography,
@@ -13,7 +15,11 @@ import {
   MenuItem,
   Snackbar,
   Alert,
-  Chip
+  Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  IconButton
 } from '@mui/material';
 
 import { SelectChangeEvent } from '@mui/material/Select';
@@ -41,7 +47,41 @@ interface Item {
   barcode: number;
   image?: File;
   category?: Category[];
+  inventory?: Inventory[];
 }
+
+interface Inventory {
+  id?: number;
+  quantity: number;
+  costPrice: number;
+  entryDate: string;
+  supplier: string;
+}
+
+interface ModalProps {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  children: React.ReactNode;
+}
+
+const Modal: React.FC<ModalProps> = ({ open, onClose, title, children }) => {
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+      <DialogTitle>
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+          {title}
+          <IconButton onClick={onClose} size="small">
+            <X />
+          </IconButton>
+        </Box>
+      </DialogTitle>
+      <DialogContent>
+        {children}
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 const CriarItem: React.FC = () => {
 
@@ -69,12 +109,22 @@ const CriarItem: React.FC = () => {
     width: 0,
     depth: 0,
     barcode: 0,
+    inventory: []
   });
+
+  const [editingInventoryIndex, setEditingInventoryIndex] = useState<number | null>(null);
+  const [currentInventory, setCurrentInventory] = useState<Inventory>({ quantity: 0, costPrice: 0, entryDate: '', supplier: '' });
+  const [isInventoryModalOpen, setIsInventoryModalOpen] = useState(false);
 
   const fetchCategories = async (searchTerm: string) => {
     let categories = [];
+    const response = await fetch('http://localhost:8080/categories');
+    const data = await response.json();
+    categories = data;
 
-    setAvailableCategories([{ 'id': 1, 'name': 'romance', 'tag': 'blue' }]);
+    categories = categories.filter((category: string) => category.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    setAvailableCategories(categories);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -122,6 +172,36 @@ const CriarItem: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+  };
+
+  const handleAddInventory = () => {
+    setEditingInventoryIndex(null);
+    setCurrentInventory({ quantity: 0, costPrice: 0, entryDate: '', supplier: '' });
+    setIsInventoryModalOpen(true);
+  };
+
+  const handleEditInventory = (index: number) => {
+    setEditingInventoryIndex(index);
+    if (!item.inventory) return;
+    setCurrentInventory(item.inventory[index]);
+    setIsInventoryModalOpen(true);
+  };
+
+  const handleDeleteInventory = (index: number) => {
+    if (!item.inventory) return;
+    const updatedInventory = item.inventory.filter((inventory, i) => i !== index);
+    setItem(prev => ({ ...prev, inventory: updatedInventory }));
+  };
+
+  const handleSaveInventory = () => {
+    if (!item.inventory) return;
+    if (editingInventoryIndex !== null) {
+      const updatedInventory = item.inventory.map((inventory, i) => i === editingInventoryIndex ? currentInventory : inventory);
+      setItem(prev => ({ ...prev, inventory: updatedInventory }));
+    } else {
+      setItem(prev => ({ ...prev, inventory: [...prev.inventory || [], currentInventory] }));
+    }
+    setIsInventoryModalOpen(false);
   };
 
   return (
@@ -291,6 +371,37 @@ const CriarItem: React.FC = () => {
             </Grid>
 
             <Grid item xs={12}>
+              <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                <Typography variant="h6">Estoque</Typography>
+                <Button
+                  variant="contained"
+                  startIcon={<Plus />}
+                  onClick={handleAddInventory}
+                >
+                  Adicionar ao Estoque
+                </Button>
+              </Box>
+              {item.inventory && item.inventory.map((inventoryLine, index) => (
+                <Paper key={inventoryLine.id || index} elevation={1} sx={{ p: 2, mb: 2 }}>
+                  <Box display="flex" justifyContent="space-between" alignItems="center">
+                    <Typography>
+                      Qtd: {inventoryLine.quantity}, Custo: R$ {inventoryLine.costPrice.toFixed(2)}, Entrada: {inventoryLine.entryDate}
+                      {inventoryLine.supplier && `, Fornecedor: ${inventoryLine.supplier}`}
+                    </Typography>
+                    <Box>
+                      <IconButton onClick={() => handleEditInventory(index)}>
+                        <Pencil />
+                      </IconButton>
+                      <IconButton onClick={() => handleDeleteInventory(index)} color="error">
+                        <Trash />
+                      </IconButton>
+                    </Box>
+                  </Box>
+                </Paper>
+              ))}
+            </Grid>
+
+            <Grid item xs={12}>
               <TextField
                 fullWidth
                 label="Buscar Categorias"
@@ -339,6 +450,70 @@ const CriarItem: React.FC = () => {
           </Grid>
         </Box>
       </Paper>
+      <Modal
+        open={isInventoryModalOpen}
+        onClose={() => setIsInventoryModalOpen(false)}
+        title="Gerenciar Estoque"
+      >
+        <DialogContent>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Quantidade"
+                name="quantity"
+                type="number"
+                value={currentInventory.quantity}
+                onChange={(e) => setCurrentInventory(prev => ({ ...prev, quantity: parseInt(e.target.value) }))}
+                variant="outlined"
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Custo"
+                name="costPrice"
+                type="number"
+                value={currentInventory.costPrice}
+                onChange={(e) => setCurrentInventory(prev => ({ ...prev, costPrice: parseFloat(e.target.value) }))}
+                variant="outlined"
+                inputProps={{ step: 0.01 }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Data de Entrada"
+                name="entryDate"
+                type="date"
+                value={currentInventory.entryDate}
+                onChange={(e) => setCurrentInventory(prev => ({ ...prev, entryDate: e.target.value }))}
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Fornecedor"
+                name="supplier"
+                value={currentInventory.supplier}
+                onChange={(e) => setCurrentInventory(prev => ({ ...prev, supplier: e.target.value }))}
+                variant="outlined"
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleSaveInventory}
+              >
+                Salvar
+              </Button>
+            </Grid>
+          </Grid>
+        </DialogContent>
+      </Modal>
     </Container>
   );
 };
